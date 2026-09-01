@@ -36,6 +36,7 @@ import {
 } from '@azure/msal-browser';
 import { CrearcontratoComponent } from './componentes/crearcontrato/crearcontrato.component';
 import { VercontratoComponent } from './componentes/vercontrato/vercontrato.component';
+import { FormatoseisComponent } from './componentes/formatoseis/formatoseis.component';
 
 export const msalInstance = new PublicClientApplication({
   auth: {
@@ -67,6 +68,7 @@ UsuariosistemaComponent,
      FormatounoverComponent,
      CrearcontratoComponent,
      VercontratoComponent,
+     FormatoseisComponent,
 
   ],
   imports: [

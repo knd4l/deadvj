@@ -72,19 +72,17 @@
 
             </button>
 
-            <div
-              *ngIf="cursoDefinidoGuardado"
-              class="alert alert-success mt-3">
-
-              <strong>¡Guardado correctamente!</strong>
-
-              <br>
-
-              El curso definido
-              <strong>{{ tematicaNuevaEditada }}</strong>
-              se ha guardado correctamente.
-
-        </div>
+        <!-- BOTÓN PARA CONTINUAR CON EL FORMATO 6 -->
+        <div *ngIf="cursoGuardado" class="mt-3 text-center"> <!-- Mensaje de confirmación --> 
+          <div class="alert alert-success"> 
+            <strong>¡Curso guardado correctamente!</strong> 
+            <br> Ahora puede continuar con el Formato 6. </div> 
+            <!-- Botón que lleva al componente del Formato 6 --> 
+             <button type="button" 
+                    class="btn btn-success" 
+                    (click)="seguirFormato6()"> 
+                    <i class="fas fa-arrow-right me-2"></i> 
+                    Seguir con el Formato 6 </button> </div>
 
           </div>
 

@@ -1,0 +1,19 @@
+/* ===================================================== */
+/* CONTENIDO PRINCIPAL */
+/* ===================================================== */
+
+#layoutSidenav_content {
+    margin-left: 225px;
+    min-height: 100vh;
+    width: calc(100% - 225px);
+}
+
+/* ===================================================== */
+/* ESPACIO DEL CONTENIDO */
+/* ===================================================== */
+
+#layoutSidenav_content main {
+    padding-top: 20px;
+    padding-left: 25px;
+    padding-right: 25px;
+}

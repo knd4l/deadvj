@@ -1,0 +1,441 @@
+<div class="sb-nav-fixed bg-light">
+
+  <div id="layoutSidenav">
+    <div id="layoutSidenav_content">
+
+      <main class="container-fluid px-4">
+
+        <!-- ========================================= -->
+        <!-- ENCABEZADO DEL FORMATO 6 -->
+        <!-- ========================================= -->
+
+        <div class="card shadow border-0 my-4">
+
+          <!-- PROYECTO -->
+          <div class="text-center mt-4">
+            <h5 class="mb-1"><b>PROYECTO</b></h5>
+
+            <!-- NOMBRE DEL CURSO -->
+            <h6 class="mb-3">
+              NOMBRE DEL CURSO:  {{ cursoNombre }}
+            </h6>
+          </div>
+
+          <!-- TÍTULO PRINCIPAL -->
+          <div class="card-header bg-institucional text-center">
+            <h4 class="mb-0">
+              <b>FORMATO 06</b>
+            </h4>
+          </div>
+
+          <div class="card-body">
+
+            <form>
+
+              <!-- ========================================= -->
+              <!-- INFORMACIÓN GENERAL -->
+              <!-- ========================================= -->
+
+              <div class="section-card">
+
+                <h5 class="section-title">
+                  1. DATOS INFORMATIVOS
+                </h5>
+
+                <table class="table table-bordered table-custom">
+
+                  <tbody>
+
+                    <!-- FECHA DE ELABORACIÓN -->
+                    <tr>
+                      <td class="label">
+                        Fecha de elaboración
+                      </td>
+
+                      <td>
+                        <input
+                          type="date"
+                          class="form-control"
+                          [(ngModel)]="formato6.fechaElaboracion"
+                          name="fechaElaboracion">
+                      </td>
+                    </tr>
+
+
+                    <!-- REQUERIMIENTO -->
+                    <tr>
+                      <td class="label">
+                        Requerimiento
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.requerimiento"
+                          name="requerimiento"
+                          placeholder="Ingrese el requerimiento">
+                      </td>
+                    </tr>
+
+
+                    <!-- UNIDAD RESPONSABLE -->
+                    <tr>
+                      <td class="label">
+                        Unidad responsable
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.unidadResponsable"
+                          name="unidadResponsable"
+                          placeholder="Ingrese la unidad responsable">
+                      </td>
+                    </tr>
+
+
+                    <!-- INSTRUCTORES -->
+                    <tr>
+                      <td class="label">
+                        Instructores
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.instructores"
+                          name="instructores"
+                          placeholder="Ingrese los instructores">
+                      </td>
+                    </tr>
+
+
+                    <!-- BENEFICIARIOS -->
+                    <tr>
+                      <td class="label">
+                        Beneficiarios
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.beneficiarios"
+                          name="beneficiarios"
+                          placeholder="Ingrese los beneficiarios">
+                      </td>
+                    </tr>
+
+
+                    <!-- PARALELO -->
+                    <tr>
+                      <td class="label">
+                        Paralelo
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.paralelo"
+                          name="paralelo"
+                          placeholder="Ingrese el paralelo">
+                      </td>
+                    </tr>
+
+
+                    <!-- MODALIDAD -->
+                    <tr>
+                      <td class="label">
+                        Modalidad
+                      </td>
+
+                      <td>
+                        <select
+                          class="form-control"
+                          [(ngModel)]="formato6.modalidad"
+                          name="modalidad">
+
+                          <option value="">
+                            Seleccionar
+                          </option>
+
+                          <option value="Presencial">
+                            Presencial
+                          </option>
+
+                          <option value="Virtual">
+                            Virtual
+                          </option>
+
+                          <option value="Híbrida">
+                            Híbrida
+                          </option>
+
+                        </select>
+                      </td>
+                    </tr>
+
+
+                    <!-- ÁREA -->
+                    <tr>
+                      <td class="label">
+                        Área
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.area"
+                          name="area"
+                          placeholder="Ingrese el área">
+                      </td>
+                    </tr>
+
+
+                    <!-- CARGA HORARIA -->
+                    <tr>
+                      <td class="label">
+                        Carga horaria
+                      </td>
+
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control"
+                          [(ngModel)]="formato6.cargaHoraria"
+                          name="cargaHoraria"
+                          placeholder="Ingrese la carga horaria">
+                      </td>
+                    </tr>
+
+
+                    <!-- PERIODOS -->
+                    <tr>
+                      <td class="label">
+                        Periodos
+                      </td>
+
+                      <td>
+                        <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="formato6.periodos"
+                        name="periodos"
+                        placeholder="Ingrese los periodos">
+                      </td>
+                      
+                    </tr>
+
+
+                    <!-- HORARIO -->
+                    <tr>
+                      <td class="label">
+                        Horario
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.horario"
+                          name="horario"
+                          placeholder="Ingrese el horario">
+                      </td>
+                    </tr>
+
+
+                    <!-- LUGAR -->
+                    <tr>
+                      <td class="label">
+                        Lugar
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.lugar"
+                          name="lugar"
+                          placeholder="Ingrese el lugar">
+                      </td>
+                    </tr>
+
+
+                    <!-- PRERREQUISITOS -->
+                    <tr>
+                      <td class="label">
+                        Prerrequisitos
+                      </td>
+
+                      <td>
+                        <textarea
+                          class="form-control"
+                          rows="3"
+                          [(ngModel)]="formato6.prerrequisitos"
+                          name="prerrequisitos"
+                          placeholder="Ingrese los prerrequisitos">
+                        </textarea>
+                      </td>
+                    </tr>
+
+
+                    <!-- TIPO DE CERTIFICADO -->
+                    <tr>
+                      <td class="label">
+                        Tipo de certificado
+                      </td>
+
+                      <td>
+                        <select
+                          class="form-control"
+                          [(ngModel)]="formato6.tipoCertificado"
+                          name="tipoCertificado">
+
+                          <option value="">
+                            Seleccionar
+                          </option>
+
+                          <option value="Aprobación">
+                            Aprobación
+                          </option>
+
+                          <option value="Asistencia">
+                            Asistencia
+                          </option>
+
+                        </select>
+                      </td>
+                    </tr>
+
+
+                    <!-- INVERSIÓN -->
+                    <tr>
+                      <td class="label">
+                        Inversión
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.inversion"
+                          name="inversion"
+                          placeholder="$">
+                      </td>
+                    </tr>
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+
+              <!-- ========================================= -->
+              <!-- BOTÓN GUARDAR -->
+              <!-- ========================================= -->
+
+              <div class="text-end mt-4">
+
+                <button
+                  type="button"
+                  class="btn btn-institucional px-5"
+                  (click)="guardarFormato6()">
+
+                  Guardar
+
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+</div>
+
+
+<style>
+
+:root {
+  --institucional: #916500;
+  --institucional-sec: #6c1313;
+  --fondo: #f7f6f2;
+  --texto: #333;
+}
+
+/* Encabezado */
+.bg-institucional {
+  background-color: var(--institucional) !important;
+  color: #fff;
+}
+
+/* Botón */
+.btn-institucional {
+  background-color: var(--institucional);
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-institucional:hover {
+  background-color: var(--institucional-sec);
+  color: #fff;
+}
+
+/* Tarjeta */
+.section-card {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  border-top: 4px solid var(--institucional);
+  box-shadow: 0 4px 10px rgba(0,0,0,.06);
+}
+
+/* Título */
+.section-title {
+  color: var(--institucional-sec);
+  font-weight: 700;
+  margin-bottom: 15px;
+  border-left: 6px solid var(--institucional);
+  padding-left: 12px;
+}
+
+/* Tabla */
+.table-custom {
+  border-color: #ddd;
+}
+
+.table-custom td {
+  vertical-align: middle;
+}
+
+/* Etiquetas */
+.table-custom .label {
+  width: 35%;
+  background: #faf7f2;
+  font-weight: 600;
+  color: var(--institucional-sec);
+}
+
+/* Inputs */
+.form-control:focus {
+  border-color: var(--institucional);
+  box-shadow: 0 0 0 0.15rem rgba(145, 101, 0, 0.25);
+}
+
+</style>

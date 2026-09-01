@@ -28,6 +28,9 @@ export class FormatounoverComponent implements OnInit {
   formatoIdSeleccionado: number;// Código del formato que estamos editando.
   cursoDefinidoGuardado: boolean = false;// Indica si el curso ya fue guardado correctamente.
 
+  cursoGuardado: boolean = false; // Indica si el curso ya fue guardado correctamente.
+  cursoGuardadoNombre: string = '';// Guarda el nombre del curso que se acaba de guardar
+
 
   index: number = 1;
   pages: number = 1;
@@ -251,6 +254,7 @@ export class FormatounoverComponent implements OnInit {
 
   //Gaurda la tematica final nombre del curso
 
+
 guardarTematicaFinal() {
 
   // Verificamos que exista un formato seleccionado.
@@ -302,8 +306,26 @@ guardarTematicaFinal() {
           'Curso definido guardado correctamente'
         );
 
-        // Ocultamos el input y el botón.
+        // Ocultamos el input y el botón de guardar.
         this.cursoDefinidoGuardado = true;
+
+        // =====================================================
+        // MOSTRAR BOTÓN PARA CONTINUAR CON EL FORMATO 6
+        // =====================================================
+
+        this.cursoGuardado = true;
+
+        // Guardamos el nombre del curso para enviarlo al Formato 6
+        this.cursoGuardadoNombre = cursoNombre;
+
+         // Guardar temporalmente el curso para el Formato 6
+        sessionStorage.setItem(
+          'cursoFormato6',
+          cursoNombre
+        );
+
+        // Limpiamos el contenido del input.
+        this.tematicaNuevaEditada = '';
 
       } else {
 
@@ -327,7 +349,6 @@ guardarTematicaFinal() {
 
   });
 }
-
 
   seleccionarTematica(tematica: string) {
 
@@ -1391,5 +1412,29 @@ console.log(
       }
     });
   }
+
+ seguirFormato6() {
+
+  // =====================================================
+  // CERRAR EL MODAL
+  // =====================================================
+
+  const botonCerrar = document.querySelector(
+    '#exampleModalRespons .btn-close'
+  ) as HTMLElement;
+
+  if (botonCerrar) {
+
+    botonCerrar.click();
+
+  }
+
+  // =====================================================
+  // NAVEGAR AL FORMATO 6
+  // =====================================================
+
+  this.router.navigate(['/formatoseis']);
+
+}
 
 }

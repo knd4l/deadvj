@@ -1,6 +1,17 @@
+<!-- MENÚ LATERAL -->
 <app-menu *ngIf="auth.isLogged()"></app-menu>
-<div class="container">
+
+<!-- CONTENIDO PRINCIPAL -->
+<div id="layoutSidenav_content">
+
+    <!-- HEADER / NAV SUPERIOR -->
     <app-nav></app-nav>
 
-    <router-outlet></router-outlet>
+    <!-- CONTENIDO DE CADA COMPONENTE -->
+    <main class="py-4">
+
+        <router-outlet></router-outlet>
+
+    </main>
+
 </div>
