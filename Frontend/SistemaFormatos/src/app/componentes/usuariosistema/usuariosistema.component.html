@@ -1,0 +1,51 @@
+
+<body class="sb-nav-fixed">
+    <div id="layoutSidenav">
+    <div id="layoutSidenav_content">
+      <main>
+
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-25">
+                                <div class="card shadow-lg border-0 rounded-lg mt-10">
+                                    <div class="card-header"><h3 class="text-center font-weight-light my-6">Registro de Usuarios</h3></div>
+                                    <div class="card-body">
+                                        <form>
+                                             <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                                                <input class="form-control"  id="txt_cedula" type="text" placeholder="Identificación" maxlength="10" (change)="checkCedula()"/>
+
+                                            </div>
+                                            <div class="d-flex align-items-center mt-3 mb-0">
+                                                <input class="form-control" id="txt_nombres" type="text" placeholder="Nombres" />
+                                                <input class="form-control" id="txt_apellidos" type="text" placeholder="Apellidos" />
+
+                                            </div>
+                                            <div class="d-flex align-items-center mt-3 mb-0">
+                                                <input class="form-control" id="txt_telefono" type="text" placeholder="telefono" maxlength="10" />
+                                                <input class="form-control" id="txt_correoins" type="text" placeholder="Correo institucional" (change)="checkCorreo()" />
+
+                                            </div>
+                                            <div class="d-flex align-items-right justify-content-between mt-4 mb-0">
+                                                <a></a>
+                                                <a class="btn btn-primary" data-dismiss="modal" (click)="GuardarUsuario()">Guardar</a>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="card-footer text-center py-3">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+      </main>
+
+    </div>
+    </div>
+
+
+    </body>
+
+<script></script>

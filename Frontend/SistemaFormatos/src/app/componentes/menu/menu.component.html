@@ -1,0 +1,138 @@
+<div id="layoutSidenav" >
+    <div id="layoutSidenav_nav">
+        <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion" style="background-color: #f5f5f5E6;" >
+
+          <div class="sb-sidenav-menu">
+
+            <div class="nav">
+              <div class="sb-sidenav-footer" style="background-color: #6c1313;color: white;">
+                <div class="small"><br>
+                {{this.nombresUsuario}}</div></div>
+                <div class="sb-sidenav-menu-heading">MENU PRINCIPAL</div>
+                <a id="BannerUsuarios" class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseUsers" aria-expanded="true" aria-controls="collapseLayoutsusu">
+                    <div class="sb-nav-link-icon" ><i class="fa fa-user fa-lg" ></i></div>
+                    FORMATO UNO
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseUsers" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" routerLink="formatouno"> Crear formato</a>
+                        <a class="nav-link" routerLink="verformatouno">Ver formato</a>
+
+                    </nav>
+                </div>
+
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                    <div class="sb-nav-link-icon"><i class="fa fa-columns fa-lg"></i></div>
+                    CONTRATO
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a  class="nav-link" routerLink="crearcontrato">Crear Contrato</a>
+                        <a class="nav-link" routerLink="vercontrato">Ver Contrato</a>
+                    </nav>
+                </div>
+                <a  id="BanerModulos" class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePages" aria-expanded="false" aria-controls="collapsePages">
+                    <div class="sb-nav-link-icon"><i class="fas fa-book-open fa-lg"></i></div>
+                    FORMATO TRES
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down "></i></div>
+                </a>
+                <div class="collapse" id="collapsePages" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionPages">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapseAuth" aria-expanded="false" aria-controls="pagesCollapseAuth">
+                            Facultades
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="pagesCollapseAuth" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" routerLink="crearfacultades">Crear Facultades</a>
+                                <a class="nav-link" routerLink="listarfacultades">Ver Facultades</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapsProgramas" aria-expanded="false" aria-controls="pagesCollapseError">
+                            Programas
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="pagesCollapsProgramas" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" routerLink="crearprogramas">Crear Programa</a>
+                                <a class="nav-link" routerLink="listarprogramas">Ver Programa</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapseModulos" aria-expanded="false" aria-controls="pagesCollapseError">
+                            Módulos
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="pagesCollapseModulos" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
+                            <nav class="sb-sidenav-menu-nested nav">
+
+                                <a class="nav-link" routerLink="crearmodulos">Crear Módulo</a>
+                                <a class="nav-link" routerLink="listarmodulos">Ver Módulos</a>
+                            </nav>
+                        </div>
+                    </nav>
+                </div>
+
+                <a  class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayoutsDeadv" aria-expanded="false" aria-controls="collapseLayouts">
+                  <div class="sb-nav-link-icon"><i class="fa fa-columns fa-lg"></i></div>
+                  FORMATO CUATRO
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+              </a>
+              <div  class="collapse" id="collapseLayoutsDeadv" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                      <a class="nav-link" routerLink="creardeadv">Crear formulario</a>
+                      <a class="nav-link" routerLink="verdeadv">Ver Formularios</a>
+                  </nav>
+              </div>
+
+              <!--SE AGREGO EL FORMATO SEIS -->
+              <a class="nav-link collapsed" 
+                 href="#FormatoSeisDeadv" 
+                 data-bs-toggle="collapse"
+                 role="button" 
+                 data-bs-target="#FormatoSeisDeadv" 
+                 aria-expanded="false" 
+                 aria-controls="FormatoSeisDeadv">
+
+                <div class="sb-nav-link-icon">
+                    <i class="fa fa-columns fa-lg"></i>
+                </div>
+
+                  FORMATO SEIS
+
+                <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                </div>
+              </a>
+              <div  class="collapse" 
+                    id="FormatoSeisDeadv" 
+                    aria-labelledby="headingOne" 
+                    data-bs-parent="#sidenavAccordion">
+
+                  <nav class="sb-sidenav-menu-nested nav">
+                      <a class="nav-link" routerLink="creardeadv">Crear formulario</a>
+                      <a class="nav-link" routerLink="verdeadv">Ver Formularios</a>
+                  </nav>
+              </div>
+
+              <!--PERFIL-->
+                <a routerLink="/miperfil" class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePerfil" aria-expanded="true" aria-controls="collapseLayoutperfil">
+                  <div routerLink="/miperfil" class="sb-nav-link-icon"><i class="fa fa-street-view fa-lg"></i></div>
+                  MI PERFIL
+              </a>
+              <a (click)="logout()"  class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSalir" aria-expanded="true" aria-controls="collapseLayoutsalir">
+                    <div (click)="logout()"  class="sb-nav-link-icon"><i class="fa fa-times-circle fa-lg"></i></div>
+                    SALIR
+                </a>
+
+            </div>
+
+        </div>
+       <!--     <div class="sb-sidenav-footer" style="background-color: #eb822c;color: white;">
+                <div class="small">Bienvenid@:<br>
+                {{this.nombresUsuario}}</div></div>-->
+        </nav>
+    </div>
+
+</div>

@@ -1,0 +1,226 @@
+<div class="sb-nav-fixed bg-light">
+
+  <div id="layoutSidenav">
+    <div id="layoutSidenav_content">
+
+      <main class="container-fluid px-4">
+
+        <!-- Modal Responsable-->
+          <div class="modal fade" 
+                id="exampleModalRespons" 
+                tabindex="-1" 
+                aria-labelledby="exampleModalRespons"
+                aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="exampleModalRespons">Tematicas Tentativas</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+            <div class="modal-body">
+            <form>
+            
+
+            <ul style="cursor: pointer"  class="form-autocomplete-suggestions"  id="some-list"  role="listbox"  aria-label="Sugerencias"  tabindex="-1">
+           <li 
+              *ngFor="let tematica of tematicasSeleccionadas"
+              (click)="seleccionarTematica(tematica)"
+              style="padding: 0.25rem 1.5rem; font-size: 95%;" 
+              role="option">
+
+              {{ tematica }}
+
+            </li>
+            </ul>
+             <!-- USUARIO SELECCIONADO -->
+              <div
+              *ngIf="tematicaSeleccionada"                                                      
+              class="alert alert-success mt-3">
+
+              <strong>tematica seleccionada:</strong>
+              <br>
+              {{ tematicaSeleccionada }}
+
+            </div>
+            <div class="mb-3">
+            <input type="text"
+                    class="form-control form-control-warning"
+                    name="tematicaNuevaEditada"
+                    id="inputcedulamodalresp"
+                    placeholder="Defina el nombre del curso"
+                    [(ngModel)]="tematicaNuevaEditada">
+            </div>
+          <!-- BOTONES -->
+          <div class="d-flex align-items-right justify-content-between mt-4 mb-0">
+
+            <button
+              type="button"
+              class="btn btn-rojo"
+              tabindex="-1" data-bs-dismiss="modal"
+              >
+
+              Cancelar
+
+            </button>
+
+            <button
+              *ngIf="tematicaSeleccionada && !cursoDefinidoGuardado"
+              type="button"
+              class="btn btn-azul"
+              (click)="guardarTematicaFinal()">
+              Guardar
+
+            </button>
+
+            <div
+              *ngIf="cursoDefinidoGuardado"
+              class="alert alert-success mt-3">
+
+              <strong>¡Guardado correctamente!</strong>
+
+              <br>
+
+              El curso definido
+              <strong>{{ tematicaNuevaEditada }}</strong>
+              se ha guardado correctamente.
+
+        </div>
+
+          </div>
+
+          
+          </form>
+
+                 </div>
+
+                    </div>
+                          </div>
+                              </div>
+
+
+        <!-- TÍTULO -->
+        <div class="card shadow border-0 my-4">
+          <div class="card-header bg-institucional text-center">
+            <h4 class="mb-0"><b>LISTA DE FORMATOS 01</b></h4>
+          </div>
+          
+          <div class="card-body">
+
+            <div class="table-responsive">
+
+              <table class="table table-bordered table-hover table-custom text-center align-middle">
+
+                <thead>
+                  <tr>
+                    <th>Tipo Capacitación</th>
+                    <th>Institución</th>
+                    <th>Modalidad</th>
+                    <th>Contacto</th>
+                    <th>Temáticas</th>
+                    <th>Acciones</th>
+                    <th>Validaciones</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  <tr *ngFor="let formato of listaformatos1 | paginate: { itemsPerPage: 30, currentPage: pages }">
+                    <td>{{ formato.tipo_capac_nombre }}</td>
+                    <td>{{ formato.formato1_institucion }}</td>
+                    <td>{{ formato.modalidad_nombre }}</td>
+                    <td>{{ formato.formato1_persona_contacto }}</td>
+                    <td>{{ formato.formato1_tematicas }}</td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-institucional"
+                        (click)="verFormularioPDF(formato.id)">
+                        <i class="fa fa-file-pdf"></i> Ver
+                      </button>    
+                    </td>
+
+                    <!-- NUEVA COLUMNA: VALIDACIONES -->
+                    <td>
+                      
+                      <button
+                        class="btn btn-sm btn-institucional"
+                        (click)="abrirModalResponsable(formato.formato1_tematicas, formato.id)"
+                        data-bs-toggle="modal"
+                        data-bs-target="#exampleModalRespons">     
+                        Temática
+                      </button>
+                    </td>
+                  </tr>
+
+                  <tr *ngIf="listaformatos1?.length === 0">
+                    <td colspan="7" class="text-muted text-center">
+                      No existen registros
+                    </td>
+
+                    
+                  </tr>
+
+                </tbody>
+
+              </table>
+            </div>
+
+            <!-- PAGINACIÓN -->
+            <div class="d-flex justify-content-center mt-4">
+              <pagination-controls
+                (pageChange)="pages = $event"
+                previousLabel="Anterior"
+                nextLabel="Siguiente">
+              </pagination-controls>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+</div>
+<style
+>
+
+/* Header principal */
+.bg-institucional {
+  background-color: var(--institucional);
+  color: #fff;
+}
+
+/* Tabla */
+.table-custom th {
+  background: #f4efe6;
+  color: var(--institucional-sec);
+  font-weight: 700;
+}
+
+.table-custom td {
+  vertical-align: middle;
+}
+
+/* Botón institucional */
+.btn-institucional {
+  background-color: var(--institucional);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-institucional:hover {
+  background-color: var(--institucional-sec);
+  color: #fff;
+}
+
+/*"Validar temáticas" aparezca en dos líneas */
+.boton-validar {
+  width: 90px;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+
+</style>

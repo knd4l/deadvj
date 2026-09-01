@@ -1,0 +1,190 @@
+<div class="sb-nav-fixed bg-light">
+
+  <div id="layoutSidenav">
+  <div id="layoutSidenav_content">
+
+  <main class="container-fluid px-4">
+
+  <!-- CARD PRINCIPAL -->
+  <div class="card shadow border-0 my-4">
+
+  <div class="card-header bg-institucional text-center">
+  <h4 class="mb-0"><b>CONTRATO</b></h4>
+  </div>
+
+  <div class="card-body">
+
+  <form>
+
+  <!-- ========================= -->
+  <!-- INFORMACIÓN INSTITUCIÓN -->
+  <!-- ========================= -->
+
+  <div class="section-card">
+
+  <h5 class="section-title">
+  Información de la Institución / Empresa
+  </h5>
+
+  <div class="row g-3">
+
+  <div class="col-md-6">
+  <label class="form-label label">Tipo de necesidad</label>
+
+  <select class="form-control" id="tematica" (change)="consultaporSeleccion()">
+
+  <option value="">Seleccionar</option>
+
+  <option *ngFor="let tem of tematicas" [value]="tem.temid">
+    {{ tem.temnombre}}
+  </option>
+
+  </select>
+
+  </div>
+
+  <div class="col-md-6">
+  <label class="form-label label">Modalidad</label>
+  <input class="form-control" id="docucapacitacion" readonly>
+  </div>
+
+  <div class="col-md-6">
+  <label class="form-label label">Institución</label>
+  <input class="form-control" id="institucion">
+  </div>
+
+  <div class="col-md-6">
+  <label class="form-label label">Persona de contacto</label>
+  <input class="form-control" id="personacontacto">
+  </div>
+
+  <div class="col-md-6">
+  <label class="form-label label">Dirección</label>
+  <input class="form-control" id="direccion">
+  </div>
+
+  <div class="col-md-3">
+  <label class="form-label label">Teléfono</label>
+  <input class="form-control" id="telefono">
+  </div>
+
+  <div class="col-md-3">
+  <label class="form-label label">Correo</label>
+  <input class="form-control" id="correo">
+  </div>
+
+  </div>
+  </div>
+
+
+
+  <!-- ========================= -->
+  <!-- BOTONES -->
+  <!-- ========================= -->
+
+  <div class="text-end mt-4">
+
+  <button
+  class="btn btn-institucional px-5 me-2"
+  type="button"
+  (click)="guardarContrato()">
+
+  Guardar
+
+  </button>
+
+  <button
+  class="btn btn-institucional px-5"
+  type="button"
+  (click)="guardarContrato()">
+
+  Ver
+
+  </button>
+
+  </div>
+
+
+  </form>
+
+  </div>
+  </div>
+
+  </main>
+
+  </div>
+  </div>
+  </div>
+
+
+  <style>
+:root {
+  --institucional: #916500;      /* Dorado */
+  --institucional-sec: #6c1313;  /* Vino */
+  --fondo: #f7f6f2;
+  --texto: #333;
+}
+
+/* Encabezado principal */
+.bg-institucional {
+  background-color: var(--institucional) !important;
+  color: #fff;
+}
+
+/* Botón principal */
+.btn-institucional {
+  background-color: var(--institucional);
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-institucional:hover {
+  background-color: var(--institucional-sec);
+  color: #fff;
+}
+
+/* Tarjetas de sección */
+.section-card {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  border-top: 4px solid var(--institucional);
+  box-shadow: 0 4px 10px rgba(0,0,0,.06);
+}
+
+/* Títulos de sección */
+.section-title {
+  color: var(--institucional-sec);
+  font-weight: 700;
+  margin-bottom: 15px;
+  border-left: 6px solid var(--institucional);
+  padding-left: 12px;
+}
+
+/* Tabla */
+.table-custom {
+  border-color: #ddd;
+}
+
+.table-custom td {
+  vertical-align: middle;
+}
+
+/* Etiquetas izquierda */
+.table-custom .label {
+  width: 35%;
+  background: #faf7f2;
+  font-weight: 600;
+  color: var(--institucional-sec);
+}
+
+/* Inputs */
+.form-control:focus {
+  border-color: var(--institucional);
+  box-shadow: 0 0 0 0.15rem rgba(145, 101, 0, 0.25);
+}
+
+  </style>

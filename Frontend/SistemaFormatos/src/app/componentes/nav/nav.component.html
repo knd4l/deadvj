@@ -1,0 +1,26 @@
+<nav class="sb-topnav navbar navbar-expand"
+     style="background-color: #f5f5f5E6; height: 75px;">
+  <!-- bg-light-->
+    <a class="logo">
+        <h1><img class="sp-default-logo hidden-xs" width="220" height="80" src="https://deadv.uta.edu.ec/images/2017/componentes/logo2020.png" alt="DEaDV"></h1>
+    </a>
+    <!-- Navbar Brand https://deadv.uta.edu.ec/images/2017/componentes/logo2020.png-->
+
+    <!-- Sidebar Toggle-->
+
+    <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!" style="color: #520B13;"><i class="fas fa-bars"></i></button>
+    <!-- Navbar Search-->
+    <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+      <div class="navbar-user" *ngIf="nombreUsuario" >
+        Bienvenido,
+        <strong>{{ nombreUsuario }}</strong>
+        <br>
+        <small>{{ emailUsuario }}</small>
+      </div>
+
+    </form>
+    <!-- Navbar-->
+
+
+</nav>
+

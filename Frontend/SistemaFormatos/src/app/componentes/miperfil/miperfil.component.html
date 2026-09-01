@@ -1,0 +1,59 @@
+
+<body class="sb-nav-fixed">
+  <div id="layoutSidenav">
+  <div id="layoutSidenav_content">
+    <main>
+      <br>
+      <h1 _ngcontent-rrl-c51="" class="mt-4"></h1>
+                  <div class="container">
+                      <div class="row justify-content-center">
+                          <div class="col-lg-25">
+                              <div class="card shadow-lg border-0 rounded-lg mt-10">
+                                  <div class="card-header"><h3 class="text-center font-weight-light my-6">Mi perfil</h3></div>
+                                  <div class="card-body">
+                                      <form>
+                                        <div class="d-flex align-items-center mt-3 mb-0">
+                                              <input class="form-control" id="txt_cedula" type="text" readonly="true" placeholder="Identificación" maxlength="10"/>&nbsp;&nbsp;&nbsp;
+                                              <input class="form-control" id="txt_rol" type="text" readonly="true" placeholder="Rol" />
+                                          </div>
+                                          <div class="d-flex align-items-center mt-3 mb-0">
+                                            <input class="form-control" id="txt_nombres" type="text"  readonly="true" placeholder="Nombres" oninput="javascript:this.value=this.value.toUpperCase();" (input)="validarNombre($event)"/>&nbsp;&nbsp;&nbsp;
+                                            <input class="form-control" id="txt_apellidos" type="text" readonly="true" placeholder="Apellidos" oninput="javascript:this.value=this.value.toUpperCase();" (input)="validarApellido($event)"/>
+
+                                        </div>
+                                        <div class="d-flex align-items-center mt-3 mb-0">
+                                            <input class="form-control" id="txt_telefono" type="text" readonly="true" maxlength="10" placeholder="Teléfono" (input)="validarTelefono($event)" />&nbsp;&nbsp;&nbsp;
+                                            <input class="form-control" id="txt_correoins" type="text" readonly="true" placeholder="Correo institucional" />
+
+                                        </div>
+                                        <!--  <div class="d-flex align-items-center mt-3 mb-0">
+                                              <input class="form-control" id="txt_usu" type="text" placeholder="Usuario" />
+                                              &nbsp;&nbsp;&nbsp;
+                                              <input class="form-control" id="txt_contrase" type="text" placeholder="Contraseña" />
+
+                                          </div>-->
+                                          <div class="d-flex align-items-right justify-content-between mt-4 mb-0">
+                                              <a class="btn btn-primary" data-dismiss="modal" routerLink="/principal">Volver</a>
+                                           <!--   <a class="btn btn-primary" data-dismiss="modal" (click)="onClickActualizar()">Actualizar</a>-->
+                                          </div>
+                                      </form>
+                                  </div>
+                                  <div class="card-footer text-center py-3">
+
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+
+    </main>
+
+  </div>
+  </div>
+
+
+  </body>
+
+<script></script>
+

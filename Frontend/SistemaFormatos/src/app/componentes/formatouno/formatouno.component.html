@@ -1,0 +1,423 @@
+<div class="sb-nav-fixed bg-light">
+
+  <div id="layoutSidenav">
+    <div id="layoutSidenav_content">
+
+      <main class="container-fluid px-4">
+
+        <!-- TÍTULO PRINCIPAL -->
+        <div class="card shadow border-0 my-4">
+          <div class="card-header bg-institucional text-center">
+            <h4 class="mb-0"><b>FORMATO 01</b></h4>
+          </div>
+
+          <div class="card-body">
+
+            <form [formGroup]="formato1Form" novalidate>
+
+              <!-- INFORMACIÓN INSTITUCIÓN -->
+              <div class="section-card">
+                <h5 class="section-title">Información de la Institución / Empresa</h5>
+
+                <table class="table table-bordered table-custom">
+                  <tbody>
+
+                    <tr>
+                      <td class="label">Tipo de necesidad</td>
+                      <td>
+                        <select class="form-control" formControlName="tipocapacitacion">
+                          <option value="">Seleccionar</option>
+                          <option *ngFor="let t of tipocapacitacion"
+                                  [value]="t.tipo_capac_codigo">
+                            {{ t.tipo_capac_nombre }}
+                          </option>
+                        </select>
+                        <input class="form-control" formControlName="docucapacitacion">
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Institución</td>
+                      <td><input class="form-control" formControlName="institucion"></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Persona de contacto</td>
+                      <td><input class="form-control" formControlName="personacontacto"></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Dirección</td>
+                      <td><input class="form-control" formControlName="direccion"></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Teléfono</td>
+                      <td><input class="form-control" formControlName="telefono"></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Correo electrónico</td>
+                      <td><input class="form-control" formControlName="correo"></td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- DETALLE CAPACITACIÓN -->
+              <div class="section-card">
+                <h5 class="section-title">Detalle de la Capacitación</h5>
+
+                <table class="table table-bordered table-custom">
+                  <tbody>
+
+                    <tr>
+                      <td class="label">Temáticas tentativas</td>
+                      <td formArrayName="tematicas">
+                        <input class="form-control mb-2" [formControlName]="0">
+                        <input class="form-control mb-2" [formControlName]="1">
+                        <input class="form-control" [formControlName]="2">
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Modalidad</td>
+                      <td>
+                        <select class="form-control" formControlName="modalidad">
+                          <option value="">Seleccionar</option>
+                          <option *ngFor="let m of modalidadcapacitacion"
+                                  [value]="m.modalidad_codigo">
+                            {{ m.modalidad_nombre }}
+                          </option>
+                        </select>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Mes de ejecución</td>
+                      <td>
+                      <select class="form-control" formControlName="mesejecucion">
+                        <option value="">Seleccionar</option>
+                        <option value="Enero">Enero</option>
+                        <option value="Febrero">Febrero</option>
+                        <option value="Marzo">Marzo</option>
+                        <option value="Abril">Abril</option>
+                        <option value="Mayo">Mayo</option>
+                        <option value="Junio">Junio</option>
+                        <option value="Julio">Julio</option>
+                        <option value="Agosto">Agosto</option>
+                        <option value="Septiembre">Septiembre</option>
+                        <option value="Octubre">Octubre</option>
+                        <option value="Noviembre">Noviembre</option>
+                        <option value="Diciembre">Diciembre</option>
+                      </select></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Número de personas</td>
+                      <td><input class="form-control" formControlName="numeropersonas"></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Carga horaria</td>
+                      <td><input class="form-control" formControlName="cargahoraria"></td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- PROPUESTA -->
+              <div class="section-card">
+                <h5 class="section-title">Propuesta de Capacitación</h5>
+
+                <table class="table table-bordered table-custom">
+                  <tbody>
+
+                    <tr>
+                      <td class="label">Instructores tentativos</td>
+                      <td formArrayName="instructores">
+                        <input class="form-control mb-2" [formControlName]="0">
+                        <input class="form-control mb-2" [formControlName]="1">
+                        <input class="form-control" [formControlName]="2">
+                      </td>
+
+                    </tr>
+
+                    <tr>
+                      <td class="label">Fecha de ejecución</td>
+                      <td><input class="form-control" type="date" formControlName="fechaejecucion"></td>
+                    </tr>
+
+                    <tr>
+                      <td class="label">Inversión</td>
+                      <td><input class="form-control" placeholder="$" formControlName="inversion"></td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- CONSECUENCIAS -->
+              <div class="section-card">
+                <h5 class="section-title">CONSECUENCIAS POTENCIALES DE NO EJECUTAR EL EVENTO DE CAPACITACIÓN</h5>
+
+                <table class="table table-bordered table-custom">
+                  <tbody>
+
+                    <tr>
+                      <td>
+                        <input class="form-control mb-2" formControlName="consecuencia1">
+                        <input class="form-control mb-2" formControlName="consecuencia2">
+                        <input class="form-control" formControlName="consecuencia3">
+
+                      </td>
+
+                    </tr>
+
+
+
+                  </tbody>
+                </table>
+              </div>
+
+
+
+
+
+                          <!-- DOCUMENTOS ANEXOS -->
+            <div class="section-card mt-4">
+              <h5 class="section-title">Documentos Anexos</h5>
+
+              <table class="table table-bordered table-custom">
+                <tbody>
+
+                  <!-- ACTA DE TRABAJO (TEXTO) -->
+            <!-- ACTA DE TRABAJO -->
+            <tr>
+              <td class="label">Acta de Trabajo</td>
+              <td colspan="2">
+                <input type="checkbox"
+                      class="form-check-input me-2"
+                      formControlName="actaTrabajo">
+
+                <input type="text"
+                      class="form-control mt-2"
+                      placeholder="Detalle del acta de trabajo"
+                      formControlName="actaTrabajoTexto">
+              </td>
+            </tr>
+
+
+            <!-- ACUERDO DE CALIDAD
+            <tr>
+              <td class="label">Acuerdo de Calidad</td>
+              <td>
+                <input type="checkbox"
+                      class="form-check-input me-2"
+                      formControlName="acuerdoCalidad">
+
+                <input type="file"
+                      class="form-control mt-2"
+                      formControlName="acuerdoCalidadFile"
+                      (change)="onFileSelected($event, 'acuerdoCalidadFile')">
+              </td>
+            </tr>-->
+
+            <!-- CRITERIO DE CALIFICACIÓN
+            <tr>
+              <td class="label">Criterio de Calificación</td>
+              <td>
+                <input type="checkbox"
+                      class="form-check-input me-2"
+                      formControlName="criterioCalificacion">
+
+                <input type="file"
+                      class="form-control mt-2"
+                      formControlName="criterioCalificacionFile"
+                      (change)="onFileSelected($event, 'criterioCalificacionFile')">
+              </td>
+            </tr>-->
+
+
+
+
+
+            <tr>
+              <td class="label">Acuerdo de Calidad</td>
+
+              <td>
+                <input type="checkbox"
+                      class="form-check-input me-2"
+                      formControlName="acuerdoCalidad">
+                <input
+                  type="file"
+                  id="txtfile_acuerdo"
+                  class="form-control"
+                  (change)="seleccionarArchivo($event)">
+
+                </td>
+                <td>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="upload()">
+                  <i class="fas fa-upload"></i>&nbsp; SUBIR
+                </button>
+
+                <p *ngIf="archivoSubidoHV" style="color:white; background-color:green; padding:6px">
+                  Su documento se ha subido con éxito
+                  <i class="fa fa-check"></i>
+                </p>
+              </td>
+
+
+
+            </tr>
+
+            <!-- CRITERIO DE CALIFICACIÓN -->
+            <tr>
+              <td class="label">Criterio de Calificación</td>
+
+              <td>
+                <input type="checkbox"
+                      class="form-check-input me-2"
+                      formControlName="criterioCalificacion">
+                <input
+                  type="file"
+                  id="txtfile_criterio"
+                  class="form-control"
+                  (change)="seleccionarArchivo_Crit($event)">
+
+                </td>
+                <td>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="upload_Crit()">
+                  <i class="fas fa-upload"></i>&nbsp; SUBIR
+                </button>
+
+                <p *ngIf="archivoSubido_crit" style="color:white; background-color:green; padding:6px">
+                  Su documento se ha subido con éxito
+                  <i class="fa fa-check"></i>
+                </p>
+              </td>
+
+
+
+            </tr>
+
+
+
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div class="text-danger text-center mt-2"
+                            *ngIf="formato1Form.errors && formato1Form.touched">
+                          Complete el texto o adjunte el archivo según el documento seleccionado
+                        </div>
+
+
+
+
+              <!-- BOTÓN -->
+              <div class="text-end mt-4">
+                <button class="btn btn-institucional px-5"
+                        type="button"
+                        (click)="guardarformato1()">
+                   Guardar
+                </button>
+                <button class="btn btn-institucional px-5"
+                        type="button"
+                        (click)="guardarprueba()">
+                   ver
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+</div>
+
+
+  <style>
+:root {
+  --institucional: #916500;      /* Dorado */
+  --institucional-sec: #6c1313;  /* Vino */
+  --fondo: #f7f6f2;
+  --texto: #333;
+}
+
+/* Encabezado principal */
+.bg-institucional {
+  background-color: var(--institucional) !important;
+  color: #fff;
+}
+
+/* Botón principal */
+.btn-institucional {
+  background-color: var(--institucional);
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-institucional:hover {
+  background-color: var(--institucional-sec);
+  color: #fff;
+}
+
+/* Tarjetas de sección */
+.section-card {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  border-top: 4px solid var(--institucional);
+  box-shadow: 0 4px 10px rgba(0,0,0,.06);
+}
+
+/* Títulos de sección */
+.section-title {
+  color: var(--institucional-sec);
+  font-weight: 700;
+  margin-bottom: 15px;
+  border-left: 6px solid var(--institucional);
+  padding-left: 12px;
+}
+
+/* Tabla */
+.table-custom {
+  border-color: #ddd;
+}
+
+.table-custom td {
+  vertical-align: middle;
+}
+
+/* Etiquetas izquierda */
+.table-custom .label {
+  width: 35%;
+  background: #faf7f2;
+  font-weight: 600;
+  color: var(--institucional-sec);
+}
+
+/* Inputs */
+.form-control:focus {
+  border-color: var(--institucional);
+  box-shadow: 0 0 0 0.15rem rgba(145, 101, 0, 0.25);
+}
+
+  </style>
