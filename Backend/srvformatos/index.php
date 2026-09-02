@@ -88,7 +88,9 @@ if ($view == "no identificado" || $view == "none") {
 		'insertconsecuencia'=>true,
 		'verdatosRoles'=>true,
 		'getformato1Reporte'=>true,
-		'insertCursoDefinido'=>true	
+		'insertCursoDefinido'=>true,
+		'getformato1PorCodigo'=>true,
+		'insertformato6'=>true
 		
 	);
 

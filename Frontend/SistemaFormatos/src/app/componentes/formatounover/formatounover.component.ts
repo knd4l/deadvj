@@ -1415,9 +1415,7 @@ console.log(
 
  seguirFormato6() {
 
-  // =====================================================
   // CERRAR EL MODAL
-  // =====================================================
 
   const botonCerrar = document.querySelector(
     '#exampleModalRespons .btn-close'
@@ -1428,12 +1426,21 @@ console.log(
     botonCerrar.click();
 
   }
+  if(!this.formatoIdSeleccionado){
+    console.log("No existe un formato seleccionado");
+    return;
+  }
 
-  // =====================================================
-  // NAVEGAR AL FORMATO 6
-  // =====================================================
+  console.log("Enviando ID del formato 1 al Formato 6",
+    this.formatoIdSeleccionado);
 
-  this.router.navigate(['/formatoseis']);
+  // NAVEGAR AL FORMATO 6 enviando el id
+
+  this.router.navigate(['/formatoseis'],{
+    queryParams:{
+      formato1_codigo:this.formatoIdSeleccionado
+    }
+  });
 
 }
 

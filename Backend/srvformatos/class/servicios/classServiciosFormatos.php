@@ -1102,6 +1102,212 @@ var_dump($e);
     } 
 }
 
+// =====================================================
+// OBTENER UN FORMATO 1 POR SU CÓDIGO
+// SE UTILIZA PARA CARGAR LOS DATOS EN FORMATO 6
+// =====================================================
+
+public function getformato1PorCodigo($codigo){
+
+$codigo=$codigo->formato1_codigo;
+
+    try {
+
+        $result = array();
+
+        $get_Dataa = "
+        SELECT
+
+            f1.formato1_codigo,
+
+            f1.formato1_fecha_ejecucion,
+
+            tc.tipo_capac_nombre,
+
+            mc.modalidad_nombre,
+
+            f1.formato1_carga_horaria,
+
+            f1.formato1_inversion,
+
+            GROUP_CONCAT(
+                DISTINCT it.instructorest_nombre
+                SEPARATOR ', '
+            ) AS instructores_tentativos
+
+        FROM formato1 f1
+
+        LEFT JOIN modalidad_capacitacion mc
+            ON f1.formato1_modalidad = mc.modalidad_codigo
+
+        LEFT JOIN tipo_capacitacion tc
+            ON f1.formato1_tipo_capacitacion = tc.tipo_capac_codigo
+
+        LEFT JOIN instructores_tentativosf1 it
+            ON f1.formato1_codigo = it.instructorest_codigof1
+            AND it.instructorest_estado = 'Activo'
+
+        WHERE f1.formato1_codigo = :formato1_codigo
+        AND f1.formato1_estado = 'Activo'
+
+        GROUP BY
+
+            f1.formato1_codigo,
+            f1.formato1_fecha_ejecucion,
+            tc.tipo_capac_nombre,
+            mc.modalidad_nombre,
+            f1.formato1_carga_horaria,
+            f1.formato1_inversion
+        ";
+
+        $dbc = $this->getInitDatabase();
+
+        if ($dbc->getEstado()->codigo == 0) {
+
+            // =====================================================
+            // ENVIAR CÓDIGO DEL FORMATO 1
+            // =====================================================
+
+            $dbc->query($get_Dataa);
+
+            //Intentamos hacer el bind
+            $dbc->bind(
+                ":formato1_codigo",
+                $codigo
+            );
+
+            
+
+            $dbc->execute();
+
+            
+
+            $tabla = $dbc->getTabla();
+
+            if ($dbc->rowCount() > 0) {
+
+                foreach ($tabla as $row) {
+
+                    $item = new stdClass();
+
+                    $item->formato1_codigo =
+                        $row['formato1_codigo'];
+
+                    $item->formato1_fecha_ejecucion =
+                        $row['formato1_fecha_ejecucion'];
+
+                    $item->tipo_capac_nombre =
+                        $row['tipo_capac_nombre'];
+
+                    $item->modalidad_nombre =
+                        $row['modalidad_nombre'];
+
+                    $item->formato1_carga_horaria =
+                        $row['formato1_carga_horaria'];
+
+                    $item->formato1_inversion =
+                        $row['formato1_inversion'];
+
+                    $item->instructores_tentativos =
+                        $row['instructores_tentativos'];
+
+                    $result[] = $item;
+                }
+
+                $this->estado =
+                    new Exception_Object(1, '');
+
+                $this->estado->setLastID(1);
+
+            } else {
+
+                $this->estado =
+                    new Exception_Object(
+                        -1,
+                        'No se encontró el Formato 1.'
+                    );
+
+                $this->estado->setLastID(-1);
+            }
+
+        } else {
+
+            $this->estado =
+                new Exception_Object(
+                    -2,
+                    'Error no es posible abrir la conexión.'
+                );
+
+            $this->estado->setLastID(-2);
+        }
+
+        try {
+            $dbc->closeAll();
+        } catch (Exception $e) {
+        }
+
+    } catch (Exception $e) {
+
+        var_dump($e);
+
+        $this->estado =
+            new Exception_Object(
+                -3,
+                'No es posible leer los datos requeridos.'
+            );
+
+        $this->estado->setLastID(-3);
+    }
+
+
+    // =====================================================
+    // PREPARAR RESPUESTA
+    // =====================================================
+
+    $resultados = new stdClass();
+
+    $resultados->data = new stdClass();
+
+    $resultados->data->success =
+        $this->estado->getLastID() >= 1 ? True : false;
+
+    $resultados->data->message =
+        $this->estado->getMessage();
+
+    $resultados->data->estado =
+        $this->estado->getCode();
+
+    $resultados->data->item = $result;
+
+
+    try {
+
+        if ($this->isHTML == true) {
+
+            header('Content-type: application/json');
+
+            echo json_encode($resultados);
+
+        } else {
+
+            return $resultados;
+
+        }
+
+    } catch (Exception $e) {
+
+        if ($this->isHTML == true) {
+
+            header('Content-type: application/json');
+
+        } else {
+
+            return $e;
+
+        }
+    }
+}
+
 public function getformato1Reporte($filtros)
 {
 
@@ -1469,6 +1675,11 @@ public function insertCursoDefinido($filtros) {
             return $e;
         }
     }
+}
+
+public function obtenerDatosFormato1($filtros){
+
+
 }
 
 
