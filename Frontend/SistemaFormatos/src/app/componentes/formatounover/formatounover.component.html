@@ -141,9 +141,10 @@
                       
                       <button
                         class="btn btn-sm btn-institucional"
-                        (click)="abrirModalResponsable(formato.formato1_tematicas, formato.id)"
+                        (click)="abrirModalResponsable(formato.formato1_tematicas, formato.id,formato)"
                         data-bs-toggle="modal"
-                        data-bs-target="#exampleModalRespons">     
+                        data-bs-target="#exampleModalRespons"
+                        [disabled]="formato.formato1_curso_definido_fecha">     
                         Temática
                       </button>
                     </td>

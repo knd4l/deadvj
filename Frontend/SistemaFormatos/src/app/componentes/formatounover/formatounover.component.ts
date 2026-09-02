@@ -31,7 +31,6 @@ export class FormatounoverComponent implements OnInit {
   cursoGuardado: boolean = false; // Indica si el curso ya fue guardado correctamente.
   cursoGuardadoNombre: string = '';// Guarda el nombre del curso que se acaba de guardar
 
-
   index: number = 1;
   pages: number = 1;
 
@@ -233,9 +232,15 @@ export class FormatounoverComponent implements OnInit {
 
   }*/
 
-    //Se convierte el string a arreglo 
- abrirModalResponsable(tematicas: string, idFormato: number) {
+   
 
+    //Se convierte el string a arreglo 
+ abrirModalResponsable(tematicas: string, idFormato: number, formato?:any) {
+    // evitar abrir la edición si ya fue realizada
+  if (formato?.formato1_curso_definido_fecha) {
+    console.warn('Esta temática ya fue editada.');
+    return;
+  }
   console.log('ID DEL FORMATO:', idFormato);
   console.log('TEMATICAS RECIBIDAS:', tematicas);
 
@@ -309,9 +314,7 @@ guardarTematicaFinal() {
         // Ocultamos el input y el botón de guardar.
         this.cursoDefinidoGuardado = true;
 
-        // =====================================================
         // MOSTRAR BOTÓN PARA CONTINUAR CON EL FORMATO 6
-        // =====================================================
 
         this.cursoGuardado = true;
 

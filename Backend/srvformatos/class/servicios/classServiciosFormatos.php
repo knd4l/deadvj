@@ -146,7 +146,7 @@ public function getcategorias(){
  }
 
         } catch (Exception $e) {
-var_dump($e);
+
            $this->estado = new Exception_Object(-3,'No es posible leer los datos requeridos.');
            $this->estado->setLastID(-3);
         }
@@ -248,7 +248,7 @@ $dbc->closeAll();
 }
 
     } catch (Exception $e) {
-var_dump($e);
+
        $this->estado = new Exception_Object(-3,'No es posible leer los datos requeridos.');
        $this->estado->setLastID(-3);
     }
@@ -340,7 +340,7 @@ var_dump($e);
     }
     
         } catch (Exception $e) {
-    var_dump($e);
+    
            $this->estado = new Exception_Object(-3,'No es posible leer los datos requeridos.');
            $this->estado->setLastID(-3);
         }
@@ -437,7 +437,7 @@ public function getUsuariosLogin($filtros){
     }
 
     } catch (Exception $e) {
-var_dump($e);
+
        $this->estado = new Exception_Object(-3,'No es posible leer los datos requeridos.');
        $this->estado->setLastID(-3);
     }
@@ -664,7 +664,7 @@ public function insertTemTentativas($filtros) {
    }
 
   } catch (Exception $e) {
-   var_dump($e);
+   
    $this->estado = new Exception_Object(60012002, 'ha ocurrido un error grave comuniquese con el admnistrador.');
    $this->estado->setLastID(-1);
   }
@@ -751,7 +751,7 @@ public function insertInstTentativas($filtros) {
    }
 
   } catch (Exception $e) {
-   var_dump($e);
+   
    $this->estado = new Exception_Object(60012002, 'ha ocurrido un error grave comuniquese con el admnistrador.');
    $this->estado->setLastID(-1);
   }
@@ -874,6 +874,7 @@ public function insertConsecuenciaFormato1($filtros) {
         f1.formato1_tipo_capacitacion,
         tc.tipo_capac_nombre,
         f1.formato1_fecha_elaboracion,
+        f1.formato1_curso_definido_fecha,
         f1.formato1_institucion,
         f1.formato1_persona_contacto,
         f1.formato1_direccion,
@@ -932,6 +933,7 @@ public function insertConsecuenciaFormato1($filtros) {
         f1.formato1_tipo_capacitacion,
         tc.tipo_capac_nombre,
         f1.formato1_fecha_elaboracion,
+        f1.formato1_curso_definido_fecha,
         f1.formato1_institucion,
         f1.formato1_persona_contacto,
         f1.formato1_direccion,
@@ -1009,6 +1011,10 @@ $item->formato1_tematicas =
 
 $item->formato1_mes_ejecucion =
     $row['formato1_mes_ejecucion'];
+    
+    //indica si la tematica ya fue editada
+    $item->formato1_curso_definido_fecha=
+    $row['formato1_curso_definido_fecha'];
 
 $item->formato1_numero_personas =
     $row['formato1_numero_personas'];
@@ -1072,7 +1078,7 @@ $dbc->closeAll();
 }
 
     } catch (Exception $e) {
-var_dump($e);
+
        $this->estado = new Exception_Object(-3,'No es posible leer los datos requeridos.');
        $this->estado->setLastID(-3);
     }
@@ -1248,7 +1254,7 @@ $codigo=$codigo->formato1_codigo;
 
     } catch (Exception $e) {
 
-        var_dump($e);
+        
 
         $this->estado =
             new Exception_Object(
@@ -1607,7 +1613,7 @@ public function insertCursoDefinido($filtros) {
     } catch (Exception $e) {
 
         // Muestra el error para poder identificarlo durante el desarrollo
-        var_dump($e);
+       
 
         $this->estado = new Exception_Object(
             60012002,

@@ -71,7 +71,7 @@ class Database {
 			$this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
 			$this->estado = new Exception_Object(0, 'Conectado');
 		} catch (PDOException $e) {
-			var_dump($e);
+			
 			// $this->error = $e->getMessage();
 			$this->estado = new Exception_Object(1001, 'error de datos');
 		}
