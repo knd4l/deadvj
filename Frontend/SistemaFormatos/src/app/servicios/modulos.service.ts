@@ -45,6 +45,11 @@ obtenerDatosFormato1(codigo:number): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
+//Guardara el formato 6
+insertformato6(objetoopciones:any):Observable<any>{
+  return this.http.post<any>(this.URL,objetoopciones);
+}
+
 insertarInstTentativ(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }

@@ -1677,10 +1677,241 @@ public function insertCursoDefinido($filtros) {
     }
 }
 
-public function obtenerDatosFormato1($filtros){
+// =====================================================
+// GUARDAR FORMATO 6
+// =====================================================
 
+public function insertformato6($datos)
+{
 
+    try {
+
+        $result = array();
+
+        // =====================================================
+        // INSERTAR DATOS DEL FORMATO 6
+        // =====================================================
+
+        $insert = "
+            INSERT INTO formato6 (
+                formato1_codigo,
+                formato6_fecha_elaboracion,
+                formato6_requerimiento,
+                formato6_unidad_responsable,
+                formato6_instructores,
+                formato6_beneficiarios,
+                formato6_paralelo,
+                formato6_modalidad,
+                formato6_area,
+                formato6_carga_horaria,
+                formato6_periodos,
+                formato6_horario,
+                formato6_lugar,
+                formato6_prerrequisitos,
+                formato6_tipo_certificado,
+                formato6_inversion
+            )
+            VALUES (
+                :formato1_codigo,
+                :formato6_fecha_elaboracion,
+                :formato6_requerimiento,
+                :formato6_unidad_responsable,
+                :formato6_instructores,
+                :formato6_beneficiarios,
+                :formato6_paralelo,
+                :formato6_modalidad,
+                :formato6_area,
+                :formato6_carga_horaria,
+                :formato6_periodos,
+                :formato6_horario,
+                :formato6_lugar,
+                :formato6_prerrequisitos,
+                :formato6_tipo_certificado,
+                :formato6_inversion
+            )
+        ";
+
+        $dbc = $this->getInitDatabase();
+
+        if ($dbc->getEstado()->codigo == 0) {
+
+            $dbc->query($insert);
+
+            // =====================================================
+            // DATOS DEL FORMATO 1
+            // =====================================================
+
+            $dbc->bind(
+                ":formato1_codigo",
+                $datos->formato1_codigo
+            );
+
+            // =====================================================
+            // DATOS DEL FORMATO 6
+            // =====================================================
+
+            $dbc->bind(
+                ":formato6_fecha_elaboracion",
+                $datos->fechaElaboracion
+            );
+
+            $dbc->bind(
+                ":formato6_requerimiento",
+                $datos->requerimiento
+            );
+
+            $dbc->bind(
+                ":formato6_unidad_responsable",
+                $datos->unidadResponsable
+            );
+
+            $dbc->bind(
+                ":formato6_instructores",
+                $datos->instructores
+            );
+
+            $dbc->bind(
+                ":formato6_beneficiarios",
+                $datos->beneficiarios
+            );
+
+            $dbc->bind(
+                ":formato6_paralelo",
+                $datos->paralelo
+            );
+
+            $dbc->bind(
+                ":formato6_modalidad",
+                $datos->modalidad
+            );
+
+            $dbc->bind(
+                ":formato6_area",
+                $datos->area
+            );
+
+            $dbc->bind(
+                ":formato6_carga_horaria",
+                $datos->cargaHoraria
+            );
+
+            $dbc->bind(
+                ":formato6_periodos",
+                $datos->periodos
+            );
+
+            $dbc->bind(
+                ":formato6_horario",
+                $datos->horario
+            );
+
+            $dbc->bind(
+                ":formato6_lugar",
+                $datos->lugar
+            );
+
+            $dbc->bind(
+                ":formato6_prerrequisitos",
+                $datos->prerrequisitos
+            );
+
+            $dbc->bind(
+                ":formato6_tipo_certificado",
+                $datos->tipoCertificado
+            );
+
+            $dbc->bind(
+                ":formato6_inversion",
+                $datos->inversion
+            );
+
+            $dbc->execute();
+
+            // =====================================================
+            // VERIFICAR SI SE INSERTÓ
+            // =====================================================
+
+            if ($dbc->rowCount() > 0) {
+
+                $this->estado =
+                    new Exception_Object(
+                        1,
+                        'Formato 6 guardado correctamente.'
+                    );
+
+                $this->estado->setLastID(1);
+
+            } else {
+
+                $this->estado =
+                    new Exception_Object(
+                        -1,
+                        'No se pudo guardar el Formato 6.'
+                    );
+
+                $this->estado->setLastID(-1);
+            }
+
+        } else {
+
+            $this->estado =
+                new Exception_Object(
+                    -2,
+                    'Error no es posible abrir la conexión.'
+                );
+
+            $this->estado->setLastID(-2);
+        }
+
+        try {
+            $dbc->closeAll();
+        } catch (Exception $e) {
+        }
+
+    } catch (Exception $e) {
+
+        $this->estado =
+            new Exception_Object(
+                -3,
+                'Error al guardar el Formato 6.'
+            );
+
+        $this->estado->setLastID(-3);
+    }
+
+    // =====================================================
+    // RESPUESTA
+    // =====================================================
+
+    $resultados = new stdClass();
+
+    $resultados->data = new stdClass();
+
+    $resultados->data->success =
+        $this->estado->getLastID() >= 1 ? True : false;
+
+    $resultados->data->message =
+        $this->estado->getMessage();
+
+    $resultados->data->estado =
+        $this->estado->getCode();
+
+    $resultados->data->item =
+        $result;
+
+    if ($this->isHTML == true) {
+
+        header('Content-type: application/json');
+
+        echo json_encode($resultados);
+
+    } else {
+
+        return $resultados;
+    }
 }
+
+
 
 
 }//fin

@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import {Router} from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ModulosService } from 'src/app/servicios/modulos.service';
-
+import Swal from 'sweetalert2';
+import { catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-formatoseis',
   templateUrl: './formatoseis.component.html',
@@ -92,15 +93,110 @@ export class FormatoseisComponent implements OnInit {
 
   };
 
-   // =====================================================
-  // GUARDAR FORMATO 6
-  // =====================================================
+// =====================================================
+// GUARDAR FORMATO 6
+// =====================================================
 
-  guardarFormato6() {
+guardarFormato6() {
 
-    console.log('Datos del Formato 6:', this.formato6);
+  const objetoopciones = {
 
-  }
+    fx: 'insertformato6',
+
+    d: {
+      formato1_codigo: this.formato1Codigo,
+
+      fechaElaboracion: this.formato6.fechaElaboracion,
+      requerimiento: this.formato6.requerimiento,
+      unidadResponsable: this.formato6.unidadResponsable,
+      instructores: this.formato6.instructores,
+      beneficiarios: this.formato6.beneficiarios,
+      paralelo: this.formato6.paralelo,
+      modalidad: this.formato6.modalidad,
+      area: this.formato6.area,
+      cargaHoraria: this.formato6.cargaHoraria,
+      periodos: this.formato6.periodos,
+      horario: this.formato6.horario,
+      lugar: this.formato6.lugar,
+      prerrequisitos: this.formato6.prerrequisitos,
+      tipoCertificado: this.formato6.tipoCertificado,
+      inversion: this.formato6.inversion
+    }
+
+  };
+
+  console.log(
+    'Datos enviados para Formato 6:',
+    objetoopciones
+  );
+
+  this.miServicio.insertformato6(
+    objetoopciones
+  )
+  .subscribe({
+
+    next: (respuesta: any) => {
+
+      console.log(
+        'Respuesta del servidor:',
+        respuesta
+      );
+
+      // =====================================================
+      // GUARDADO CORRECTO
+      // =====================================================
+
+      if (
+        respuesta &&
+        respuesta.data &&
+        respuesta.data.success
+      ) {
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado correctamente',
+          text: respuesta.data.message
+        });
+
+      } else {
+
+        // =====================================================
+        // ERROR AL GUARDAR
+        // =====================================================
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: respuesta?.data?.message ||
+                'No se pudo guardar el Formato 6.'
+        });
+
+      }
+
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Error al guardar Formato 6:',
+        error
+      );
+
+      // =====================================================
+      // ERROR DE CONEXIÓN / SERVIDOR
+      // =====================================================
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Ocurrió un error al guardar el Formato 6.'
+      });
+
+    }
+
+  });
+
+}
 
   cargarDatosFormato1(codigo: number) {
 
