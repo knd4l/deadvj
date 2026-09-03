@@ -1,0 +1,225 @@
+<div class="sb-nav-fixed bg-light">
+
+  <div id="layoutSidenav">
+
+    <div id="layoutSidenav_content">
+
+      <main class="container-fluid px-4">
+
+        <!-- TÍTULO -->
+
+        <div class="card shadow border-0 my-4">
+
+          <div class="card-header bg-institucional text-center">
+
+            <h4 class="mb-0">
+              <b>LISTA DE FORMATOS 06</b>
+            </h4>
+
+          </div>
+
+          <div class="card-body">
+
+            <!-- TABLA -->
+
+            <div class="table-responsive">
+
+              <table
+                class="table table-bordered table-hover table-custom text-center align-middle">
+
+                <thead>
+
+                  <tr>
+
+                    <th>
+                      Unidad responsable
+                    </th>
+
+                    <th>
+                      Beneficiarios
+                    </th>
+
+                    <th>
+                      Modalidad
+                    </th>
+
+                    <th>
+                      Períodos
+                    </th>
+
+                    <th>
+                      Prerrequisitos
+                    </th>
+
+                    <th>
+                      Tipo de certificado
+                    </th>
+
+                    <th>
+                      Acciones
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <tr
+                    *ngFor="
+                      let formato of listaformatos6
+                      | paginate: {
+                          itemsPerPage: 30,
+                          currentPage: pages
+                        }
+                    ">
+
+                    <td>
+                      {{ formato.formato6_unidad_responsable }}
+                    </td>
+
+                    <td>
+                      {{ formato.formato6_beneficiarios }}
+                    </td>
+
+                    <td>
+                      {{ formato.formato6_modalidad }}
+                    </td>
+
+                    <td>
+                      {{ formato.formato6_periodos }}
+                    </td>
+
+                    <td>
+                      {{ formato.formato6_prerrequisitos }}
+                    </td>
+
+                    <td>
+                      {{ formato.formato6_tipo_certificado }}
+                    </td>
+
+                    <td>
+
+                      <button
+                        class="btn btn-sm btn-institucional"
+                        (click)="verFormulario6(formato)">
+
+                        <i class="fa fa-file-pdf"></i>
+                        Ver
+
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+
+                  <!-- SIN REGISTROS -->
+
+                  <tr
+                    *ngIf="listaformatos6?.length === 0">
+
+                    <td
+                      colspan="7"
+                      class="text-muted text-center">
+
+                      No existen registros
+
+                    </td>
+
+                  </tr>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+
+            <!-- PAGINACIÓN -->
+
+            <div
+              class="d-flex justify-content-center mt-4">
+
+              <pagination-controls
+
+                (pageChange)="pages = $event"
+
+                previousLabel="Anterior"
+
+                nextLabel="Siguiente">
+
+              </pagination-controls>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<style>
+
+/* HEADER */
+
+.bg-institucional {
+
+  background-color: var(--institucional);
+
+  color: #fff;
+
+}
+
+
+/* TABLA */
+
+.table-custom th {
+
+  background: #f4efe6;
+
+  color: var(--institucional-sec);
+
+  font-weight: 700;
+
+}
+
+
+.table-custom td {
+
+  vertical-align: middle;
+
+}
+
+
+/* BOTÓN */
+
+.btn-institucional {
+
+  background-color: var(--institucional);
+
+  color: #fff;
+
+  border: none;
+
+  font-weight: 600;
+
+}
+
+
+.btn-institucional:hover {
+
+  background-color: var(--institucional-sec);
+
+  color: #fff;
+
+}
+
+</style>

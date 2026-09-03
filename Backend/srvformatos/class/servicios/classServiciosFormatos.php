@@ -1919,6 +1919,144 @@ public function insertformato6($datos)
 
 
 
+// OBTENER FORMATOS 6
+// =====================================================
+public function getformato6(){
+
+    try {
+
+        $result = array();
+
+        $get_Dataa = "
+            SELECT
+                formato6_codigo,
+                formato1_codigo,
+                formato6_unidad_responsable,
+                formato6_beneficiarios,
+                formato6_modalidad,
+                formato6_periodos,
+                formato6_prerrequisitos,
+                formato6_tipo_certificado
+            FROM formato6
+            WHERE formato6_estado = 'Activo'
+            ORDER BY formato6_codigo DESC
+        ";
+
+        $dbc = $this->getInitDatabase();
+
+        if ($dbc->getEstado()->codigo == 0) {
+
+            $dbc->query($get_Dataa);
+            $dbc->execute();
+
+            $tabla = $dbc->getTabla();
+
+            if ($dbc->rowCount() > 0) {
+
+                foreach ($tabla as $row) {
+
+                    $item = new stdClass();
+
+                    $item->formato6_codigo =
+                        $row['formato6_codigo'];
+
+                    $item->formato1_codigo =
+                        $row['formato1_codigo'];
+
+                    $item->formato6_unidad_responsable =
+                        $row['formato6_unidad_responsable'];
+
+                    $item->formato6_beneficiarios =
+                        $row['formato6_beneficiarios'];
+
+                    $item->formato6_modalidad =
+                        $row['formato6_modalidad'];
+
+                    $item->formato6_periodos =
+                        $row['formato6_periodos'];
+
+                    $item->formato6_prerrequisitos =
+                        $row['formato6_prerrequisitos'];
+
+                    $item->formato6_tipo_certificado =
+                        $row['formato6_tipo_certificado'];
+
+                    $result[] = $item;
+                }
+
+                $this->estado =
+                    new Exception_Object(1, '');
+
+                $this->estado->setLastID(1);
+
+            } else {
+
+                $this->estado =
+                    new Exception_Object(
+                        -1,
+                        'No existen registros de Formato 6.'
+                    );
+
+                $this->estado->setLastID(-1);
+            }
+
+        } else {
+
+            $this->estado =
+                new Exception_Object(
+                    -2,
+                    'Error no es posible abrir la conexión.'
+                );
+
+            $this->estado->setLastID(-2);
+        }
+
+        try {
+            $dbc->closeAll();
+        } catch (Exception $e) {
+        }
+
+    } catch (Exception $e) {
+
+        // No usar var_dump porque dañaría el JSON
+        $this->estado =
+            new Exception_Object(
+                -3,
+                'No es posible leer los datos requeridos.'
+            );
+
+        $this->estado->setLastID(-3);
+    }
+
+    $resultados = new stdClass();
+
+    $resultados->data = new stdClass();
+
+    $resultados->data->success =
+        $this->estado->getLastID() >= 1 ? true : false;
+
+    $resultados->data->message =
+        $this->estado->getMessage();
+
+    $resultados->data->estado =
+        $this->estado->getCode();
+
+    $resultados->data->item =
+        $result;
+
+    if ($this->isHTML == true) {
+
+        header('Content-type: application/json');
+
+        echo json_encode($resultados);
+
+    } else {
+
+        return $resultados;
+    }
+}
+
+
 
 }//fin
 

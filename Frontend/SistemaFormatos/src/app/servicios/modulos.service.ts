@@ -50,6 +50,11 @@ insertformato6(objetoopciones:any):Observable<any>{
   return this.http.post<any>(this.URL,objetoopciones);
 }
 
+//Obtener formato 6
+obtenerFormato6(objetoopciones:any):Observable<any>{
+  return this.http.post<any>(this.URL,objetoopciones);
+}
+
 insertarInstTentativ(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
