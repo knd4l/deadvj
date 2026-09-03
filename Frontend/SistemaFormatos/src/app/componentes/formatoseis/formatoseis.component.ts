@@ -344,6 +344,140 @@ guardarFormato6() {
     });
 
 }
+// =====================================================
+// CARGAR FORMATO 6 EXISTENTE
+// =====================================================
+cargarFormato6Existente(codigo: number): void {
+
+  const objetoopciones = {
+    fx: 'getformato6PorFormato1',
+    d: {
+      formato1_codigo: codigo
+    },
+    dpro: 0,
+    dus: 0,
+    dcx: 1
+  };
+
+  console.log(
+    'Buscando Formato 6 para Formato 1:',
+    codigo
+  );
+
+  this.miServicio.obtenerFormato6PorFormato1(
+    objetoopciones
+  ).subscribe({
+
+    next: (respuesta: any) => {
+
+      console.log(
+        'Respuesta Formato 6 existente:',
+        respuesta
+      );
+
+      // =====================================================
+      // SI EXISTE FORMATO 6
+      // =====================================================
+
+      if (
+        respuesta &&
+        respuesta.data &&
+        respuesta.data.success &&
+        respuesta.data.item &&
+        respuesta.data.item.length > 0
+      ) {
+
+        const datos = respuesta.data.item[0];
+
+        console.log(
+          'Cargando datos existentes del Formato 6:',
+          datos
+        );
+
+        // =====================================================
+        // CARGAR TODOS LOS DATOS DEL FORMATO 6
+        // =====================================================
+
+        this.formato6.fechaElaboracion =
+          datos.formato6_fecha_elaboracion || '';
+
+        this.formato6.requerimiento =
+          datos.formato6_requerimiento || '';
+
+        this.formato6.unidadResponsable =
+          datos.formato6_unidad_responsable || '';
+
+        this.formato6.instructores =
+          datos.formato6_instructores || '';
+
+        this.formato6.beneficiarios =
+          datos.formato6_beneficiarios || '';
+
+        this.formato6.paralelo =
+          datos.formato6_paralelo || '';
+
+        this.formato6.modalidad =
+          datos.formato6_modalidad || '';
+
+        this.formato6.area =
+          datos.formato6_area || '';
+
+        this.formato6.cargaHoraria =
+          datos.formato6_carga_horaria || '';
+
+        this.formato6.periodos =
+          datos.formato6_periodos || '';
+
+        this.formato6.horario =
+          datos.formato6_horario || '';
+
+        this.formato6.lugar =
+          datos.formato6_lugar || '';
+
+        this.formato6.prerrequisitos =
+          datos.formato6_prerrequisitos || '';
+
+        this.formato6.tipoCertificado =
+          datos.formato6_tipo_certificado || '';
+
+        this.formato6.inversion =
+          datos.formato6_inversion || '';
+
+        console.log(
+          'Formato 6 cargado completamente:',
+          this.formato6
+        );
+
+      } else {
+
+        // =====================================================
+        // NO EXISTE FORMATO 6
+        // =====================================================
+        // En este caso NO hacemos nada.
+        //
+        // Los datos del Formato 1 que ya fueron cargados
+        // mediante cargarDatosFormato1() permanecen.
+        // =====================================================
+
+        console.log(
+          'Este Formato 1 todavía no tiene un Formato 6 guardado.'
+        );
+
+      }
+
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Error al buscar Formato 6 existente:',
+        error
+      );
+
+    }
+
+  });
+}
 
 // =====================================================
 // SELECCIONAR FORMATO 1
@@ -352,41 +486,22 @@ guardarFormato6() {
 seleccionarFormato1(): void {
 
   if (!this.formato1Seleccionado) {
-
     this.formato1Codigo = 0;
     this.cursoNombre = '';
-
     return;
   }
 
-  console.log(
-    'FORMATO 1 SELECCIONADO:',
-    this.formato1Seleccionado
-  );
-
-  // =====================================================
-  // GUARDAR CÓDIGO DEL FORMATO 1
-  // =====================================================
-
   this.formato1Codigo =
-    Number(
-      this.formato1Seleccionado.formato1_codigo
-    );
-
-  // =====================================================
-  // MOSTRAR NOMBRE DEL CURSO
-  // =====================================================
+    Number(this.formato1Seleccionado.formato1_codigo);
 
   this.cursoNombre =
     this.formato1Seleccionado.formato1_curso_definido;
 
-  // =====================================================
-  // CARGAR DATOS COMPLETOS DEL FORMATO 1
-  // =====================================================
+  // Primero cargamos los datos del Formato 1
+  this.cargarDatosFormato1(this.formato1Codigo);
 
-  this.cargarDatosFormato1(
-    this.formato1Codigo
-  );
-
+  // Luego buscamos si ya existe un Formato 6
+  this.cargarFormato6Existente(this.formato1Codigo);
 }
+
 }

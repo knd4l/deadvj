@@ -59,14 +59,15 @@ obtenerFormato6Reporte(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
-obtenerFormato1CursoDefinido(
-  objetoopciones: any
-): Observable<any> {
+obtenerFormato1CursoDefinido(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL,objetoopciones);
 
-  return this.http.post<any>(
-    this.URL,
-    objetoopciones
-  );
+}
+// =====================================================
+// OBTENER FORMATO 6 POR FORMATO 1
+// =====================================================
+obtenerFormato6PorFormato1(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL,objetoopciones);
 
 }
 

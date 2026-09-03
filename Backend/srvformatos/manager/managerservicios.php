@@ -86,6 +86,11 @@ case 'getformato1CursoDefinido':
     $clsCursos = new classServiciosFormatos();
     $clsCursos->getformato1CursoDefinido($jdata->d);
     break;
+
+case 'getformato6PorFormato1':
+    $clsCursos = new classServiciosFormatos();
+    $clsCursos->getformato6PorFormato1($jdata->d);
+    break;
 }
 
 

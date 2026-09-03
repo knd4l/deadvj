@@ -2056,6 +2056,220 @@ public function getformato6(){
     }
 }
 
+
+
+public function getformato6PorFormato1($codigo){
+
+    $codigo = $codigo->formato1_codigo;
+
+    try {
+
+        $result = array();
+
+        // =====================================================
+        // BUSCAR FORMATO 6 DEL FORMATO 1 SELECCIONADO
+        // =====================================================
+
+        $get_Dataa = "
+            SELECT
+                formato6_codigo,
+                formato1_codigo,
+                formato6_fecha_elaboracion,
+                formato6_requerimiento,
+                formato6_unidad_responsable,
+                formato6_instructores,
+                formato6_beneficiarios,
+                formato6_paralelo,
+                formato6_modalidad,
+                formato6_area,
+                formato6_carga_horaria,
+                formato6_periodos,
+                formato6_horario,
+                formato6_lugar,
+                formato6_prerrequisitos,
+                formato6_tipo_certificado,
+                formato6_inversion
+
+            FROM formato6
+
+            WHERE formato1_codigo = :formato1_codigo
+            AND formato6_estado = 'Activo'
+
+            ORDER BY formato6_codigo DESC
+        ";
+
+        // =====================================================
+        // CONEXIÓN
+        // =====================================================
+
+        $dbc = $this->getInitDatabase();
+
+        if ($dbc->getEstado()->codigo == 0) {
+
+            $dbc->query($get_Dataa);
+
+            $dbc->bind(
+                ":formato1_codigo",
+                $codigo
+            );
+
+            $dbc->execute();
+
+            $tabla = $dbc->getTabla();
+
+            // =====================================================
+            // VERIFICAR SI EXISTE FORMATO 6
+            // =====================================================
+
+            if ($dbc->rowCount() > 0) {
+
+                foreach ($tabla as $row) {
+
+                    $item = new stdClass();
+
+                    $item->formato6_codigo =
+                        $row['formato6_codigo'];
+
+                    $item->formato1_codigo =
+                        $row['formato1_codigo'];
+
+                    $item->formato6_fecha_elaboracion =
+                        $row['formato6_fecha_elaboracion'];
+
+                    $item->formato6_requerimiento =
+                        $row['formato6_requerimiento'];
+
+                    $item->formato6_unidad_responsable =
+                        $row['formato6_unidad_responsable'];
+
+                    $item->formato6_instructores =
+                        $row['formato6_instructores'];
+
+                    $item->formato6_beneficiarios =
+                        $row['formato6_beneficiarios'];
+
+                    $item->formato6_paralelo =
+                        $row['formato6_paralelo'];
+
+                    $item->formato6_modalidad =
+                        $row['formato6_modalidad'];
+
+                    $item->formato6_area =
+                        $row['formato6_area'];
+
+                    $item->formato6_carga_horaria =
+                        $row['formato6_carga_horaria'];
+
+                    $item->formato6_periodos =
+                        $row['formato6_periodos'];
+
+                    $item->formato6_horario =
+                        $row['formato6_horario'];
+
+                    $item->formato6_lugar =
+                        $row['formato6_lugar'];
+
+                    $item->formato6_prerrequisitos =
+                        $row['formato6_prerrequisitos'];
+
+                    $item->formato6_tipo_certificado =
+                        $row['formato6_tipo_certificado'];
+
+                    $item->formato6_inversion =
+                        $row['formato6_inversion'];
+
+                    $result[] = $item;
+                }
+
+                $this->estado =
+                    new Exception_Object(1, '');
+
+                $this->estado->setLastID(1);
+
+            } else {
+
+                // =====================================================
+                // NO EXISTE FORMATO 6
+                // =====================================================
+
+                $this->estado =
+                    new Exception_Object(
+                        -1,
+                        'No existe un Formato 6 para este Formato 1.'
+                    );
+
+                $this->estado->setLastID(-1);
+            }
+
+        } else {
+
+            $this->estado =
+                new Exception_Object(
+                    -2,
+                    'Error no es posible abrir la conexión.'
+                );
+
+            $this->estado->setLastID(-2);
+        }
+
+        // =====================================================
+        // CERRAR CONEXIÓN
+        // =====================================================
+
+        try {
+
+            $dbc->closeAll();
+
+        } catch (Exception $e) {
+        }
+
+    } catch (Exception $e) {
+
+        $this->estado =
+            new Exception_Object(
+                -3,
+                'No es posible leer los datos requeridos.'
+            );
+
+        $this->estado->setLastID(-3);
+    }
+
+    // =====================================================
+    // PREPARAR RESPUESTA
+    // =====================================================
+
+    $resultados = new stdClass();
+
+    $resultados->data = new stdClass();
+
+    $resultados->data->success =
+        $this->estado->getLastID() >= 1 ? true : false;
+
+    $resultados->data->message =
+        $this->estado->getMessage();
+
+    $resultados->data->estado =
+        $this->estado->getCode();
+
+    $resultados->data->item =
+        $result;
+
+    // =====================================================
+    // DEVOLVER RESPUESTA
+    // =====================================================
+
+    if ($this->isHTML == true) {
+
+        header('Content-type: application/json');
+
+        echo json_encode($resultados);
+
+    } else {
+
+        return $resultados;
+    }
+}
+
 // OBTENER FORMATO 6 PARA REPORTE PDF
 // =====================================================
 
