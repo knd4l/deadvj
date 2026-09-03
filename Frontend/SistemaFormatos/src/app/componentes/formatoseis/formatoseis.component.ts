@@ -1,6 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import {Router} from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
 import { ModulosService } from 'src/app/servicios/modulos.service';
 import Swal from 'sweetalert2';
 import { catchError } from 'rxjs/operators';
@@ -13,21 +11,17 @@ export class FormatoseisComponent implements OnInit {
 
 
     formato1Codigo:number=0;
-   cursoNombre: string = '';
+    cursoNombre: string = '';
+
+      // FORMATOS 1 CON CURSO DEFINIDO
+
+    formatos1Definidos: any[] = [];
+    formato1Seleccionado: any = null;
+
+
   constructor(
-    private router: Router,
-    private route: ActivatedRoute,
     private miServicio: ModulosService
   ) { 
-    const navigation = this.router.getCurrentNavigation();
-
-    if (navigation?.extras?.state) {
-
-    this.cursoNombre =
-      navigation.extras.state['cursoNombre'];
-
-  }
-
 
   }
 
@@ -47,27 +41,89 @@ export class FormatoseisComponent implements OnInit {
       );
     }
 
+    this.cargarFormatos1Definidos();
     //Recuperamos el id del formato 1
 
-    this.route.queryParams.subscribe(params => {
+  }
 
-      const formato1Codigo = params['formato1_codigo'];
-      if(formato1Codigo){
-        console.log("Codigo del formato 1 recibido",
-          formato1Codigo);
+  // =====================================================
+// CARGAR FORMATOS 1 CON CURSO DEFINIDO
+// =====================================================
 
-          this.formato1Codigo=Number(formato1Codigo);
+cargarFormatos1Definidos(): void {
 
-          this.cargarDatosFormato1(this.formato1Codigo);
+  const objetoopciones = {
 
+    fx: 'getformato1CursoDefinido',
 
-     
-      }else{
-        console.log('No se recibió el código del Formato 1');
+    d: {},
+
+    dpro: 0,
+
+    dus: 0,
+
+    dcx: 1
+
+  };
+
+  console.log(
+    'Consultando Formatos 1 con curso definido:',
+    objetoopciones
+  );
+
+  this.miServicio.obtenerFormato1CursoDefinido(
+    objetoopciones
+  )
+  .subscribe({
+
+    next: (respuesta: any) => {
+
+      console.log(
+        'Formatos 1 con curso definido:',
+        respuesta
+      );
+
+      if (
+        respuesta &&
+        respuesta.data &&
+        respuesta.data.success &&
+        Array.isArray(respuesta.data.item)
+      ) {
+
+        this.formatos1Definidos =
+          respuesta.data.item;
+
+        console.log(
+          'TOTAL FORMATOS 1 DISPONIBLES:',
+          this.formatos1Definidos.length
+        );
+
+      } else {
+
+        this.formatos1Definidos = [];
+
+        console.warn(
+          'No existen Formatos 1 con curso definido.'
+        );
+
       }
 
-    });
-  }
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Error al cargar Formatos 1 definidos:',
+        error
+      );
+
+      this.formatos1Definidos = [];
+
+    }
+
+  });
+
+}
 
  // =====================================================
   // DATOS DEL FORMATO 6
@@ -286,6 +342,51 @@ guardarFormato6() {
       }
 
     });
+
+}
+
+// =====================================================
+// SELECCIONAR FORMATO 1
+// =====================================================
+
+seleccionarFormato1(): void {
+
+  if (!this.formato1Seleccionado) {
+
+    this.formato1Codigo = 0;
+    this.cursoNombre = '';
+
+    return;
+  }
+
+  console.log(
+    'FORMATO 1 SELECCIONADO:',
+    this.formato1Seleccionado
+  );
+
+  // =====================================================
+  // GUARDAR CÓDIGO DEL FORMATO 1
+  // =====================================================
+
+  this.formato1Codigo =
+    Number(
+      this.formato1Seleccionado.formato1_codigo
+    );
+
+  // =====================================================
+  // MOSTRAR NOMBRE DEL CURSO
+  // =====================================================
+
+  this.cursoNombre =
+    this.formato1Seleccionado.formato1_curso_definido;
+
+  // =====================================================
+  // CARGAR DATOS COMPLETOS DEL FORMATO 1
+  // =====================================================
+
+  this.cargarDatosFormato1(
+    this.formato1Codigo
+  );
 
 }
 }

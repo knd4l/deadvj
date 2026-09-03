@@ -75,7 +75,20 @@ case 'insertformato6':
 case 'getformato6':
 	$clsCursos = new classServiciosFormatos();	
 	$clsCursos->getformato6($jdata->d);
+	break;
+
+case 'getformato6Reporte':
+	$clsCursos = new classServiciosFormatos();
+	$clsCursos->getformato6Reporte($jdata->d);
+	break;
+
+case 'getformato1CursoDefinido':
+    $clsCursos = new classServiciosFormatos();
+    $clsCursos->getformato1CursoDefinido($jdata->d);
+    break;
 }
+
+
 
 
 ?>

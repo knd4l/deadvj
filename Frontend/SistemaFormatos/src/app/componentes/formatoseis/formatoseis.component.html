@@ -15,10 +15,42 @@
           <div class="text-center mt-4">
             <h5 class="mb-1"><b>PROYECTO</b></h5>
 
-            <!-- NOMBRE DEL CURSO -->
-            <h6 class="mb-3">
-              NOMBRE DEL CURSO:  {{ cursoNombre }}
-            </h6>
+            <!-- SELECCIONAR FORMATO 1 -->
+            <!-- ========================================= -->
+
+        <div class="mb-4 px-4">
+
+              <label class="form-label">
+                <b>Seleccionar Formato 1</b>
+              </label>
+
+              <select
+                class="form-select"
+                [(ngModel)]="formato1Seleccionado"
+                name="formato1Seleccionado"
+                (change)="seleccionarFormato1()">
+
+                <option [ngValue]="null">
+                  -- Seleccione un Formato 1 --
+                </option>
+
+                <option
+                  *ngFor="let formato of formatos1Definidos"
+                  [ngValue]="formato">
+
+                  {{ formato.formato1_codigo }}
+                  -
+                  {{ formato.formato1_curso_definido }}
+
+                </option>
+
+              </select>
+
+            </div>
+
+
+
+            
           </div>
 
           <!-- TÍTULO PRINCIPAL -->

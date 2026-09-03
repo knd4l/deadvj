@@ -54,6 +54,21 @@ insertformato6(objetoopciones:any):Observable<any>{
 obtenerFormato6(objetoopciones:any):Observable<any>{
   return this.http.post<any>(this.URL,objetoopciones);
 }
+//Obtiene el formato 6 para generar el reporte PDF
+obtenerFormato6Reporte(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
+obtenerFormato1CursoDefinido(
+  objetoopciones: any
+): Observable<any> {
+
+  return this.http.post<any>(
+    this.URL,
+    objetoopciones
+  );
+
+}
 
 insertarInstTentativ(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);

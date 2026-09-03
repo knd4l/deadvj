@@ -91,7 +91,9 @@ if ($view == "no identificado" || $view == "none") {
 		'insertCursoDefinido'=>true,
 		'getformato1PorCodigo'=>true,
 		'insertformato6'=>true,
-		'getformato6'=>true
+		'getformato6'=>true,
+		'getformato6Reporte'=>true,
+		'getformato1CursoDefinido'=>true,
 		
 	);
 
