@@ -95,6 +95,7 @@ if ($view == "no identificado" || $view == "none") {
 		'getformato6Reporte'=>true,
 		'getformato1CursoDefinido'=>true,
 		'getformato6PorFormato1'=>true,
+		'updateformato6'=>true,
 
 		
 	);

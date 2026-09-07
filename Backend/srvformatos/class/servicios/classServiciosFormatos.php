@@ -2699,6 +2699,199 @@ public function getformato1CursoDefinido($d){
     }
 }
 
+public function updateformato6($d){
+
+    $codigo = $d->formato6_codigo;
+
+    try {
+
+        $get_Dataa = "
+            UPDATE formato6
+            SET
+                formato1_codigo = :formato1_codigo,
+                formato6_fecha_elaboracion = :fechaElaboracion,
+                formato6_requerimiento = :requerimiento,
+                formato6_unidad_responsable = :unidadResponsable,
+                formato6_instructores = :instructores,
+                formato6_beneficiarios = :beneficiarios,
+                formato6_paralelo = :paralelo,
+                formato6_modalidad = :modalidad,
+                formato6_area = :area,
+                formato6_carga_horaria = :cargaHoraria,
+                formato6_periodos = :periodos,
+                formato6_horario = :horario,
+                formato6_lugar = :lugar,
+                formato6_prerrequisitos = :prerrequisitos,
+                formato6_tipo_certificado = :tipoCertificado,
+                formato6_inversion = :inversion
+
+            WHERE formato6_codigo = :formato6_codigo
+            AND formato6_estado = 'Activo'
+        ";
+
+        $dbc = $this->getInitDatabase();
+
+        if ($dbc->getEstado()->codigo == 0) {
+
+            $dbc->query($get_Dataa);
+
+            $dbc->bind(
+                ":formato6_codigo",
+                $codigo
+            );
+
+            $dbc->bind(
+                ":formato1_codigo",
+                $d->formato1_codigo
+            );
+
+            $dbc->bind(
+                ":fechaElaboracion",
+                $d->fechaElaboracion
+            );
+
+            $dbc->bind(
+                ":requerimiento",
+                $d->requerimiento
+            );
+
+            $dbc->bind(
+                ":unidadResponsable",
+                $d->unidadResponsable
+            );
+
+            $dbc->bind(
+                ":instructores",
+                $d->instructores
+            );
+
+            $dbc->bind(
+                ":beneficiarios",
+                $d->beneficiarios
+            );
+
+            $dbc->bind(
+                ":paralelo",
+                $d->paralelo
+            );
+
+            $dbc->bind(
+                ":modalidad",
+                $d->modalidad
+            );
+
+            $dbc->bind(
+                ":area",
+                $d->area
+            );
+
+            $dbc->bind(
+                ":cargaHoraria",
+                $d->cargaHoraria
+            );
+
+            $dbc->bind(
+                ":periodos",
+                $d->periodos
+            );
+
+            $dbc->bind(
+                ":horario",
+                $d->horario
+            );
+
+            $dbc->bind(
+                ":lugar",
+                $d->lugar
+            );
+
+            $dbc->bind(
+                ":prerrequisitos",
+                $d->prerrequisitos
+            );
+
+            $dbc->bind(
+                ":tipoCertificado",
+                $d->tipoCertificado
+            );
+
+            $dbc->bind(
+                ":inversion",
+                $d->inversion
+            );
+
+            $dbc->execute();
+
+            $this->estado =
+                new Exception_Object(
+                    1,
+                    'Formato 6 actualizado correctamente.'
+                );
+
+            $this->estado->setLastID(1);
+
+        } else {
+
+            $this->estado =
+                new Exception_Object(
+                    -2,
+                    'Error no es posible abrir la conexión.'
+                );
+
+            $this->estado->setLastID(-2);
+        }
+
+        try {
+
+            $dbc->closeAll();
+
+        } catch (Exception $e) {
+        }
+
+    } catch (Exception $e) {
+
+        $this->estado =
+            new Exception_Object(
+                -3,
+                'No es posible actualizar el Formato 6.'
+            );
+
+        $this->estado->setLastID(-3);
+    }
+
+
+    // =====================================================
+    // PREPARAR RESPUESTA
+    // =====================================================
+
+    $resultados = new stdClass();
+
+    $resultados->data = new stdClass();
+
+    $resultados->data->success =
+        $this->estado->getLastID() >= 1 ? true : false;
+
+    $resultados->data->message =
+        $this->estado->getMessage();
+
+    $resultados->data->estado =
+        $this->estado->getCode();
+
+    $resultados->data->item = array();
+
+
+    if ($this->isHTML == true) {
+
+        header('Content-type: application/json');
+
+        echo json_encode($resultados);
+
+    } else {
+
+        return $resultados;
+    }
+}
+
 }//fin
 
 

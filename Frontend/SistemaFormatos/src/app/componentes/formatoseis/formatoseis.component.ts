@@ -11,12 +11,16 @@ export class FormatoseisComponent implements OnInit {
 
 
     formato1Codigo:number=0;
+    formato6Codigo:number=0;
     cursoNombre: string = '';
 
       // FORMATOS 1 CON CURSO DEFINIDO
 
     formatos1Definidos: any[] = [];
     formato1Seleccionado: any = null;
+
+    formato6Existe: boolean = false;
+
 
 
   constructor(
@@ -153,7 +157,110 @@ cargarFormatos1Definidos(): void {
 // GUARDAR FORMATO 6
 // =====================================================
 
-guardarFormato6() {
+guardarFormato6(): void {
+
+  // =====================================================
+  // SI YA EXISTE → ACTUALIZAR
+  // =====================================================
+
+  if (this.formato6Existe) {
+
+    const objetoopciones = {
+
+      fx: 'updateformato6',
+
+      d: {
+        formato6_codigo: this.formato6Codigo,
+        formato1_codigo: this.formato1Codigo,
+
+        fechaElaboracion: this.formato6.fechaElaboracion,
+        requerimiento: this.formato6.requerimiento,
+        unidadResponsable: this.formato6.unidadResponsable,
+        instructores: this.formato6.instructores,
+        beneficiarios: this.formato6.beneficiarios,
+        paralelo: this.formato6.paralelo,
+        modalidad: this.formato6.modalidad,
+        area: this.formato6.area,
+        cargaHoraria: this.formato6.cargaHoraria,
+        periodos: this.formato6.periodos,
+        horario: this.formato6.horario,
+        lugar: this.formato6.lugar,
+        prerrequisitos: this.formato6.prerrequisitos,
+        tipoCertificado: this.formato6.tipoCertificado,
+        inversion: this.formato6.inversion
+        
+      }
+      
+
+    };
+    this.formato6Existe = true;
+
+    console.log(
+      'Actualizando Formato 6:',
+      objetoopciones
+    );
+
+    this.miServicio.updateformato6(
+      objetoopciones
+    ).subscribe({
+
+      next: (respuesta: any) => {
+
+        console.log(
+          'Respuesta actualización:',
+          respuesta
+        );
+
+        if (
+          respuesta &&
+          respuesta.data &&
+          respuesta.data.success
+        ) {
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Actualizado correctamente',
+            text: respuesta.data.message
+          });
+
+        } else {
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text:
+              respuesta?.data?.message ||
+              'No se pudo actualizar el Formato 6.'
+          });
+
+        }
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error al actualizar Formato 6:',
+          error
+        );
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Ocurrió un error al actualizar el Formato 6.'
+        });
+
+      }
+
+    });
+
+    return;
+  }
+
+
+  // =====================================================
+  // SI NO EXISTE → GUARDAR NUEVO
+  // =====================================================
 
   const objetoopciones = {
 
@@ -182,14 +289,13 @@ guardarFormato6() {
   };
 
   console.log(
-    'Datos enviados para Formato 6:',
+    'Guardando nuevo Formato 6:',
     objetoopciones
   );
 
   this.miServicio.insertformato6(
     objetoopciones
-  )
-  .subscribe({
+  ).subscribe({
 
     next: (respuesta: any) => {
 
@@ -197,10 +303,6 @@ guardarFormato6() {
         'Respuesta del servidor:',
         respuesta
       );
-
-      // =====================================================
-      // GUARDADO CORRECTO
-      // =====================================================
 
       if (
         respuesta &&
@@ -216,15 +318,12 @@ guardarFormato6() {
 
       } else {
 
-        // =====================================================
-        // ERROR AL GUARDAR
-        // =====================================================
-
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: respuesta?.data?.message ||
-                'No se pudo guardar el Formato 6.'
+          text:
+            respuesta?.data?.message ||
+            'No se pudo guardar el Formato 6.'
         });
 
       }
@@ -238,10 +337,6 @@ guardarFormato6() {
         error
       );
 
-      // =====================================================
-      // ERROR DE CONEXIÓN / SERVIDOR
-      // =====================================================
-
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -251,7 +346,6 @@ guardarFormato6() {
     }
 
   });
-
 }
 
   cargarDatosFormato1(codigo: number) {
@@ -321,6 +415,10 @@ guardarFormato6() {
             this.formato6
           );
 
+         // DESPUÉS DE CARGAR FORMATO 1,
+        // BUSCAR SI YA EXISTE UN FORMATO 6
+          this.cargarFormato6Existente(codigo);
+
         } else {
 
           console.warn(
@@ -389,10 +487,17 @@ cargarFormato6Existente(codigo: number): void {
 
         const datos = respuesta.data.item[0];
 
-        console.log(
-          'Cargando datos existentes del Formato 6:',
-          datos
-        );
+        // =====================================================<f
+        // GUARDAR CÓDIGO DEL FORMATO 6 EXISTENTE
+        // =====================================================
+
+                  // INDICA QUE YA EXISTE
+      
+        this.formato6Codigo =Number(datos.formato6_codigo);  
+        this.formato6Existe = true;
+
+          console.log('Existe Formato 6. Se podrá actualizar.');
+
 
         // =====================================================
         // CARGAR TODOS LOS DATOS DEL FORMATO 6
@@ -443,26 +548,18 @@ cargarFormato6Existente(codigo: number): void {
         this.formato6.inversion =
           datos.formato6_inversion || '';
 
-        console.log(
-          'Formato 6 cargado completamente:',
-          this.formato6
-        );
+          this.formato6Existe = true;
+
+        console.log('Formato 6 cargado completamente:',this.formato6);
+        console.log('formato6Existe:', this.formato6Existe);
+        console.log('formato6Codigo:', this.formato6Codigo);
 
       } else {
 
-        // =====================================================
-        // NO EXISTE FORMATO 6
-        // =====================================================
-        // En este caso NO hacemos nada.
-        //
-        // Los datos del Formato 1 que ya fueron cargados
-        // mediante cargarDatosFormato1() permanecen.
-        // =====================================================
+       this.formato6Existe = false;
+        this.formato6Codigo = 0;
 
-        console.log(
-          'Este Formato 1 todavía no tiene un Formato 6 guardado.'
-        );
-
+      console.log('NO EXISTE FORMATO 6');
       }
 
     },
@@ -488,8 +585,12 @@ seleccionarFormato1(): void {
   if (!this.formato1Seleccionado) {
     this.formato1Codigo = 0;
     this.cursoNombre = '';
+    this.formato6Existe = false;
+    this.formato6Codigo = 0;
     return;
   }
+
+  console.log('FORMATO 1 SELECCIONADO:', this.formato1Seleccionado);
 
   this.formato1Codigo =
     Number(this.formato1Seleccionado.formato1_codigo);
@@ -497,11 +598,15 @@ seleccionarFormato1(): void {
   this.cursoNombre =
     this.formato1Seleccionado.formato1_curso_definido;
 
-  // Primero cargamos los datos del Formato 1
+  // CAMBIO: reiniciar estado antes de consultar
+  this.formato6Existe = false;
+  this.formato6Codigo = 0;
+
+  console.log('Estado reiniciado:');
+  console.log('formato6Existe:', this.formato6Existe);
+  console.log('formato6Codigo:', this.formato6Codigo);
+
   this.cargarDatosFormato1(this.formato1Codigo);
 
-  // Luego buscamos si ya existe un Formato 6
-  this.cargarFormato6Existente(this.formato1Codigo);
 }
-
 }

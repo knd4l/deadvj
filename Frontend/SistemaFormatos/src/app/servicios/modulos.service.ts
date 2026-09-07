@@ -71,6 +71,14 @@ obtenerFormato6PorFormato1(objetoopciones: any): Observable<any> {
 
 }
 
+// =====================================================
+// ACTUALIZAR FORMATO 6
+// =====================================================
+updateformato6(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL,objetoopciones);
+
+}
+
 insertarInstTentativ(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
