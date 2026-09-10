@@ -145,10 +145,34 @@
 
                     </tr>
 
-                    <tr>
-                      <td class="label">Fecha de ejecución</td>
-                      <td><input class="form-control" type="date" formControlName="fechaejecucion"></td>
-                    </tr>
+                    
+                  <tr>
+                    <td class="label">Fecha de ejecución</td>
+
+                    <td>
+                      <div class="row g-2">
+
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold">Desde</label>
+                          <input
+                            class="form-control"
+                            type="date"
+                            formControlName="fechaEjecucionDesde">
+                        </div>
+
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold">Hasta</label>
+                          <input
+                            class="form-control"
+                            type="date"
+                            formControlName="fechaEjecucionHasta">
+                        </div>
+
+                      </div>
+                    </td>
+                  </tr>
+
+
 
                     <tr>
                       <td class="label">Inversión</td>

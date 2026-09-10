@@ -41,6 +41,10 @@ export class FormatounoComponent implements OnInit {
   rutaArchivoguardarCrit = '';
   archivoSubido_crit = false;
 
+  fechaEjecucionDesde:[''];
+  fechaEjecucionHasta:[''];
+
+
   constructor(private fb: FormBuilder,private moduloService: ModulosService,public CookieService:CookieService,private formularioService: FormulariosService, private deviceService: DeviceDetectorService,private router:Router) { }
 
   ngOnInit(): void {
@@ -61,7 +65,8 @@ export class FormatounoComponent implements OnInit {
       modalidad: ['', Validators.required],
       numeropersonas: ['', Validators.required],
       cargahoraria: ['', Validators.required],
-      fechaejecucion: ['', Validators.required],
+      fechaEjecucionDesde: ['', Validators.required],
+      fechaEjecucionHasta: ['', Validators.required],
       inversion: ['', Validators.required],
 
       // ===== ARRAYS =====
@@ -221,7 +226,7 @@ export class FormatounoComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
 
-      // 🔥 SOLO EL NOMBRE, SIN fakepath
+      // SOLO EL NOMBRE, SIN fakepath
       this.formato1Form.get(controlName)?.setValue(file.name);
     }
   }
@@ -342,7 +347,7 @@ export class FormatounoComponent implements OnInit {
       d: {
         fformato1_tipo_capacitacion: f.tipocapacitacion,
         fformato1_tipo_capacitacion_docum:f.docucapacitacion,
-        fformato1_fecha_elaboracion: f.fechaejecucion,
+        fformato1_fecha_elaboracion: new Date().toISOString().split('T')[0],
         fformato1_institucion: f.institucion,
         fformato1_persona_contacto: f.personacontacto,
         fformato1_direccion: f.direccion,
@@ -354,7 +359,8 @@ export class FormatounoComponent implements OnInit {
         fformato1_modalidad: f.modalidad,
         fformato1_carga_horaria: f.cargahoraria,
         fformato1_instructores_tentativos: instructoresTexto,
-        fformato1_fecha_ejecucion: f.fechaejecucion,
+        fformato1_fecha_ejecucion_desde: f.fechaEjecucionDesde,
+        fformato1_fecha_ejecucion_hasta: f.fechaEjecucionHasta,
         fformato1_inversion: f.inversion,
         fformato1_consecuencia1:f.consecuencia1,
         fformato1_consecuencia2:f.consecuencia2,
@@ -471,6 +477,14 @@ export class FormatounoComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.isGuardando = false;
+        console.error('========== ERROR INSERTAR FORMATO 1 ==========');
+        console.error('STATUS:', err.status);
+        console.error('STATUS TEXT:', err.statusText);
+        console.error('MESSAGE:', err.message);
+        console.error('ERROR DEL SERVIDOR:', err.error);
+        console.error('ERROR COMO STRING:', JSON.stringify(err.error));
+
+
         Swal.fire({
           icon: 'error',
           title: 'Error del servidor',

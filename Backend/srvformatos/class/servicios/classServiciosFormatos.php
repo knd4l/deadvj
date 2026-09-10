@@ -494,7 +494,8 @@ public function insertformato1($filtros) {
    formato1_modalidad,
    formato1_carga_horaria,
    formato1_instructores_tentativos,
-   formato1_fecha_ejecucion,
+   formato1_fecha_ejecucion_desde,
+   formato1_fecha_ejecucion_hasta,
    formato1_inversion,
    formato1_estado)
    VALUES(
@@ -511,7 +512,8 @@ public function insertformato1($filtros) {
    :formato1_modalidad,
    :formato1_carga_horaria,
    :formato1_instructores_tentativos,
-   :formato1_fecha_ejecucion,
+   :formato1_fecha_ejecucion_desde,
+   :formato1_fecha_ejecucion_hasta,
    :formato1_inversion,
    'Activo')";
 
@@ -535,7 +537,8 @@ public function insertformato1($filtros) {
             $dbc->bind(":formato1_modalidad",$filtros->fformato1_modalidad);
             $dbc->bind(":formato1_carga_horaria",$filtros->fformato1_carga_horaria);
             $dbc->bind(":formato1_instructores_tentativos",$filtros->fformato1_instructores_tentativos);
-            $dbc->bind(":formato1_fecha_ejecucion",$filtros->fformato1_fecha_ejecucion);
+            $dbc->bind(":formato1_fecha_ejecucion_desde",$filtros->fformato1_fecha_ejecucion_desde);
+            $dbc->bind(":formato1_fecha_ejecucion_hasta",$filtros->fformato1_fecha_ejecucion_hasta);
             $dbc->bind(":formato1_inversion",$filtros->fformato1_inversion);
             
         $dbc->execute();
@@ -887,7 +890,8 @@ public function insertConsecuenciaFormato1($filtros) {
         mc.modalidad_nombre,
         f1.formato1_carga_horaria,
         f1.formato1_instructores_tentativos,
-        f1.formato1_fecha_ejecucion,
+        f1.formato1_fecha_ejecucion_desde,
+        f1.formato1_fecha_ejecucion_hasta,
         f1.formato1_inversion,
         f1.formato1_estado,
 
@@ -946,7 +950,8 @@ public function insertConsecuenciaFormato1($filtros) {
         mc.modalidad_nombre,
         f1.formato1_carga_horaria,
         f1.formato1_instructores_tentativos,
-        f1.formato1_fecha_ejecucion,
+        f1.formato1_fecha_ejecucion_desde,
+        f1.formato1_fecha_ejecucion_hasta,
         f1.formato1_inversion,
         f1.formato1_estado
 ";
@@ -1031,8 +1036,11 @@ $item->formato1_carga_horaria =
 $item->formato1_instructores_tentativos =
     $row['formato1_instructores_tentativos'];
 
-$item->formato1_fecha_ejecucion =
-    $row['formato1_fecha_ejecucion'];
+$item->formato1_fecha_ejecucion_desde =
+    $row['formato1_fecha_ejecucion_desde'];
+
+    $item->formato1_fecha_ejecucion_hasta =
+    $row['formato1_fecha_ejecucion_hasta'];
 
 $item->formato1_inversion =
     $row['formato1_inversion'];
@@ -1060,7 +1068,8 @@ $result[] = $item;
              $item->modalidad_nombre = 'NO HAY REGISTROS';  
              $item->formato1_persona_contacto = 'NO HAY REGISTROS'; 
              $item->formato1_telefono = 'NO HAY REGISTROS';  
-             $item->formato1_fecha_ejecucion = 'NO HAY REGISTROS';
+             $item->formato1_fecha_ejecucion_desde = 'NO HAY REGISTROS';
+             $item->formato1_fecha_ejecucion_hasta = 'NO HAY REGISTROS';
 
         $result[] = $item;
         $this->estado = new Exception_Object(-1,'');
@@ -1126,7 +1135,11 @@ $codigo=$codigo->formato1_codigo;
 
             f1.formato1_codigo,
 
-            f1.formato1_fecha_ejecucion,
+            f1.formato1_fecha_elaboracion,
+
+            f1.formato1_fecha_ejecucion_desde,
+
+            f1.formato1_fecha_ejecucion_hasta,
 
             tc.tipo_capac_nombre,
 
@@ -1159,7 +1172,9 @@ $codigo=$codigo->formato1_codigo;
         GROUP BY
 
             f1.formato1_codigo,
-            f1.formato1_fecha_ejecucion,
+            f1.formato1_fecha_elaboracion,
+            f1.formato1_fecha_ejecucion_desde,
+            f1.formato1_fecha_ejecucion_hasta,
             tc.tipo_capac_nombre,
             mc.modalidad_nombre,
             f1.formato1_carga_horaria,
@@ -1196,26 +1211,23 @@ $codigo=$codigo->formato1_codigo;
 
                     $item = new stdClass();
 
-                    $item->formato1_codigo =
-                        $row['formato1_codigo'];
+                    $item->formato1_codigo =$row['formato1_codigo'];
 
-                    $item->formato1_fecha_ejecucion =
-                        $row['formato1_fecha_ejecucion'];
+                    $item->formato1_fecha_elaboracion= $row['formato1_fecha_elaboracion'];
 
-                    $item->tipo_capac_nombre =
-                        $row['tipo_capac_nombre'];
+                    $item->formato1_fecha_ejecucion_desde =$row['formato1_fecha_ejecucion_desde'];
 
-                    $item->modalidad_nombre =
-                        $row['modalidad_nombre'];
+                    $item->formato1_fecha_ejecucion_hasta =$row['formato1_fecha_ejecucion_hasta'];
 
-                    $item->formato1_carga_horaria =
-                        $row['formato1_carga_horaria'];
+                    $item->tipo_capac_nombre =$row['tipo_capac_nombre'];
 
-                    $item->formato1_inversion =
-                        $row['formato1_inversion'];
+                    $item->modalidad_nombre =$row['modalidad_nombre'];
 
-                    $item->instructores_tentativos =
-                        $row['instructores_tentativos'];
+                    $item->formato1_carga_horaria =$row['formato1_carga_horaria'];
+
+                    $item->formato1_inversion =$row['formato1_inversion'];
+
+                    $item->instructores_tentativos =$row['instructores_tentativos'];
 
                     $result[] = $item;
                 }
@@ -1803,12 +1815,12 @@ public function insertformato6($datos)
 
             $dbc->bind(
                 ":formato6_periodos",
-                $datos->periodos
+                json_encode($datos->periodos, JSON_UNESCAPED_UNICODE)
             );
 
             $dbc->bind(
                 ":formato6_horario",
-                $datos->horario
+                json_encode($datos->horario, JSON_UNESCAPED_UNICODE)
             );
 
             $dbc->bind(

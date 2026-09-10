@@ -11,300 +11,649 @@
 
         <div class="card shadow border-0 my-4">
 
+          <!-- ========================================= -->
           <!-- PROYECTO -->
+          <!-- ========================================= -->
+
           <div class="text-center mt-4">
-            <h5 class="mb-1"><b>PROYECTO</b></h5>
 
-            <!-- SELECCIONAR FORMATO 1 -->
-            <!-- ========================================= -->
+            <h5 class="mb-1">
+              <b>
+                PROYECTO
+                <br><br>
+                {{ cursoNombre }}
+              </b>
+            </h5>
 
-        <div class="mb-4 px-4">
-
-              <label class="form-label">
-                <b>Seleccionar curso definido</b>
-              </label>
-
-              <select
-                class="form-select"
-                [(ngModel)]="formato1Seleccionado"
-                name="formato1Seleccionado"
-                (change)="seleccionarFormato1()">
-
-                <option [ngValue]="null">
-                  -- Seleccionar curso --
-                </option>
-
-                <option
-                  *ngFor="let formato of formatos1Definidos"
-                  [ngValue]="formato">
-
-                  {{ formato.formato1_codigo }}
-                  -
-                  {{ formato.formato1_curso_definido }}
-
-                </option>
-
-              </select>
-
-            </div>
-
-
-
-            
           </div>
 
-          <!-- TÍTULO PRINCIPAL -->
-          <div class="card-header bg-institucional text-center">
-            <h4 class="mb-0">
-              <b>FORMATO 06</b>
-            </h4>
-          </div>
+
+          <!-- ========================================= -->
+          <!-- CUERPO -->
+          <!-- ========================================= -->
 
           <div class="card-body">
 
             <form>
 
-              <!-- ========================================= -->
-              <!-- INFORMACIÓN GENERAL -->
-              <!-- ========================================= -->
 
-              <div class="section-card">
+              <!-- ===================================================== -->
+              <!-- MÓDULO 1 - DATOS INFORMATIVOS -->
+              <!-- ===================================================== -->
+
+              <div
+                class="section-card"
+                *ngIf="moduloActual === 1">
 
                 <h5 class="section-title">
                   1. DATOS INFORMATIVOS
                 </h5>
+
+
+                <!-- ========================================= -->
+                <!-- SELECCIONAR FORMATO 1 -->
+                <!-- ========================================= -->
+
+                <div class="mb-4">
+
+                  <label class="form-label">
+                    <b>Seleccionar curso definido</b>
+                  </label>
+
+                  <select
+                    class="form-select"
+                    [(ngModel)]="formato1Seleccionado"
+                    name="formato1Seleccionado"
+                    (change)="seleccionarFormato1()">
+
+                    <option [ngValue]="null">
+                      -- Seleccionar curso --
+                    </option>
+
+                    <option
+                      *ngFor="let formato of formatos1Definidos"
+                      [ngValue]="formato">
+
+                      {{ formato.formato1_codigo }}
+                      -
+                      {{ formato.formato1_curso_definido }}
+
+                    </option>
+
+                  </select>
+
+                </div>
+
+                <!-- ========================================= -->
+                <!-- DATOS DEL FORMATO 6 -->
+                <!-- ========================================= -->
 
                 <table class="table table-bordered table-custom">
 
                   <tbody>
 
                     <!-- FECHA DE ELABORACIÓN -->
+
                     <tr>
+
                       <td class="label">
                         Fecha de elaboración
                       </td>
 
                       <td>
+
                         <input
                           type="date"
                           class="form-control"
                           [(ngModel)]="formato6.fechaElaboracion"
                           name="fechaElaboracion">
+
                       </td>
+
                     </tr>
 
 
                     <!-- REQUERIMIENTO -->
+
                     <tr>
+
                       <td class="label">
                         Requerimiento
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.requerimiento"
                           name="requerimiento"
                           placeholder="Ingrese el requerimiento">
+
                       </td>
+
                     </tr>
 
 
                     <!-- UNIDAD RESPONSABLE -->
+
                     <tr>
+
                       <td class="label">
                         Unidad responsable
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.unidadResponsable"
                           name="unidadResponsable"
                           placeholder="Ingrese la unidad responsable">
+
                       </td>
+
                     </tr>
 
 
                     <!-- INSTRUCTORES -->
+
                     <tr>
+
                       <td class="label">
                         Instructores
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.instructores"
                           name="instructores"
                           placeholder="Ingrese los instructores">
+
+                         <small class="text-muted text-nowrap">
+                          Profesionales expertos en el tema
+                        </small>
+
                       </td>
+
                     </tr>
 
 
                     <!-- BENEFICIARIOS -->
+
                     <tr>
+
                       <td class="label">
                         Beneficiarios
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.beneficiarios"
                           name="beneficiarios"
                           placeholder="Ingrese los beneficiarios">
+
                       </td>
+
                     </tr>
 
 
                     <!-- PARALELO -->
+
                     <tr>
+
                       <td class="label">
                         Paralelo
                       </td>
 
                       <td>
+
                         <input
-                          type="text"
+                          type="number"
                           class="form-control"
                           [(ngModel)]="formato6.paralelo"
                           name="paralelo"
-                          placeholder="Ingrese el paralelo">
+                          min="1"
+                          placeholder="Numero de participantes">
+
+                          <small class="text-muted text-nowrap">
+                            Participantes que integrarán cada paralelo
+                          </small>
+
                       </td>
+
                     </tr>
 
 
                     <!-- MODALIDAD -->
+
+                   
                     <tr>
                       <td class="label">
                         Modalidad
                       </td>
 
                       <td>
-                        <select
+                        <input
+                          type="text"
                           class="form-control"
                           [(ngModel)]="formato6.modalidad"
-                          name="modalidad">
-
-                          <option value="">
-                            Seleccionar
-                          </option>
-
-                          <option value="Presencial">
-                            Presencial
-                          </option>
-
-                          <option value="Virtual">
-                            Virtual
-                          </option>
-
-                          <option value="Híbrida">
-                            Híbrida
-                          </option>
-
-                        </select>
+                          name="modalidad"
+                          placeholder="Ingrese la modalidad">
                       </td>
+                        
+                      
                     </tr>
 
 
+
+
                     <!-- ÁREA -->
+
                     <tr>
+
                       <td class="label">
                         Área
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.area"
                           name="area"
                           placeholder="Ingrese el área">
+
                       </td>
+
                     </tr>
 
 
                     <!-- CARGA HORARIA -->
+
                     <tr>
+
                       <td class="label">
                         Carga horaria
                       </td>
 
-                      <td>
-                        <input
-                          type="number"
-                          class="form-control"
-                          [(ngModel)]="formato6.cargaHoraria"
-                          name="cargaHoraria"
-                          placeholder="Ingrese la carga horaria">
-                      </td>
+                     
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+
+                            <input
+                              type="number"
+                              class="form-control"
+                              [(ngModel)]="formato6.cargaHoraria"
+                              name="cargaHoraria"
+                              style="max-width: 150px;"
+                            >
+
+                            <span class="text-nowrap">
+                              horas
+                            </span>
+
+                          </div>
+                        </td>
+
+
+
                     </tr>
 
 
                     <!-- PERIODOS -->
+
                     <tr>
+
                       <td class="label">
                         Periodos
                       </td>
 
                       <td>
-                        <input
-                        type="text"
-                        class="form-control"
-                        [(ngModel)]="formato6.periodos"
-                        name="periodos"
-                        placeholder="Ingrese los periodos">
+
+                        <!-- INSCRIPCIONES --> 
+                         <div class="fw-bold mb-3"> 
+                          <div> 
+                            INSCRIPCIONES y MATRÍCULA: 
+                          </div> 
+                          <div class="d-flex align-items-center gap-2">
+                             
+                            <span>Desde</span> 
+
+                            <input 
+                            type="date" 
+                            class="form-control" 
+                            [(ngModel)]="formato6.periodos.matriculaDesde" 
+                            name="matriculaDesde" 
+                            style="max-width: 180px;" > 
+
+                            <span>Hasta</span> 
+
+                            <input 
+                            type="date" 
+                            class="form-control" 
+                            [(ngModel)]="formato6.periodos.matriculaHasta" 
+                            name="matriculaHasta" 
+                            style="max-width: 180px;" > 
+                          </div> 
+
+                        </div>
+
+                        <!--Ejecucion del curso-->
+
+                        <div class="fw-bold mb-3"> 
+                          <div> 
+                            EJECUCIÓN DEL CURSO: 
+                          </div> 
+                            <div >
+                            {{ formato6.periodos.ejecucion }}
+                            </div>
+                          </div>
+
+
+                          <!--Modulos-->
+                          
+                          <div class="mt-4">
+
+                            <div class="fw-bold mb-3">
+                              MÓDULOS:
+                            </div>
+
+
+                            <!-- LISTA DE MÓDULOS -->
+
+                            <div
+                              *ngFor="let modulo of formato6.periodos.modulos; let i = index"
+                              class="border rounded p-3 mb-3"
+                            >
+
+                              <!-- NOMBRE DEL MÓDULO -->
+
+                              <div class="mb-3">
+
+                                <label class="form-label fw-bold">
+                                  Módulo {{ i + 1 }}:
+                                </label>
+
+                                <input
+                                  type="text"
+                                  class="form-control"
+                                  [(ngModel)]="modulo.nombre"
+                                  [name]="'moduloNombre' + i"
+                                  placeholder="Ingrese el nombre del módulo"
+                                >
+
+                              </div>
+
+
+                              <!-- FECHAS DEL MÓDULO -->
+
+                              <div class="d-flex align-items-center gap-2">
+
+                                <span>Del</span>
+
+                                <input
+                                  type="date"
+                                  class="form-control"
+                                  [(ngModel)]="modulo.desde"
+                                  [name]="'moduloDesde' + i"
+                                  style="max-width: 180px;"
+                                >
+
+                                <span>al</span>
+
+                                <input
+                                  type="date"
+                                  class="form-control"
+                                  [(ngModel)]="modulo.hasta"
+                                  [name]="'moduloHasta' + i"
+                                  style="max-width: 180px;"
+                                >
+
+
+                                <!-- ELIMINAR -->
+
+                                <button
+                                  type="button"
+                                  class="btn"
+                                  style="background-color: #6c1313; color:white"
+                                  *ngIf="formato6.periodos.modulos.length > 1"
+                                  (click)="eliminarModulo(i)"
+                                >
+                                  Eliminar
+                                </button>
+
+                              </div>
+
+                            </div>
+
+
+                            <!-- ===================================================== -->
+                            <!-- AGREGAR MÓDULO -->
+                            <!-- ===================================================== -->
+
+                            <button
+                              type="button"
+                              class="btn"
+                              style="background-color: #6c1313; color:white"
+                              (click)="agregarModulo()"
+                            >
+                              + Agregar módulo
+                            </button>
+
+                          </div>
+
                       </td>
-                      
+
                     </tr>
 
 
                     <!-- HORARIO -->
-                    <tr>
-                      <td class="label">
-                        Horario
-                      </td>
 
-                      <td>
-                        <input
-                          type="text"
-                          class="form-control"
-                          [(ngModel)]="formato6.horario"
-                          name="horario"
-                          placeholder="Ingrese el horario">
-                      </td>
-                    </tr>
+                  
+<tr>
+
+  <td class="label">
+    Horario
+  </td>
+
+  <td>
+
+    <!-- ===================================================== -->
+    <!-- LISTA DE HORARIOS -->
+    <!-- ===================================================== -->
+
+    <div
+      *ngFor="let horario of formato6.horario; let i = index"
+      class="border rounded p-3 mb-3"
+    >
+
+      <!-- ================================================= -->
+      <!-- TIPO DE ACTIVIDAD -->
+      <!-- ================================================= -->
+
+      <div class="mb-3">
+
+        <label class="form-label fw-bold">
+          Tipo de actividad:
+        </label>
+
+        <select
+          class="form-control"
+          [(ngModel)]="horario.tipo"
+          [name]="'tipoHorario' + i"
+        >
+
+          <option value="Clases en vivo (sincrónico)">
+            Clases en vivo (sincrónico)
+          </option>
+
+          <option value="Trabajo autónomo (asincrónico)">
+            Trabajo autónomo (asincrónico)
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- ================================================= -->
+      <!-- DÍAS -->
+      <!-- ================================================= -->
+
+      <div class="mb-3">
+
+        <label class="form-label fw-bold">
+          Seleccione los días:
+        </label>
+
+        <div class="row">
+
+          <div
+            class="col-md-3 mb-2"
+            *ngFor="let dia of diasSemana"
+          >
+
+            <div class="form-check">
+
+              <input
+                type="checkbox"
+                class="form-check-input"
+                [id]="'dia' + i + dia"
+                [checked]="horario.dias.includes(dia)"
+                (change)="cambiarDia(horario, dia, $event)"
+              >
+
+              <label
+                class="form-check-label"
+                [for]="'dia' + i + dia"
+              >
+                {{ dia }}
+              </label>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================================= -->
+      <!-- HORARIO -->
+      <!-- ================================================= -->
+
+      <div class="mb-3">
+
+        <label class="form-label fw-bold">
+          Horario:
+        </label>
+
+        <div class="d-flex align-items-center gap-2">
+
+          <span>Desde</span>
+
+          <input
+            type="time"
+            class="form-control"
+            [(ngModel)]="horario.horaDesde"
+            [name]="'horaDesde' + i"
+            style="max-width: 150px;"
+          >
+
+          <span>Hasta</span>
+
+          <input
+            type="time"
+            class="form-control"
+            [(ngModel)]="horario.horaHasta"
+            [name]="'horaHasta' + i"
+            style="max-width: 150px;"
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- ================================================= -->
+      <!-- ELIMINAR HORARIO -->
+      <!-- ================================================= -->
+
+      <button
+        type="button"
+        class="btn"
+        style="background-color: #6c1313; color:white"
+        *ngIf="formato6.horario.length > 1"
+        (click)="eliminarHorario(i)"
+      >
+        Eliminar horario
+      </button>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- AGREGAR HORARIO -->
+    <!-- ===================================================== -->
+
+    <button
+      type="button"
+      class="btn"
+      style="background-color: #6c1313; color:white"
+      (click)="agregarHorario()"
+    >
+      + Agregar horario
+    </button>
+
+  </td>
+
+</tr>
+
+
 
 
                     <!-- LUGAR -->
+
                     <tr>
+
                       <td class="label">
                         Lugar
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.lugar"
                           name="lugar"
                           placeholder="Ingrese el lugar">
+
                       </td>
+
                     </tr>
 
 
                     <!-- PRERREQUISITOS -->
+
                     <tr>
+
                       <td class="label">
                         Prerrequisitos
                       </td>
 
                       <td>
+
                         <textarea
                           class="form-control"
                           rows="3"
@@ -312,42 +661,67 @@
                           name="prerrequisitos"
                           placeholder="Ingrese los prerrequisitos">
                         </textarea>
+
                       </td>
+
                     </tr>
 
 
                     <!-- TIPO DE CERTIFICADO -->
+
                     <tr>
+
                       <td class="label">
                         Tipo de certificado
                       </td>
 
                       <td>
+
                         <input
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.tipoCertificado"
                           name="tipoCertificado"
-                          placeholder="Ingrese el tipo de certificado">             
-                        
+                          placeholder="Ingrese el tipo de certificado">
+
                       </td>
+
                     </tr>
 
 
                     <!-- INVERSIÓN -->
+
                     <tr>
+
                       <td class="label">
                         Inversión
                       </td>
 
-                      <td>
-                        <input
-                          type="text"
-                          class="form-control"
-                          [(ngModel)]="formato6.inversion"
-                          name="inversion"
-                          placeholder="$">
-                      </td>
+                      
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+
+                            <input
+                              type="number"
+                              class="form-control"
+                              [(ngModel)]="formato6.inversion"
+                              name="inversion"
+                              step="0.01"
+                              style="max-width: 180px;"
+                            >
+
+                            <span
+                              class="text-nowrap"
+                              *ngIf="formato6.inversion !== '' && formato6.inversion !== null"
+                            >
+                              USD
+                            </span>
+
+                          </div>
+                        </td>
+
+
+
                     </tr>
 
                   </tbody>
@@ -357,22 +731,728 @@
               </div>
 
 
-              <!-- ========================================= -->
-              <!-- BOTÓN GUARDAR -->
-              <!-- ========================================= -->
+              <!-- ===================================================== -->
+              <!-- BOTÓN SIGUIENTE - MÓDULO 1 -->
+              <!-- ===================================================== -->
 
-              <div class="text-end mt-4">
+              <div
+                *ngIf="moduloActual === 1"
+                class="text-end mt-4">
+
+                <button
+                  type="button"
+                  class="btn btn-institucional px-5"
+                  (click)="siguienteModulo()">
+
+                  Siguiente →
+
+                </button>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- MÓDULO 2 -->
+              <!-- INTRODUCCIÓN Y JUSTIFICACIÓN -->
+              <!-- ===================================================== -->
+
+              <div
+                class="section-card"
+                *ngIf="moduloActual === 2">
+
+                <h5 class="section-title">
+                  2. INTRODUCCIÓN
+                </h5>
+
+                <div class="mb-4">
+
+                  <textarea
+                    class="form-control texto-largo"
+                    rows="10"
+                    [(ngModel)]="formato6.introduccion"
+                    name="introduccion"
+                    style="text-align: justify;">
+                  </textarea>
+
+                </div>
+
+
+                <h5 class="section-title">
+                  3. JUSTIFICACIÓN
+                </h5>
+
+                <div class="mb-4">
+
+                  <textarea
+                    class="form-control texto-largo"
+                    rows="10"
+                    [(ngModel)]="formato6.justificacion"
+                    name="justificacion"
+                    style="text-align: justify;">
+                  </textarea>
+
+                </div>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- BOTONES MÓDULO 2 -->
+              <!-- ===================================================== -->
+
+              <div
+                *ngIf="moduloActual === 2"
+                class="d-flex justify-content-between mt-4">
+
+                <button
+                  type="button"
+                  class="btn btn-secondary px-5"
+                  (click)="moduloAnterior()">
+
+                  ← Anterior
+
+                </button>
+
+
+                <button
+                  type="button"
+                  class="btn btn-institucional px-5"
+                  (click)="siguienteModulo()">
+
+                  Siguiente →
+
+                </button>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- MÓDULO 3 -->
+              <!-- OBJETIVOS, METODOLOGÍA Y PLANIFICACIÓN -->
+              <!-- ===================================================== -->
+
+              <div
+                class="section-card"
+                *ngIf="moduloActual === 3">
+
+                <h5 class="section-title">
+                  4. OBJETIVOS
+                </h5>
+
+                
+                 
+                    <div class="mb-4">
+
+                      <!-- OBJETIVO GENERAL -->
+                      <div class="mb-4">
+
+                        <label class="form-label fw-bold">
+                          Objetivo general:
+                        </label>
+
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="formato6.objetivos.general"
+                          name="objetivoGeneral"
+                          placeholder="Ingrese el objetivo general...">
+
+                      </div>
+
+
+                      <!-- OBJETIVOS ESPECÍFICOS -->
+                      <div>
+
+                        <label class="form-label fw-bold">
+                          Objetivos específicos:
+                        </label>
+
+                        <div
+                          *ngFor="let objetivo of formato6.objetivos.especificos; let i = index"
+                          class="mb-2"
+                        >
+
+                          <div class="d-flex align-items-center gap-2">
+
+                            <span class="fw-bold">
+                              {{ i + 1 }}.
+                            </span>
+
+                            <input
+                              type="text"
+                              class="form-control"
+                              [(ngModel)]="formato6.objetivos.especificos[i]"
+                              [name]="'objetivoEspecifico' + i"
+                              placeholder="Ingrese el objetivo específico...">
+
+                            <button
+                              type="button"
+                              class="btn"
+                              style="background-color: #6c1313; color:white"
+                              *ngIf="formato6.objetivos.especificos.length > 1"
+                              (click)="eliminarObjetivoEspecifico(i)">
+                              Eliminar
+                            </button>
+
+                          </div>
+
+                        </div>
+
+                        <button
+                          type="button"
+                          class="btn"
+                          style="background-color: #6c1313; color:white"
+                          (click)="agregarObjetivoEspecifico()">
+                          + Agregar objetivo específico
+                        </button>
+
+                      </div>
+
+                    </div>
+
+
+
+                <h5 class="section-title">
+                  5. METODOLOGÍA DEL CURSO
+                </h5>
+
+               
+              
+                  <div class="mb-4">
+
+                    <!-- NOMBRE DEL CURSO -->
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">
+                        El Curso: {{ cursoNombre }}
+                      </label>
+                    </div>
+
+                    <!-- METODOLOGÍA -->
+                    <div>
+                      <label class="form-label fw-bold">
+                        Metodología del curso:
+                      </label>
+
+                      <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="formato6.metodologiaCurso"
+                        name="metodologiaCurso"
+                        placeholder="Ingrese la metodología del curso...">
+                    </div>
+
+                  </div>
+
+
+                <h5 class="section-title">
+                  6. PLANIFICACIÓN DE CONTENIDOS
+                </h5>
+
+                <div class="mb-4">
+
+                  <div
+                    *ngFor="let modulo of formato6.periodos.modulos; let i = index"
+                    class="mb-4"
+                  >
+
+                    <!-- TÍTULO DEL MÓDULO -->
+                    <label class="form-label fw-bold">
+                      Módulo {{ i + 1 }}: {{ modulo.nombre }}
+                    </label>
+
+                    <!-- CONTENIDOS -->
+                    <input
+                      type="text"
+                      class="form-control"
+                      [name]="'contenidoModulo' + i"
+                      placeholder="Ingrese los contenidos que tendrá este módulo...">
+
+                  </div>
+
+                </div>
+
+
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- BOTONES MÓDULO 3 -->
+              <!-- ===================================================== -->
+
+              <div
+                *ngIf="moduloActual === 3"
+                class="d-flex justify-content-between mt-4">
+
+                <button
+                  type="button"
+                  class="btn btn-secondary px-5"
+                  (click)="moduloAnterior()">
+
+                  ← Anterior
+
+                </button>
+
+
+                <button
+                  type="button"
+                  class="btn btn-institucional px-5"
+                  (click)="siguienteModulo()">
+
+                  Siguiente →
+
+                </button>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- MÓDULO 4 -->
+              <!-- EVALUACIÓN, ACREDITACIÓN Y CRONOGRAMA -->
+              <!-- ===================================================== -->
+
+              <div
+                class="section-card"
+                *ngIf="moduloActual === 4">
+
+                <h5 class="section-title">
+                  7. EVALUACIÓN
+                </h5>
+
+                <div class="mb-4">
+
+                  <textarea
+                    class="form-control texto-largo"
+                    rows="10"
+                    [(ngModel)]="formato6.evaluacion"
+                    name="evaluacion"
+                    placeholder="Ingrese la evaluación del curso...">
+                  </textarea>
+
+                </div>
+
+
+                <h5 class="section-title">
+                  8. ACREDITACIÓN Y CALIFICACIÓN
+                </h5>
+
+                <div class="mb-4">
+
+                  <textarea
+                    class="form-control texto-largo"
+                    rows="10"
+                    [(ngModel)]="formato6.acreditacionCalificacion"
+                    name="acreditacionCalificacion"
+                    placeholder="Ingrese los criterios de acreditación y calificación...">
+                  </textarea>
+
+                </div>
+
+
+                <!-- ========================================= -->
+                <!-- 9. CRONOGRAMA DEL EVENTO -->
+                <!-- ========================================= -->
+
+                <h5 class="section-title">
+                  9. CRONOGRAMA DEL EVENTO
+                </h5>
+
+
+                <div class="table-responsive">
+
+                  <table class="table table-bordered cronograma-table">
+
+                    <thead>
+
+                      <tr>
+
+                        <th>
+                          Horario
+                        </th>
+
+                        <th>
+                          Fechas
+                        </th>
+
+                        <th>
+                          Total de horas
+                        </th>
+
+                      </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                      <tr
+                        *ngFor="
+                          let fila of formato6.cronograma;
+                          let i = index
+                        ">
+
+                        <td>
+
+                          <textarea
+                            class="form-control cronograma-textarea"
+                            rows="7"
+                            [(ngModel)]="fila.horario"
+                            [name]="'horario_' + i"
+                            placeholder="Ejemplo.-
+Módulo 1: Competencias académicas para la innovación docente
+Clases en vivo (sincrónico)
+Miércoles 18:00 a 22:00 y Sábado 08:00 a 13:00">
+                          </textarea>
+
+                        </td>
+
+
+                        <td>
+
+                          <textarea
+                            class="form-control cronograma-textarea"
+                            rows="7"
+                            [(ngModel)]="fila.fechas"
+                            [name]="'fechas_' + i"
+                            placeholder="Ejemplo.-
+                              Lunes 02 de marzo (4h)
+                              Miércoles 04 de marzo (4h)
+                              Viernes 06 de marzo (4h)
+                              2026">
+                          </textarea>
+
+                        </td>
+
+
+                        <td>
+
+                          <input
+                            type="number"
+                            class="form-control total-horas"
+                            [(ngModel)]="fila.totalHoras"
+                            [name]="'totalHoras_' + i"
+                            placeholder="Horas">
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <div class="text-end mt-3">
+
+                  <button
+                    type="button"
+                    class="btn btn-outline-institucional"
+                    (click)="agregarFilaCronograma()">
+
+                    + Agregar fila
+
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- BOTONES MÓDULO 4 -->
+              <!-- ===================================================== -->
+
+              <div
+                *ngIf="moduloActual === 4"
+                class="d-flex justify-content-between mt-4">
+
+                <button
+                  type="button"
+                  class="btn btn-secondary px-5"
+                  (click)="moduloAnterior()">
+
+                  ← Anterior
+
+                </button>
+
+
+                <button
+                  type="button"
+                  class="btn btn-institucional px-5"
+                  (click)="siguienteModulo()">
+
+                  Siguiente →
+
+                </button>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- MÓDULO 5 -->
+              <!-- PRESUPUESTO -->
+              <!-- ===================================================== -->
+
+              <div
+                class="section-card"
+                *ngIf="moduloActual === 5">
+
+                <!-- ========================================= -->
+                <!-- 10. PRESUPUESTO -->
+                <!-- ========================================= -->
+
+                <h5 class="section-title">
+                  10. PRESUPUESTO
+                </h5>
+
+
+                <!-- ========================================= -->
+                <!-- NOMBRE DEL CURSO -->
+                <!-- ========================================= -->
+
+                <div class="presupuesto-curso">
+
+                  <b>
+                    {{ cursoNombre }}
+                  </b>
+
+                </div>
+
+
+                <!-- ========================================= -->
+                <!-- TABLA DE INGRESOS -->
+                <!-- ========================================= -->
+
+                <div class="table-responsive">
+
+                  <table class="table table-bordered presupuesto-table">
+
+                    <thead>
+
+                      <!-- ========================================= -->
+                      <!-- INGRESOS + PARTICIPANTES + PARALELOS -->
+                      <!-- ========================================= -->
+
+                      <tr>
+
+                        <!-- INGRESOS -->
+
+                        <th class="presupuesto-titulo ingresos-titulo">
+                          Ingresos
+                        </th>
+
+
+                        <!-- PARTICIPANTES -->
+
+                        <td class="presupuesto-dato">
+
+                          <div class="presupuesto-inline">
+
+                            <b>Participantes</b>
+
+                            <input
+                              type="number"
+                              class="form-control presupuesto-numero"
+                              [(ngModel)]="formato6.presupuesto.participantes"
+                              name="presupuestoParticipantes"
+                              min="0"
+                              placeholder="Ej:25"
+                              (input)="recalcularIngresos()">
+
+                          </div>
+
+                        </td>
+
+
+                        <!-- PARALELOS -->
+
+                        <td
+                          colspan="2"
+                          class="presupuesto-dato">
+
+                          <div class="presupuesto-inline">
+
+                            <b>
+                              Paralelos
+                            </b>
+
+                            <input
+                              type="number"
+                              class="form-control presupuesto-numero"
+                              [(ngModel)]="formato6.presupuesto.paralelo"
+                              name="presupuestoParalelo"
+                              min="0"
+                              placeholder="Ej:2">
+
+                          </div>
+
+                        </td>
+
+                      </tr>
+
+
+                      <!-- ========================================= -->
+                      <!-- ENCABEZADOS -->
+                      <!-- ========================================= -->
+
+                      <tr>
+
+                        <th class="col-n">
+                          N
+                        </th>
+
+                        <th class="col-descripcion">
+                          Descripción
+                        </th>
+
+                        <th class="col-valor">
+                          Valor
+                        </th>
+
+                        <th class="col-total">
+                          Total
+                        </th>
+
+                      </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                      <!-- ========================================= -->
+                      <!-- FILAS DE INGRESOS -->
+                      <!-- ========================================= -->
+
+                      <tr
+                        *ngFor="
+                          let ingreso of formato6.presupuesto.ingresos;
+                          let i = index
+                        ">
+
+                        <!-- N -->
+
+                        <td class="text-center">
+
+                          {{ formato6.presupuesto.participantes }}
+
+                        </td>
+
+
+                        <!-- DESCRIPCIÓN -->
+
+                        <td>
+
+                          <input
+                            type="text"
+                            class="form-control presupuesto-input"
+                            [(ngModel)]="ingreso.descripcion"
+                            [name]="'presupuestoDescripcion_' + i"
+                            placeholder="Ej. Inscripción">
+
+                        </td>
+
+
+                        <!-- VALOR -->
+
+                        <td>
+
+                          <input
+                            type="number"
+                            class="form-control presupuesto-input"
+                            [(ngModel)]="ingreso.valor"
+                            [name]="'presupuestoValor_' + i"
+                            min="0"
+                            step="0.01"
+                            placeholder="Valor $"
+                            (input)="recalcularIngresos()">
+
+                        </td>
+
+
+                        <!-- TOTAL -->
+
+                        <td>
+
+                          <input
+                            type="number"
+                            class="form-control presupuesto-total"
+                            [(ngModel)]="ingreso.total"
+                            [name]="'presupuestoTotal_' + i"
+                            readonly>
+
+                        </td>
+
+                      </tr>
+
+
+                      <!-- ========================================= -->
+                      <!-- TOTAL INGRESOS -->
+                      <!-- ========================================= -->
+
+                      <tr>
+
+                        <td
+                          colspan="3"
+                          class="total-ingresos-label">
+
+                          Total ingresos
+
+                        </td>
+
+                        <td>
+
+                          <input
+                            type="number"
+                            class="form-control presupuesto-total"
+                            [(ngModel)]="formato6.presupuesto.totalIngresos"
+                            name="presupuestoTotalIngresos"
+                            readonly>
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </div>
+
+
+              <!-- ===================================================== -->
+              <!-- BOTONES MÓDULO 5 -->
+              <!-- ===================================================== -->
+
+              <div
+                *ngIf="moduloActual === 5"
+                class="d-flex justify-content-between mt-4">
+
+                <button
+                  type="button"
+                  class="btn btn-secondary px-5"
+                  (click)="moduloAnterior()">
+
+                  ← Anterior
+
+                </button>
+
 
                 <button
                   type="button"
                   class="btn btn-institucional px-5"
                   (click)="guardarFormato6()">
-                
-                   {{ formato6Existe ? 'Actualizar' : 'Guardar' }}
-                   
+
+                  {{ formato6Existe ? 'Actualizar' : 'Guardar' }}
+
                 </button>
-              
+
               </div>
+
 
             </form>
 
@@ -388,75 +1468,422 @@
 </div>
 
 
+<!-- ===================================================== -->
+<!-- ESTILOS -->
+<!-- ===================================================== -->
+
 <style>
 
 :root {
+
   --institucional: #916500;
   --institucional-sec: #6c1313;
   --fondo: #f7f6f2;
   --texto: #333;
+
 }
 
-/* Encabezado */
+
+/* ========================================= */
+/* ENCABEZADO */
+/* ========================================= */
+
 .bg-institucional {
+
   background-color: var(--institucional) !important;
   color: #fff;
+
 }
 
-/* Botón */
+
+/* ========================================= */
+/* BOTÓN INSTITUCIONAL */
+/* ========================================= */
+
 .btn-institucional {
+
   background-color: var(--institucional);
   color: #fff;
   border-radius: 6px;
   font-weight: 600;
   border: none;
+
 }
+
 
 .btn-institucional:hover {
+
   background-color: var(--institucional-sec);
   color: #fff;
+
 }
 
-/* Tarjeta */
+
+/* ========================================= */
+/* TARJETA DE SECCIÓN */
+/* ========================================= */
+
 .section-card {
+
   background: #fff;
   padding: 20px;
   margin-bottom: 25px;
   border-radius: 8px;
   border-top: 4px solid var(--institucional);
   box-shadow: 0 4px 10px rgba(0,0,0,.06);
+
 }
 
-/* Título */
+
+/* ========================================= */
+/* TÍTULO DE SECCIÓN */
+/* ========================================= */
+
 .section-title {
+
   color: var(--institucional-sec);
   font-weight: 700;
   margin-bottom: 15px;
   border-left: 6px solid var(--institucional);
   padding-left: 12px;
+
 }
 
-/* Tabla */
+
+/* ========================================= */
+/* TABLA */
+/* ========================================= */
+
 .table-custom {
+
   border-color: #ddd;
+
 }
+
 
 .table-custom td {
+
   vertical-align: middle;
+
 }
 
-/* Etiquetas */
+
+/* ========================================= */
+/* ETIQUETAS */
+/* ========================================= */
+
 .table-custom .label {
+
   width: 35%;
   background: #faf7f2;
   font-weight: 600;
   color: var(--institucional-sec);
+
 }
 
-/* Inputs */
+
+/* ========================================= */
+/* INPUTS */
+/* ========================================= */
+
 .form-control:focus {
+
   border-color: var(--institucional);
-  box-shadow: 0 0 0 0.15rem rgba(145, 101, 0, 0.25);
+
+  box-shadow:
+    0 0 0 0.15rem
+    rgba(145, 101, 0, 0.25);
+
+}
+
+
+/* ========================================= */
+/* TEXTAREA */
+/* ========================================= */
+
+.texto-largo {
+
+  min-height: 220px;
+  resize: vertical;
+  line-height: 1.6;
+  padding: 15px;
+
+}
+
+
+/* ========================================= */
+/* TABLA CRONOGRAMA */
+/* ========================================= */
+
+.cronograma-table {
+
+  border-color: #ddd;
+  width: 100%;
+
+}
+
+
+.cronograma-table th {
+
+  background-color: #faf7f2;
+  color: var(--institucional-sec);
+  font-weight: 700;
+  text-align: center;
+  vertical-align: middle;
+
+}
+
+
+.cronograma-table td {
+
+  vertical-align: top;
+  padding: 10px;
+
+}
+
+
+.cronograma-table th:nth-child(1) {
+
+  width: 40%;
+
+}
+
+
+.cronograma-table th:nth-child(2) {
+
+  width: 40%;
+
+}
+
+
+.cronograma-table th:nth-child(3) {
+
+  width: 20%;
+
+}
+
+
+/* ========================================= */
+/* TEXTAREAS DEL CRONOGRAMA */
+/* ========================================= */
+
+.cronograma-textarea {
+
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  line-height: 1.5;
+  padding: 12px;
+
+}
+
+
+/* ========================================= */
+/* TOTAL DE HORAS */
+/* ========================================= */
+
+.total-horas {
+
+  text-align: center;
+
+}
+
+
+/* ========================================= */
+/* PRESUPUESTO */
+/* ========================================= */
+
+.presupuesto-curso {
+
+  background-color: #faf7f2;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 18px;
+  color: var(--institucional-sec);
+
+}
+
+
+/* ========================================= */
+/* TABLA PRESUPUESTO */
+/* ========================================= */
+
+.presupuesto-table {
+
+  width: 100%;
+  border-color: #ddd;
+
+}
+
+
+.presupuesto-table th {
+
+  background-color: #faf7f2;
+  color: var(--institucional-sec);
+  font-weight: 700;
+  text-align: center;
+  vertical-align: middle;
+
+}
+
+
+.presupuesto-table td {
+
+  vertical-align: middle;
+  padding: 10px;
+
+}
+
+
+/* ========================================= */
+/* TÍTULO INGRESOS */
+/* ========================================= */
+
+.presupuesto-titulo {
+
+  background-color: #faf7f2 !important;
+  color: var(--institucional-sec) !important;
+  font-weight: 700;
+  font-size: 17px;
+  text-align: center;
+
+}
+
+
+.ingresos-titulo {
+
+  width: 25%;
+
+}
+
+
+/* ========================================= */
+/* DATOS INGRESOS */
+/* ========================================= */
+
+.presupuesto-dato {
+
+  background-color: #fff;
+  width: 25%;
+
+}
+
+
+.presupuesto-inline {
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+}
+
+
+.presupuesto-inline b {
+
+  white-space: nowrap;
+  color: var(--institucional-sec);
+
+}
+
+
+.presupuesto-numero {
+
+  width: 120px;
+  text-align: center;
+
+}
+
+
+/* ========================================= */
+/* COLUMNAS PRESUPUESTO */
+/* ========================================= */
+
+.col-n {
+
+  width: 15%;
+
+}
+
+
+.col-descripcion {
+
+  width: 45%;
+
+}
+
+
+.col-valor {
+
+  width: 20%;
+
+}
+
+
+.col-total {
+
+  width: 20%;
+
+}
+
+
+/* ========================================= */
+/* INPUTS PRESUPUESTO */
+/* ========================================= */
+
+.presupuesto-input {
+
+  width: 100%;
+
+}
+
+
+.presupuesto-total {
+
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  background-color: #f8f8f8;
+
+}
+
+
+/* ========================================= */
+/* TOTAL INGRESOS */
+/* ========================================= */
+
+.total-ingresos-label {
+
+  text-align: right;
+  font-weight: 700;
+  color: var(--institucional-sec);
+  background-color: #faf7f2;
+
+}
+
+
+/* ========================================= */
+/* BOTÓN AGREGAR FILA */
+/* ========================================= */
+
+.btn-outline-institucional {
+
+  color: var(--institucional);
+  border: 1px solid var(--institucional);
+  background-color: transparent;
+  border-radius: 6px;
+  font-weight: 600;
+
+}
+
+
+.btn-outline-institucional:hover {
+
+  background-color: var(--institucional);
+  color: #fff;
+
 }
 
 </style>

@@ -877,20 +877,29 @@ console.log('================================');*/
             {}
           ],
 
-          [
-            {
-              text: 'Fecha de ejecución',
-              style: 'campo'
-            },
-            fechaEjecucion || '',
-            {
-              text: 'Inversión: ' +
-                (formato.formato1_inversion
-                  ? '$ ' + formato.formato1_inversion
-                  : ''),
-              style: 'campo'
-            }
-          ]
+        
+            [
+              {
+                text: 'Fecha de ejecución',
+                style: 'campo'
+              },
+
+              'Desde: ' +
+                (formato.formato1_fecha_ejecucion_desde || '') +
+                '\n' +
+                'Hasta: ' +
+                (formato.formato1_fecha_ejecucion_hasta || ''),
+
+              {
+                text: 'Inversión: ' +
+                  (formato.formato1_inversion
+                    ? '$ ' + formato.formato1_inversion
+                    : ''),
+                style: 'campo'
+              }
+            ]
+
+
 
         ]
 
@@ -1116,7 +1125,7 @@ console.log('================================');*/
     {
       stack: [
         {
-          text: '\n\n\n\n\n\n'
+          text: '\n\n\n\n\n'
         },
         {
           text: '_____________________________________________',
@@ -1147,21 +1156,22 @@ console.log('================================');*/
 
       ],
 
-      width: 260,
+      width: 200,
       margin: [0, -115, 0, 0]
     }
 
   ],
 
   alignment: 'left',
-  margin: [0, 5, 0, 0]
+  margin: [0, 4, 0, 0]
 },
  {
       text: 'NSIB: Nivel de Sensibilidad de la Información MEDIO',
       bold: false,
       fontSize: 9,
       alignment: 'left',
-      margin: [20, 5, 0, 0]
+      dontBreakRows:true,
+      margin: [20, 6.9, 0, 0]
     }
 
   ],
@@ -1321,51 +1331,30 @@ console.log('================================');*/
 
             this.listaformatos1 = res.data.item;
                 console.log('================================');
-    console.log('PRUEBA RESPUESTA DEL SERVIDOR');
-    console.log('PRIMER REGISTRO:', this.listaformatos1[0]);
-    console.log(
-      'CAMPOS:',
-      Object.keys(this.listaformatos1[0])
-    );
-    console.log(
-      'TEMÁTICAS RECIBIDAS:',
-      this.listaformatos1[0].tematicas_tentativas
-    );
+                console.log('PRUEBA RESPUESTA DEL SERVIDOR');
+                console.log('PRIMER REGISTRO:', this.listaformatos1[0]);
+                console.log('CAMPOS:',Object.keys(this.listaformatos1[0]));
+    console.log('TEMÁTICAS RECIBIDAS:',this.listaformatos1[0].tematicas_tentativas);
     console.log('================================');
             console.log('REGISTRO COMPLETO:', this.listaformatos1[0]);
-            console.log(
-  'CAMPOS DEL FORMATO 01:',
-  Object.keys(this.listaformatos1[0])
-);
+            console.log('CAMPOS DEL FORMATO 01:',Object.keys(this.listaformatos1[0]));
 
-console.log(
-  'DATOS COMPLETOS DEL FORMATO 01:',
-  this.listaformatos1[0]
-);
+        console.log('DATOS COMPLETOS DEL FORMATO 01:',this.listaformatos1[0]);
 
-            console.log(
-              'FORMATOS ENCONTRADOS:',
-              this.listaformatos1.length
-            );
+            console.log('FORMATOS ENCONTRADOS:',this.listaformatos1.length);
 
-            console.table(
-              this.listaformatos1
-            );
+            console.table(this.listaformatos1);
 
           } else {
 
-            console.warn(
-              'El servidor respondió correctamente, pero item no es un arreglo'
-            );
+            console.warn('El servidor respondió correctamente, pero item no es un arreglo');
 
             this.listaformatos1 = [];
           }
 
         } else {
 
-          console.warn(
-            'El servidor no encontró registros de Formato 01'
-          );
+          console.warn('El servidor no encontró registros de Formato 01');
 
           this.listaformatos1 = [];
         }
