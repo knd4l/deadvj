@@ -80,6 +80,10 @@ class Database {
 	public function getEstado() {return $this->estado;}
 
 	public function query($query) {
+
+		// Limpiar los parámetros de la consulta anterior 
+		
+		$this->varrayp = array();
 		$this->stmt = $this->dbh->prepare($query);
 	}
 
@@ -132,41 +136,35 @@ class Database {
 
 	public function bind($param, $value, $type = null) {
 
-		if (is_null($type)) {
-			switch (true) {
-			case is_int($value):
-				$type = PDO::PARAM_INT;
-				break;
-			case is_bool($value):
-				$type = PDO::PARAM_BOOL;
-				break;
-			case is_null($value):
-				$type = PDO::PARAM_NULL;
-				break;
-			default:
-				$type = PDO::PARAM_STR;
-			}
-		}
+    if (is_null($type)) {
+        switch (true) {
+            case is_int($value):
+                $type = PDO::PARAM_INT;
+                break;
 
-		// var_dump($this->stmt);
-		/* echo "param<br>";
-	        var_dump($param);
-	        echo "value <br>";
-	        var_dump($value);
-	        echo "type <br>";
-	        var_dump($type);
-*/
+            case is_bool($value):
+                $type = PDO::PARAM_BOOL;
+                break;
 
-		$item = new stdClass();
+            case is_null($value):
+                $type = PDO::PARAM_NULL;
+                break;
 
-		$item->param = $param;
-		$item->value = $value;
-		$item->type = $type;
+            default:
+                $type = PDO::PARAM_STR;
+        }
+    }
 
-		$this->varrayp[] = $item;
+    $item = new stdClass();
 
-		$this->stmt->bindValue($param, $value, $type);
-	}
+    $item->param = $param;
+    $item->value = $value;
+    $item->type = $type;
+
+    $this->varrayp[] = $item;
+
+    $this->stmt->bindValue($param, $value, $type);
+}
 
 	public function execute() {
 		return $this->stmt->execute();
@@ -218,6 +216,11 @@ class Database {
 	public function beginTransaction() {
 		return $this->dbh->beginTransaction();
 	}
+	
+	public function inTransaction() {
+    return $this->dbh->inTransaction();
+	}
+	
 	public function endTransaction() {
 		return $this->dbh->commit();
 	}

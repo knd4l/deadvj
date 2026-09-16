@@ -2,6 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { ModulosService } from 'src/app/servicios/modulos.service';
 import Swal from 'sweetalert2';
 import { catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
+
+interface HorarioModulo{
+  tipo:string;
+  dias:string[];
+  horaDesde:string;
+  horaHasta:string;
+}
+
 @Component({
   selector: 'app-formatoseis',
   templateUrl: './formatoseis.component.html',
@@ -22,6 +31,7 @@ export class FormatoseisComponent implements OnInit {
     formato6Existe: boolean = false;//Para cambiar de boton a actualizar
     moduloActual: number = 1; //Para ver en que pestaña estamos
 
+
     diasSemana: string[]=[
        'Lunes',
         'Martes',
@@ -32,14 +42,27 @@ export class FormatoseisComponent implements OnInit {
         'Domingo'
     ];
 
+      presupuesto: any = [
+        {
+          partida: 1,
+          numeroInstructores: 1,
+          valor: 0,
+          total: 0,
+          descripcion: ''
+        }
+      ]
+      
+    
 
 
-
+    modulosGuardados: any[] = []; //Para guardar los modulos del formato 6
+    modulos: any[] = [];
 
 
 
   constructor(
-    private miServicio: ModulosService
+    private miServicio: ModulosService,
+    private router: Router
   ) { 
 
   }
@@ -94,52 +117,38 @@ moduloAnterior(): void {
     this.moduloActual--;
   }
 }
-agregarFilaCronograma(): void {
-  this.formato6.cronograma.push({
-    horario: '',
-    fechas: '',
-    totalHoras: ''
-  });
+
+trackByIndex(index: number, item: any): number {
+  return index;
 }
 
-calcularTotalIngresos(): void {
+//Metodo para guardar el modulo 
+guardarModulo(modulo: any): void {
 
-  const total = this.formato6.presupuesto.ingresos.reduce(
-    (suma: number, ingreso: any) => {
+  const moduloGuardado = {
+    nombre: modulo.nombre,
+    desde: modulo.desde,
+    hasta: modulo.hasta,
+    horario: modulo.horario.map(
+      (horario: HorarioModulo) => ({
+        tipo: horario.tipo,
+        dias: [...horario.dias],
+        horaDesde: horario.horaDesde,
+        horaHasta: horario.horaHasta
+      })
+    )
+  };
 
-      return suma + (Number(ingreso.total) || 0);
+  this.modulosGuardados.push(moduloGuardado);
 
-    },
-    0
+  console.log(
+    'Módulo guardado:',
+    moduloGuardado
   );
 
-  this.formato6.presupuesto.totalIngresos =
-    String(total);
-
 }
 
 
-
-recalcularIngresos(): void {
-
-  this.formato6.presupuesto.ingresos.forEach(
-    (ingreso: any) => {
-
-      const participantes =
-        Number(this.formato6.presupuesto.participantes) || 0;
-
-      const valor =
-        Number(ingreso.valor) || 0;
-
-      ingreso.total =
-        String(participantes * valor);
-
-    }
-  );
-
-  this.calcularTotalIngresos();
-
-}
 
 cargarFormatos1Definidos(): void {
 
@@ -232,7 +241,12 @@ cargarFormatos1Definidos(): void {
     modalidad: '',
     area: '',
     cargaHoraria: '',
-    periodos:{
+    inscripcionMatriculaDesde: '',
+    inscripcionMatriculaHasta: '',
+    ejecucionDesde: '',
+    ejecucionHasta: '', 
+
+    /*periodos:{
       matriculaDesde:'',
       matriculaHasta:'',
       ejecucionDesde:'',
@@ -243,7 +257,15 @@ cargarFormatos1Definidos(): void {
         {
           nombre:'',
           desde:'',
-          hasta:''
+          hasta:'',
+          horario:[
+            {
+              tipo: 'Clases en vivo (sincrónico)',
+              dias: []as string[],
+              horaDesde: '',
+              horaHasta: ''
+            }
+          ]as HorarioModulo[]
         }
       ]
     },
@@ -251,11 +273,12 @@ cargarFormatos1Definidos(): void {
     horario:[
       {
         tipo:'Clases en vivo (sincrónico)',
-        dias:[] as string[],
+        dias:[],
         horaDesde:'',
         horaHasta:''
       }
-    ],
+    ]as HorarioModulo[],
+      */
     lugar: '',
     prerrequisitos: '',
     tipoCertificado: '',
@@ -278,29 +301,76 @@ cargarFormatos1Definidos(): void {
     planificacionContenidos: '',
 
     //Modulo 4
-    evaluacion:'',
-    acreditacionCalificacion:'',
-    cronograma:[
-      {
-        horario: '',
-        fechas: '',
-        totalHoras: '',
-      }
-    ],
+    evaluacion:'Se proporciconará, permanentemente, una evaluación potencializadora del talento humano en términos de auto evaluación y hetero-evaluación',
+    acreditacionCalificacion:'REGLAMENTO DE LA DIRECCIÓN DE EDUCACIÓN CONTINUA, A DISTANCIA Y VIRTUAL DE LA UNIVERSIDAD TÉCNICA DE AMBATO aprobado por Consejo Universitario mediante Resolución 1000-CU-P-2023 de fecha 15 de septiembre de 2023.\n Artículo 40. De la acreditación de los cursos y/o programas de educación continua.- Para la acreditación (Aprobación) de los cursos y/o programas de educación continua se considerará:\nModalidad B-learning (híbrida o mixta)\n* Asistencia mínima: 90% y el cumplimiento total de las actividades obligatorias planificadas\n* Calificación mínima: 8.0/10',
 
-    //Modulo 5
-    presupuesto:{
-      participantes:'',
-      paralelo:'',
-      ingresos:[{
-        descripcion:'',
-        valor:'',
-        total:''
-      }],
-      totalIngresos:''
-    }
-
+    
+  
   };
+  horasCargaHoraria: number = 0;
+
+  obtenerHorasCargaHoraria(): void {
+
+  this.horasCargaHoraria =
+    Number(this.formato6.cargaHoraria) || 0;
+
+  
+}
+
+//Calcula el presupuesto
+
+calcularTotalPresupuesto(indice: number): void { 
+  const fila = this.presupuesto[indice]; 
+  // La primera fila utiliza la carga horaria 
+  if (indice === 0) { 
+    const valor = Number(fila.valor) || 0; 
+    const horas = Number(this.formato6.cargaHoraria) || 0; 
+    fila.total = valor * horas; 
+    } else { 
+      // Las demás filas solamente toman el valor ingresado 
+      fila.total = this.convertirNumero(fila.valor); 
+    } 
+    this.calcularTotalGeneral(); 
+}
+
+convertirNumero(valor: any): number { 
+  
+  if (valor === null || valor === undefined || valor === '') {
+      return 0; 
+    } 
+    // Permite escribir 20,00 o 20.00 
+    
+    const texto = String(valor).replace(',', '.'); 
+    
+    return Number(texto) || 0; 
+  
+  }
+
+  agregarFilaPresupuesto(): void { 
+
+    this.presupuesto.push({ 
+      
+      partida: '', 
+      descripcion: '', 
+      valor: '', 
+      total: 0 
+    }); 
+  }
+
+  eliminarFilaPresupuesto(indice: number): void { 
+    // No permitimos eliminar la primera fila 
+    if (indice === 0) { 
+      return; 
+    } 
+    this.presupuesto.splice(indice, 1); 
+    this.calcularTotalGeneral(); 
+  }
+
+  calcularTotalGeneral(): number { 
+    return this.presupuesto.reduce( 
+      (suma: number, fila: any) => 
+        suma + (Number(fila.total) || 0),0 ); 
+}
 
 agregarObjetivoEspecifico(): void {
   this.formato6.objetivos.especificos.push('');
@@ -310,39 +380,265 @@ eliminarObjetivoEspecifico(index: number): void {
   this.formato6.objetivos.especificos.splice(index, 1);
 }
 
-  //Agrega el modulo en el campo periodo
-  agregarModulo(): void {
+//Agrega el modulo en el campo periodo
 
-  this.formato6.periodos.modulos.push({
+
+agregarModulo(): void {
+
+  const nuevoModulo = {
+
     nombre: '',
+
     desde: '',
-    hasta: ''
-  });
+
+    hasta: '',
+
+    horario: [
+      {
+        tipo: 'Clases en vivo (sincrónico)',
+        dias: [],
+        horaDesde: '',
+        horaHasta: ''
+      }
+    ] as HorarioModulo[]
+
+  };
+
+  this.modulos.push(nuevoModulo);
+
+  console.log(
+    'Nuevo módulo agregado:',
+    nuevoModulo
+  );
 
 }
+
+
+
+
+
 
 //Elimina el modulo que ya no necesite
 eliminarModulo(index: number): void {
 
-  this.formato6.periodos.modulos.splice(index, 1);
+  this.modulos.splice(index, 1);
 
 }
-agregarHorario(): void {
 
-  this.formato6.horario.push({
+//Metodo para calcular las horas establecidas
+calcularHorasHorario(
+  horaDesde: string,
+  horaHasta: string
+): number {
+
+  if (!horaDesde || !horaHasta) {
+    return 0;
+  }
+
+  const [horaD, minutoD] = horaDesde
+    .split(':')
+    .map(Number);
+
+  const [horaH, minutoH] = horaHasta
+    .split(':')
+    .map(Number);
+
+  const minutosDesde =
+    horaD * 60 + minutoD;
+
+  const minutosHasta =
+    horaH * 60 + minutoH;
+
+  const diferencia =
+    minutosHasta - minutosDesde;
+
+  if (diferencia <= 0) {
+    return 0;
+  }
+
+  return diferencia / 60;
+}
+
+//Metodo para mostrar los dias 
+obtenerDiasHorario(
+  horario: HorarioModulo
+): string {
+
+  if (!horario.dias || horario.dias.length === 0) {
+    return 'Sin días seleccionados';
+  }
+
+  return horario.dias.join(', ');
+}
+
+//Metodo para obtener le fehca 
+obtenerFechasHorario(
+  modulo: any,
+  horario: HorarioModulo
+): string[] {
+
+  if (
+    !horario.dias ||
+    horario.dias.length === 0 ||
+    !modulo.desde ||
+    !modulo.hasta
+  ) {
+    return [];
+  }
+
+  const fechas: string[] = [];
+
+  const fechaInicio = new Date(
+    modulo.desde + 'T00:00:00'
+  );
+
+  const fechaFin = new Date(
+    modulo.hasta + 'T00:00:00'
+  );
+
+  const diasSemana: { [key: string]: number } = {
+    'Domingo': 0,
+    'Lunes': 1,
+    'Martes': 2,
+    'Miércoles': 3,
+    'Jueves': 4,
+    'Viernes': 5,
+    'Sábado': 6
+  };
+
+  const meses = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre'
+  ];
+
+  const fechaActual = new Date(fechaInicio);
+
+  while (fechaActual <= fechaFin) {
+
+    const numeroDia = fechaActual.getDay();
+
+    const diaEncontrado = horario.dias.find(
+      dia => diasSemana[dia] === numeroDia
+    );
+
+    if (diaEncontrado) {
+
+      const numeroFecha = String(
+        fechaActual.getDate()
+      ).padStart(2, '0');
+
+      const nombreMes =
+        meses[fechaActual.getMonth()];
+
+      fechas.push(
+        `${diaEncontrado} ${numeroFecha} ${nombreMes}`
+      );
+    }
+
+    fechaActual.setDate(
+      fechaActual.getDate() + 1
+    );
+  }
+
+  return fechas;
+}
+
+//Metodo para calcular el total de horas de un horario
+
+obtenerTotalHorasHorario(
+  horario: HorarioModulo
+): number {
+
+  const horasPorClase =
+    this.calcularHorasHorario(
+      horario.horaDesde,
+      horario.horaHasta
+    );
+
+  return horasPorClase;
+}
+
+//Suma las horas de los tipos de de clases
+
+obtenerTotalHorasModulo(modulo: any): number {
+
+  let total = 0;
+
+  if (!modulo.horario) {
+    return 0;
+  }
+
+  modulo.horario.forEach(
+    (horario: HorarioModulo) => {
+
+      // Calculamos cuánto dura una sesión
+      const horasPorDia =
+        this.calcularHorasHorario(
+          horario.horaDesde,
+          horario.horaHasta
+        );
+
+      // Calculamos cuántos días seleccionó
+      const cantidadDias =
+        horario.dias
+          ? horario.dias.length
+          : 0;
+
+      // Multiplicamos las horas por la cantidad de días
+      total += horasPorDia * cantidadDias;
+
+    }
+  );
+
+  return total;
+}
+
+
+
+
+eliminarHorario(index: number): void {
+
+  console.log('Eliminación de horario general:', index );
+
+}
+
+agregarHorarioModulo(modulo: any): void {
+
+  modulo.horario.push({
+
     tipo: 'Clases en vivo (sincrónico)',
+
     dias: [],
+
     horaDesde: '',
+
     horaHasta: ''
+
   });
 
 }
 
-eliminarHorario(index: number): void {
 
-  this.formato6.horario.splice(index, 1);
+eliminarHorarioModulo(
+  modulo: any,
+  index: number
+): void {
+
+  modulo.horario.splice(index, 1);
 
 }
+
+
 
 cambiarDia(
   horario: any,
@@ -385,6 +681,10 @@ guardarFormato6(): void {
         formato6_codigo: this.formato6Codigo,
         formato1_codigo: this.formato1Codigo,
 
+        // =============================================
+        // DATOS PRINCIPALES
+        // =============================================
+
         fechaElaboracion: this.formato6.fechaElaboracion,
         requerimiento: this.formato6.requerimiento,
         unidadResponsable: this.formato6.unidadResponsable,
@@ -394,17 +694,49 @@ guardarFormato6(): void {
         modalidad: this.formato6.modalidad,
         area: this.formato6.area,
         cargaHoraria: this.formato6.cargaHoraria,
-        periodos: this.formato6.periodos,
-        horario: this.formato6.horario,
+
+        inscripcionMatriculaDesde:this.formato6.inscripcionMatriculaDesde,
+
+        inscripcionMatriculaHasta:this.formato6.inscripcionMatriculaHasta,
+
+        ejecucionDesde:this.formato6.ejecucionDesde,
+
+        ejecucionHasta:this.formato6.ejecucionHasta,
+
+        modulos:this.modulos,
+
+
+        // =============================================
+        // DATOS ADICIONALES
+        // =============================================
+
         lugar: this.formato6.lugar,
         prerrequisitos: this.formato6.prerrequisitos,
         tipoCertificado: this.formato6.tipoCertificado,
-        inversion: this.formato6.inversion
-        
+        inversion: this.formato6.inversion,
+
+        // =============================================
+        // NUEVOS CAMPOS DE CONTENIDO
+        // =============================================
+
+        introduccion: this.formato6.introduccion,
+        justificacion: this.formato6.justificacion,
+
+        objetivos: {
+          general: this.formato6.objetivos.general,
+          especificos: this.formato6.objetivos.especificos
+        },
+
+        metodologiaCurso: this.formato6.metodologiaCurso,
+        planificacionContenidos: this.formato6.planificacionContenidos,
+        evaluacion: this.formato6.evaluacion,
+        acreditacionCalificacion:this.formato6.acreditacionCalificacion,
+
+        presupuesto:this.presupuesto
       }
-      
 
     };
+
     this.formato6Existe = true;
 
     console.log(
@@ -441,9 +773,14 @@ guardarFormato6(): void {
             icon: 'error',
             title: 'Error',
             text:
-              respuesta?.data?.message ||
-              'No se pudo actualizar el Formato 6.'
-          });
+              respuesta?.data?.message,
+              confirmButtonText:'Aceptar'
+              
+          }).then(()=>{
+            this.router.navigate([
+              
+            ]);
+          })
 
         }
 
@@ -452,14 +789,38 @@ guardarFormato6(): void {
       error: (error) => {
 
         console.error(
-          'Error al actualizar Formato 6:',
-          error
+          '========== ERROR FORMATO 6 =========='
+        );
+
+        console.error(
+          'STATUS:',
+          error.status
+        );
+
+        console.error(
+          'MENSAJE:',
+          error.message
+        );
+
+        console.error(
+          'ERROR:',
+          error.error
+        );
+
+        console.error(
+          'TEXTO:',
+          error.error?.text
+        );
+
+        console.error(
+          '===================================='
         );
 
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'Ocurrió un error al actualizar el Formato 6.'
+          text:
+            'Ocurrió un error al actualizar el Formato 6.'
         });
 
       }
@@ -479,7 +840,12 @@ guardarFormato6(): void {
     fx: 'insertformato6',
 
     d: {
+
       formato1_codigo: this.formato1Codigo,
+
+      // =============================================
+      // DATOS PRINCIPALES
+      // =============================================
 
       fechaElaboracion: this.formato6.fechaElaboracion,
       requerimiento: this.formato6.requerimiento,
@@ -490,20 +856,101 @@ guardarFormato6(): void {
       modalidad: this.formato6.modalidad,
       area: this.formato6.area,
       cargaHoraria: this.formato6.cargaHoraria,
-      periodos: this.formato6.periodos,
-      horario: this.formato6.horario,
+
+       inscripcionMatriculaDesde:
+    this.formato6.inscripcionMatriculaDesde,
+
+  inscripcionMatriculaHasta:
+    this.formato6.inscripcionMatriculaHasta,
+
+  ejecucionDesde:
+    this.formato6.ejecucionDesde,
+
+  ejecucionHasta:
+    this.formato6.ejecucionHasta,
+
+  modulos:
+    this.modulos,
+
+      // =============================================
+      // DATOS ADICIONALES
+      // =============================================
+
       lugar: this.formato6.lugar,
       prerrequisitos: this.formato6.prerrequisitos,
       tipoCertificado: this.formato6.tipoCertificado,
-      inversion: this.formato6.inversion
+      inversion: this.formato6.inversion,
+
+      // =============================================
+      // NUEVOS CAMPOS DE CONTENIDO
+      // =============================================
+
+      introduccion: this.formato6.introduccion,
+      justificacion: this.formato6.justificacion,
+
+      objetivos: {
+        general: this.formato6.objetivos.general,
+        especificos: this.formato6.objetivos.especificos
+      },
+
+      metodologiaCurso: this.formato6.metodologiaCurso,
+      planificacionContenidos:
+        this.formato6.planificacionContenidos,
+
+      evaluacion: this.formato6.evaluacion,
+
+      acreditacionCalificacion:this.formato6.acreditacionCalificacion,
+
+      presupuesto:this.presupuesto
+
     }
 
   };
+
+  
 
   console.log(
     'Guardando nuevo Formato 6:',
     objetoopciones
   );
+
+  console.log(
+  '========== COMPROBACIÓN =========='
+);
+
+console.log(
+  'INSCRIPCIÓN DESDE:',
+  objetoopciones.d.inscripcionMatriculaDesde
+);
+
+console.log(
+  'INSCRIPCIÓN HASTA:',
+  objetoopciones.d.inscripcionMatriculaHasta
+);
+
+console.log(
+  'EJECUCIÓN DESDE:',
+  objetoopciones.d.ejecucionDesde
+);
+
+console.log(
+  'EJECUCIÓN HASTA:',
+  objetoopciones.d.ejecucionHasta
+);
+
+console.log(
+  'MODULOS:',
+  objetoopciones.d.modulos
+);
+
+console.log(
+  'MODULOS GUARDADOS:',
+  this.modulosGuardados
+);
+
+console.log(
+  '==================================='
+);
 
   this.miServicio.insertformato6(
     objetoopciones
@@ -521,6 +968,16 @@ guardarFormato6(): void {
         respuesta.data &&
         respuesta.data.success
       ) {
+
+        console.log(
+        'MODULOS PARA GUARDAR:',
+        this.modulos
+      );
+
+      console.log(
+        'MODULOS GUARDADOS:',
+        this.modulosGuardados
+      );
 
         Swal.fire({
           icon: 'success',
@@ -552,13 +1009,17 @@ guardarFormato6(): void {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Ocurrió un error al guardar el Formato 6.'
+        text:
+          'Ocurrió un error al guardar el Formato 6.'
       });
 
     }
 
   });
+
 }
+
+
 
   cargarDatosFormato1(codigo: number) {
 
@@ -623,24 +1084,15 @@ guardarFormato6(): void {
 
 
           //Guardar fechas individuales
-          this.formato6.periodos.ejecucionDesde=desde|| '';
+          this.formato6.ejecucionDesde=desde|| '';
 
-          this.formato6.periodos.ejecucionHasta= hasta || '';
+          this.formato6.ejecucionHasta= hasta || '';
 
           // ===================================================== 
           // CREAR TEXTO CON EL RANGO SELECCIONADO 
           // =====================================================
 
-          if (desde && hasta) { 
-            this.formato6.periodos.ejecucion = 
-            this.formatearFecha(desde,hasta) 
-          } else { 
-            this.formato6.periodos.ejecucion = ''; }
-
-            console.log(
-            'EJECUCIÓN FORMATO 6:',
-            this.formato6.periodos.ejecucion
-          );
+          console.log( 'EJECUCIÓN FORMATO 6:', this.formato6.ejecucionDesde, 'hasta', this.formato6.ejecucionHasta );
 
 
           // =====================================================
@@ -797,27 +1249,12 @@ cargarFormato6Existente(codigo: number): void {
         this.formato6.cargaHoraria =
           datos.formato6_carga_horaria || '';
 
-        this.formato6.periodos =
-          datos.formato6_periodos?JSON.parse(datos.formato6_periodos):{
-            inscripcionDesde: '',
-            inscripcionHasta: '',
-            matriculaDesde: '',
-            matriculaHasta: '',
-            ejecucionDesde: '',
-            ejecucionHasta: '',
-            ejecucion: '',
-            modulos: []
-          };
+          console.log('PERIODOS RECIBIDOS:', datos.formato6_periodos);
+          console.log('HORARIO RECIBIDO:', datos.formato6_horario);
 
-        this.formato6.horario =
-          datos.formato6_horario?JSON.parse(datos.formato6_horario):[
-            {
-              tipo: 'Clases en vivo (sincrónico)',
-              dias: [],
-              horaDesde: '',
-              horaHasta: '' 
-            }
-          ]
+        
+
+       
 
         this.formato6.lugar =
           datos.formato6_lugar || '';

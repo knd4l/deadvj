@@ -311,174 +311,198 @@
 
                     <!-- PERIODOS -->
 
-                    <tr>
-
-                      <td class="label">
-                        Periodos
-                      </td>
-
-                      <td>
-
-                        <!-- INSCRIPCIONES --> 
-                         <div class="fw-bold mb-3"> 
-                          <div> 
-                            INSCRIPCIONES y MATRÍCULA: 
-                          </div> 
-                          <div class="d-flex align-items-center gap-2">
-                             
-                            <span>Desde</span> 
-
-                            <input 
-                            type="date" 
-                            class="form-control" 
-                            [(ngModel)]="formato6.periodos.matriculaDesde" 
-                            name="matriculaDesde" 
-                            style="max-width: 180px;" > 
-
-                            <span>Hasta</span> 
-
-                            <input 
-                            type="date" 
-                            class="form-control" 
-                            [(ngModel)]="formato6.periodos.matriculaHasta" 
-                            name="matriculaHasta" 
-                            style="max-width: 180px;" > 
-                          </div> 
-
-                        </div>
-
-                        <!--Ejecucion del curso-->
-
-                        <div class="fw-bold mb-3"> 
-                          <div> 
-                            EJECUCIÓN DEL CURSO: 
-                          </div> 
-                            <div >
-                            {{ formato6.periodos.ejecucion }}
-                            </div>
-                          </div>
-
-
-                          <!--Modulos-->
-                          
-                          <div class="mt-4">
-
-                            <div class="fw-bold mb-3">
-                              MÓDULOS:
-                            </div>
-
-
-                            <!-- LISTA DE MÓDULOS -->
-
-                            <div
-                              *ngFor="let modulo of formato6.periodos.modulos; let i = index"
-                              class="border rounded p-3 mb-3"
-                            >
-
-                              <!-- NOMBRE DEL MÓDULO -->
-
-                              <div class="mb-3">
-
-                                <label class="form-label fw-bold">
-                                  Módulo {{ i + 1 }}:
-                                </label>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  [(ngModel)]="modulo.nombre"
-                                  [name]="'moduloNombre' + i"
-                                  placeholder="Ingrese el nombre del módulo"
-                                >
-
-                              </div>
-
-
-                              <!-- FECHAS DEL MÓDULO -->
-
-                              <div class="d-flex align-items-center gap-2">
-
-                                <span>Del</span>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  [(ngModel)]="modulo.desde"
-                                  [name]="'moduloDesde' + i"
-                                  style="max-width: 180px;"
-                                >
-
-                                <span>al</span>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  [(ngModel)]="modulo.hasta"
-                                  [name]="'moduloHasta' + i"
-                                  style="max-width: 180px;"
-                                >
-
-
-                                <!-- ELIMINAR -->
-
-                                <button
-                                  type="button"
-                                  class="btn"
-                                  style="background-color: #6c1313; color:white"
-                                  *ngIf="formato6.periodos.modulos.length > 1"
-                                  (click)="eliminarModulo(i)"
-                                >
-                                  Eliminar
-                                </button>
-
-                              </div>
-
-                            </div>
-
-
-                            <!-- ===================================================== -->
-                            <!-- AGREGAR MÓDULO -->
-                            <!-- ===================================================== -->
-
-                            <button
-                              type="button"
-                              class="btn"
-                              style="background-color: #6c1313; color:white"
-                              (click)="agregarModulo()"
-                            >
-                              + Agregar módulo
-                            </button>
-
-                          </div>
-
-                      </td>
-
-                    </tr>
-
-
-                    <!-- HORARIO -->
-
-                  
 <tr>
 
   <td class="label">
-    Horario
+    Periodos
   </td>
 
   <td>
 
-    <!-- ===================================================== -->
-    <!-- LISTA DE HORARIOS -->
-    <!-- ===================================================== -->
+    <!-- ========================================= -->
+    <!-- INSCRIPCIONES Y MATRÍCULA -->
+    <!-- ========================================= -->
+
+    <div class="fw-bold mb-3">
+
+      <div>
+        INSCRIPCIONES y MATRÍCULA:
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+
+        <span>Desde</span>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="formato6.inscripcionMatriculaDesde"
+          name="inscripcionMatriculaDesde"
+          style="max-width: 180px;"
+        >
+
+        <span>Hasta</span>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="formato6.inscripcionMatriculaHasta"
+          name="inscripcionMatriculaHasta"
+          style="max-width: 180px;"
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- EJECUCIÓN DEL CURSO -->
+    <!-- ========================================= -->
+
+    <div class="fw-bold mb-3">
+
+      <div>
+        EJECUCIÓN DEL CURSO:
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+
+        <span>Desde</span>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="formato6.ejecucionDesde"
+          name="ejecucionDesde"
+          style="max-width: 180px;"
+        >
+
+        <span>Hasta</span>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="formato6.ejecucionHasta"
+          name="ejecucionHasta"
+          style="max-width: 180px;"
+        >
+
+      </div>
+          
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- MÓDULOS -->
+    <!-- ========================================= -->
+
+    <div class="mt-4">
+
+  <div class="fw-bold mb-3">
+    MÓDULOS:
+  </div>
+
+
+  <!-- ========================================= -->
+  <!-- LISTA DE MÓDULOS -->
+  <!-- ========================================= -->
+
+  <div
+    *ngFor="let modulo of modulos; let i = index"
+    class="border rounded p-3 mb-4"
+  >
+
+
+    <!-- ========================================= -->
+    <!-- NOMBRE DEL MÓDULO -->
+    <!-- ========================================= -->
+
+    <div class="mb-3">
+
+      <label class="form-label fw-bold">
+        Módulo {{ i + 1 }}:
+      </label>
+
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="modulo.nombre"
+        [name]="'moduloNombre' + i"
+        placeholder="Ingrese el nombre del módulo"
+      >
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- FECHAS DEL MÓDULO -->
+    <!-- ========================================= -->
+
+    <div class="mb-3">
+
+      <label class="form-label fw-bold">
+        Periodo del módulo:
+      </label>
+
+      <div class="d-flex align-items-center gap-2">
+
+        <span>Del</span>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="modulo.desde"
+          [name]="'moduloDesde' + i"
+          style="max-width: 180px;"
+        >
+
+        <span>al</span>
+
+        <input
+          type="date"
+          class="form-control"
+          [(ngModel)]="modulo.hasta"
+          [name]="'moduloHasta' + i"
+          style="max-width: 180px;"
+        >
+
+
+        <!-- ELIMINAR MÓDULO -->
+
+        <button
+          type="button"
+          class="btn"
+          style="background-color: #6c1313; color:white"
+          *ngIf="modulos.length > 1"
+          (click)="eliminarModulo(i)"
+        >
+          Eliminar módulo
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- HORARIOS DEL MÓDULO -->
+    <!-- ========================================= -->
 
     <div
-      *ngFor="let horario of formato6.horario; let i = index"
-      class="border rounded p-3 mb-3"
+      *ngFor="let horario of modulo.horario; let j = index"
+      class="border rounded p-3 mt-3"
     >
 
-      <!-- ================================================= -->
+      <div class="fw-bold mb-3">
+        HORARIO {{ j + 1 }}
+      </div>
+
+
+      <!-- ========================================= -->
       <!-- TIPO DE ACTIVIDAD -->
-      <!-- ================================================= -->
+      <!-- ========================================= -->
 
       <div class="mb-3">
 
@@ -489,7 +513,7 @@
         <select
           class="form-control"
           [(ngModel)]="horario.tipo"
-          [name]="'tipoHorario' + i"
+          [name]="'tipoHorarioModulo' + i + '_' + j"
         >
 
           <option value="Clases en vivo (sincrónico)">
@@ -505,9 +529,9 @@
       </div>
 
 
-      <!-- ================================================= -->
+      <!-- ========================================= -->
       <!-- DÍAS -->
-      <!-- ================================================= -->
+      <!-- ========================================= -->
 
       <div class="mb-3">
 
@@ -527,14 +551,14 @@
               <input
                 type="checkbox"
                 class="form-check-input"
-                [id]="'dia' + i + dia"
+                [id]="'diaModulo' + i + '_' + j + '_' + dia"
                 [checked]="horario.dias.includes(dia)"
                 (change)="cambiarDia(horario, dia, $event)"
               >
 
               <label
                 class="form-check-label"
-                [for]="'dia' + i + dia"
+                [for]="'diaModulo' + i + '_' + j + '_' + dia"
               >
                 {{ dia }}
               </label>
@@ -548,11 +572,11 @@
       </div>
 
 
-      <!-- ================================================= -->
-      <!-- HORARIO -->
-      <!-- ================================================= -->
+      <!-- ========================================= -->
+      <!-- HORAS -->
+      <!-- ========================================= -->
 
-      <div class="mb-3">
+      <div class="mb-2">
 
         <label class="form-label fw-bold">
           Horario:
@@ -566,7 +590,7 @@
             type="time"
             class="form-control"
             [(ngModel)]="horario.horaDesde"
-            [name]="'horaDesde' + i"
+            [name]="'horaDesdeModulo' + i + '_' + j"
             style="max-width: 150px;"
           >
 
@@ -576,48 +600,258 @@
             type="time"
             class="form-control"
             [(ngModel)]="horario.horaHasta"
-            [name]="'horaHasta' + i"
+            [name]="'horaHastaModulo' + i + '_' + j"
             style="max-width: 150px;"
           >
+
+
+          <!-- AGREGAR HORARIO -->
+
+          <button
+            type="button"
+            class="btn"
+            style="background-color: #6c1313; color:white"
+            (click)="agregarHorarioModulo(modulo)"
+          >
+            Agregar horario
+          </button>
+
+
+          <!-- ELIMINAR HORARIO -->
+
+          <button
+            type="button"
+            class="btn"
+            style="background-color: #6c1313; color:white"
+            *ngIf="modulo.horario.length > 1"
+            (click)="eliminarHorarioModulo(modulo, j)"
+          >
+            Eliminar horario
+          </button>
 
         </div>
 
       </div>
 
+    </div>
 
-      <!-- ================================================= -->
-      <!-- ELIMINAR HORARIO -->
-      <!-- ================================================= -->
+
+    <!-- ========================================= -->
+    <!-- GUARDAR MÓDULO -->
+    <!-- ========================================= -->
+
+    <div class="mt-3">
 
       <button
         type="button"
         class="btn"
         style="background-color: #6c1313; color:white"
-        *ngIf="formato6.horario.length > 1"
-        (click)="eliminarHorario(i)"
+        (click)="guardarModulo(modulo)"
       >
-        Eliminar horario
+        Guardar módulo
       </button>
 
     </div>
 
 
-    <!-- ===================================================== -->
-    <!-- AGREGAR HORARIO -->
-    <!-- ===================================================== -->
+  </div>
 
-    <button
-      type="button"
-      class="btn"
-      style="background-color: #6c1313; color:white"
-      (click)="agregarHorario()"
-    >
-      + Agregar horario
-    </button>
+
+  <!-- ========================================= -->
+  <!-- AGREGAR MÓDULO -->
+  <!-- ========================================= -->
+
+  <button
+    type="button"
+    class="btn"
+    style="background-color: #6c1313; color:white"
+    (click)="agregarModulo()"
+  >
+    + Agregar módulo
+  </button>
+
+
+  <!-- ========================================= -->
+  <!-- RESUMEN DE MÓDULOS GUARDADOS -->
+  <!-- ========================================= -->
+
+  <div
+    class="mt-4"
+    *ngIf="modulosGuardados.length > 0"
+  >
+
+    <div class="fw-bold mb-3">
+      RESUMEN DE HORARIOS:
+    </div>
+
+
+    <div class="table-responsive">
+
+      <table class="table table-bordered">
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Horario
+            </th>
+
+            <th>
+              Fechas
+            </th>
+
+            <th>
+              Total de horas
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <!-- ================================= -->
+          <!-- UN REGISTRO POR MÓDULO GUARDADO -->
+          <!-- ================================= -->
+
+          <tr
+            *ngFor="
+              let modulo of modulosGuardados;
+              let i = index
+            "
+          >
+
+
+            <!-- ================================= -->
+            <!-- COLUMNA HORARIO -->
+            <!-- ================================= -->
+
+            <td>
+
+              <!-- NOMBRE DEL MÓDULO SOLO UNA VEZ -->
+
+              <div class="fw-bold mb-3">
+
+                Módulo {{ i + 1 }}:
+                {{ modulo.nombre || 'Sin nombre' }}
+
+              </div>
+
+
+              <!-- HORARIOS DEL MÓDULO -->
+
+              <div
+                *ngFor="
+                  let horario of modulo.horario;
+                  let j = index
+                "
+                class="mb-3"
+              >
+
+              <!--TIPO DE ACTIVIDAD-->
+
+                <div>
+
+                  
+                    {{ horario.tipo }}
+                  
+
+                </div>
+
+                <!--DIAS Y HORARIOS AGRUPADOS-->
+
+
+                <div class="mt-1">
+
+                
+                  {{ obtenerDiasHorario(horario) }}
+
+                </div>
+
+
+                <div class="mt-1">
+
+                 
+
+                  {{ horario.horaDesde || '--:--' }}
+
+                  -
+
+                  {{ horario.horaHasta || '--:--' }}
+
+                </div>
+
+              </div>
+
+            </td>
+
+
+            <!-- ================================= -->
+            <!-- COLUMNA FECHAS -->
+            <!-- ================================= -->
+
+            <td>
+
+              <div
+                *ngFor="
+                  let horario of modulo.horario;
+                  let j = index
+                "
+                class="mb-3"
+              >
+
+               <div>
+                <div *ngFor="let fecha of obtenerFechasHorario(modulo, horario)">
+                  {{ fecha }}
+                </div>
+              </div>
+
+              </div>
+
+            </td>
+
+
+            <!-- ================================= -->
+            <!-- TOTAL DE HORAS -->
+            <!-- ================================= -->
+
+            <td
+              class="text-center align-middle"
+            >
+
+              <strong>
+
+                {{
+                  obtenerTotalHorasModulo(modulo)
+                    | number:'1.0-2'
+                }}
+
+                horas
+
+              </strong>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+</div>
 
   </td>
 
 </tr>
+
+
 
 
 
@@ -868,7 +1102,7 @@
                         </label>
 
                         <div
-                          *ngFor="let objetivo of formato6.objetivos.especificos; let i = index"
+                          *ngFor="let objetivo of formato6.objetivos.especificos; let i = index; trackBy: trackByIndex"
                           class="mb-2"
                         >
 
@@ -951,7 +1185,7 @@
                 <div class="mb-4">
 
                   <div
-                    *ngFor="let modulo of formato6.periodos.modulos; let i = index"
+                    *ngFor="let modulo of modulos; let i = index"
                     class="mb-4"
                   >
 
@@ -1022,12 +1256,11 @@
                 <div class="mb-4">
 
                   <textarea
-                    class="form-control texto-largo"
-                    rows="10"
+                    class="form-control "
                     [(ngModel)]="formato6.evaluacion"
-                    name="evaluacion"
-                    placeholder="Ingrese la evaluación del curso...">
-                  </textarea>
+                    name="evaluacion">
+                    </textarea>
+                  
 
                 </div>
 
@@ -1039,121 +1272,11 @@
                 <div class="mb-4">
 
                   <textarea
-                    class="form-control texto-largo"
-                    rows="10"
+                    class="form-control"
+                    rows="7"
                     [(ngModel)]="formato6.acreditacionCalificacion"
-                    name="acreditacionCalificacion"
-                    placeholder="Ingrese los criterios de acreditación y calificación...">
+                    name="acreditacionCalificacion">
                   </textarea>
-
-                </div>
-
-
-                <!-- ========================================= -->
-                <!-- 9. CRONOGRAMA DEL EVENTO -->
-                <!-- ========================================= -->
-
-                <h5 class="section-title">
-                  9. CRONOGRAMA DEL EVENTO
-                </h5>
-
-
-                <div class="table-responsive">
-
-                  <table class="table table-bordered cronograma-table">
-
-                    <thead>
-
-                      <tr>
-
-                        <th>
-                          Horario
-                        </th>
-
-                        <th>
-                          Fechas
-                        </th>
-
-                        <th>
-                          Total de horas
-                        </th>
-
-                      </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                      <tr
-                        *ngFor="
-                          let fila of formato6.cronograma;
-                          let i = index
-                        ">
-
-                        <td>
-
-                          <textarea
-                            class="form-control cronograma-textarea"
-                            rows="7"
-                            [(ngModel)]="fila.horario"
-                            [name]="'horario_' + i"
-                            placeholder="Ejemplo.-
-Módulo 1: Competencias académicas para la innovación docente
-Clases en vivo (sincrónico)
-Miércoles 18:00 a 22:00 y Sábado 08:00 a 13:00">
-                          </textarea>
-
-                        </td>
-
-
-                        <td>
-
-                          <textarea
-                            class="form-control cronograma-textarea"
-                            rows="7"
-                            [(ngModel)]="fila.fechas"
-                            [name]="'fechas_' + i"
-                            placeholder="Ejemplo.-
-                              Lunes 02 de marzo (4h)
-                              Miércoles 04 de marzo (4h)
-                              Viernes 06 de marzo (4h)
-                              2026">
-                          </textarea>
-
-                        </td>
-
-
-                        <td>
-
-                          <input
-                            type="number"
-                            class="form-control total-horas"
-                            [(ngModel)]="fila.totalHoras"
-                            [name]="'totalHoras_' + i"
-                            placeholder="Horas">
-
-                        </td>
-
-                      </tr>
-
-                    </tbody>
-
-                  </table>
-
-                </div>
-
-
-                <div class="text-end mt-3">
-
-                  <button
-                    type="button"
-                    class="btn btn-outline-institucional"
-                    (click)="agregarFilaCronograma()">
-
-                    + Agregar fila
-
-                  </button>
 
                 </div>
 
@@ -1188,240 +1311,258 @@ Miércoles 18:00 a 22:00 y Sábado 08:00 a 13:00">
                 </button>
 
               </div>
+              
+               
+<!-- =====================================================
+     9. PRESUPUESTO
+     ===================================================== -->
 
+<div
+  *ngIf="moduloActual === 5"
+  class="section-card">
 
-              <!-- ===================================================== -->
-              <!-- MÓDULO 5 -->
-              <!-- PRESUPUESTO -->
-              <!-- ===================================================== -->
+  <h4 class="section-title">
+    9. Presupuesto
+  </h4>
 
-              <div
-                class="section-card"
-                *ngIf="moduloActual === 5">
 
-                <!-- ========================================= -->
-                <!-- 10. PRESUPUESTO -->
-                <!-- ========================================= -->
 
-                <h5 class="section-title">
-                  10. PRESUPUESTO
-                </h5>
+  <!-- TABLA -->
 
+  <div class="table-responsive">
 
-                <!-- ========================================= -->
-                <!-- NOMBRE DEL CURSO -->
-                <!-- ========================================= -->
+    <table class="table table-bordered align-middle">
 
-                <div class="presupuesto-curso">
+      <thead class="table-light">
 
-                  <b>
-                    {{ cursoNombre }}
-                  </b>
+        <tr>
 
-                </div>
+          <th class="text-center">
+            Partida
+          </th>
 
+          <th>
+            Descripción
+          </th>
 
-                <!-- ========================================= -->
-                <!-- TABLA DE INGRESOS -->
-                <!-- ========================================= -->
+          <th class="text-center">
+            Valor
+          </th>
 
-                <div class="table-responsive">
+          <th class="text-center">
+            Total
+          </th>
 
-                  <table class="table table-bordered presupuesto-table">
+          <th class="text-center">
+            Acción
+          </th>
 
-                    <thead>
+        </tr>
 
-                      <!-- ========================================= -->
-                      <!-- INGRESOS + PARTICIPANTES + PARALELOS -->
-                      <!-- ========================================= -->
+      </thead>
 
-                      <tr>
 
-                        <!-- INGRESOS -->
+      <tbody>
 
-                        <th class="presupuesto-titulo ingresos-titulo">
-                          Ingresos
-                        </th>
+        <tr
+          *ngFor="let fila of presupuesto; let i = index">
 
 
-                        <!-- PARTICIPANTES -->
+          <!-- =========================================
+               PARTIDA
+               ========================================= -->
 
-                        <td class="presupuesto-dato">
+          <td>
 
-                          <div class="presupuesto-inline">
+            <!-- PRIMERA FILA -->
 
-                            <b>Participantes</b>
+            <input
+              *ngIf="i === 0"
+              type="number"
+              class="form-control text-center"
+              name="partida{{i}}"
+              [(ngModel)]="fila.partida"
+              min="1">
 
-                            <input
-                              type="number"
-                              class="form-control presupuesto-numero"
-                              [(ngModel)]="formato6.presupuesto.participantes"
-                              name="presupuestoParticipantes"
-                              min="0"
-                              placeholder="Ej:25"
-                              (input)="recalcularIngresos()">
 
-                          </div>
+            <!-- FILAS NUEVAS -->
 
-                        </td>
+            <input
+              *ngIf="i > 0"
+              type="text"
+              class="form-control"
+              name="partida{{i}}"
+              [(ngModel)]="fila.partida">
 
+          </td>
 
-                        <!-- PARALELOS -->
 
-                        <td
-                          colspan="2"
-                          class="presupuesto-dato">
+          <!-- =========================================
+               DESCRIPCIÓN
+               ========================================= -->
 
-                          <div class="presupuesto-inline">
+          <td>
 
-                            <b>
-                              Paralelos
-                            </b>
+            <!-- PRIMERA FILA -->
 
-                            <input
-                              type="number"
-                              class="form-control presupuesto-numero"
-                              [(ngModel)]="formato6.presupuesto.paralelo"
-                              name="presupuestoParalelo"
-                              min="0"
-                              placeholder="Ej:2">
+            <div
+              *ngIf="i === 0"
+              class="d-flex align-items-center gap-2">
 
-                          </div>
+              <input
+                type="number"
+                class="form-control"
+                style="max-width: 100px;"
+                name="instructores{{i}}"
+                [(ngModel)]="fila.numeroInstructores"
+                min="1">
 
-                        </td>
+              <span>
+                instructores ×
+              </span>
 
-                      </tr>
+              <span class="fw-bold">
+                {{ formato6.cargaHoraria }}
+              </span>
 
+              <span>
+                horas
+              </span>
 
-                      <!-- ========================================= -->
-                      <!-- ENCABEZADOS -->
-                      <!-- ========================================= -->
+            </div>
 
-                      <tr>
 
-                        <th class="col-n">
-                          N
-                        </th>
+            <!-- FILAS NUEVAS -->
 
-                        <th class="col-descripcion">
-                          Descripción
-                        </th>
+            <input
+              *ngIf="i > 0"
+              type="text"
+              class="form-control"
+              name="descripcion{{i}}"
+              [(ngModel)]="fila.descripcion">
 
-                        <th class="col-valor">
-                          Valor
-                        </th>
+          </td>
 
-                        <th class="col-total">
-                          Total
-                        </th>
 
-                      </tr>
+          <!-- =========================================
+               VALOR
+               ========================================= -->
 
-                    </thead>
+          <td>
 
+            <!-- PRIMERA FILA -->
 
-                    <tbody>
+            <input
+              *ngIf="i === 0"
+              type="number"
+              class="form-control text-end"
+              name="valor{{i}}"
+              [(ngModel)]="fila.valor"
+              min="0"
+              step="0.01"
+              (ngModelChange)="calcularTotalPresupuesto(i)">
 
-                      <!-- ========================================= -->
-                      <!-- FILAS DE INGRESOS -->
-                      <!-- ========================================= -->
 
-                      <tr
-                        *ngFor="
-                          let ingreso of formato6.presupuesto.ingresos;
-                          let i = index
-                        ">
+            <!-- FILAS NUEVAS -->
 
-                        <!-- N -->
+            <input
+              *ngIf="i > 0"
+              type="text"
+              class="form-control text-end"
+              name="valor{{i}}"
+              [(ngModel)]="fila.valor"
+              (ngModelChange)="calcularTotalPresupuesto(i)">
 
-                        <td class="text-center">
+          </td>
 
-                          {{ formato6.presupuesto.participantes }}
 
-                        </td>
+          <!-- =========================================
+               TOTAL
+               ========================================= -->
 
+          <td
+            class="text-end fw-bold">
 
-                        <!-- DESCRIPCIÓN -->
+            {{ fila.total | number:'1.2-2' }}
 
-                        <td>
+          </td>
 
-                          <input
-                            type="text"
-                            class="form-control presupuesto-input"
-                            [(ngModel)]="ingreso.descripcion"
-                            [name]="'presupuestoDescripcion_' + i"
-                            placeholder="Ej. Inscripción">
 
-                        </td>
+          <!-- =========================================
+               ACCIÓN
+               ========================================= -->
 
+          <td class="text-center">
 
-                        <!-- VALOR -->
+            <button
+              *ngIf="i > 0"
+              class="btn"
+              style="background-color: #6c1313; color:white"
+              (click)="eliminarFilaPresupuesto(i)">
 
-                        <td>
+              Eliminar
 
-                          <input
-                            type="number"
-                            class="form-control presupuesto-input"
-                            [(ngModel)]="ingreso.valor"
-                            [name]="'presupuestoValor_' + i"
-                            min="0"
-                            step="0.01"
-                            placeholder="Valor $"
-                            (input)="recalcularIngresos()">
+            </button>
 
-                        </td>
+          </td>
 
+        </tr>
 
-                        <!-- TOTAL -->
 
-                        <td>
+        <!-- =========================================
+             TOTAL GENERAL
+             ========================================= -->
 
-                          <input
-                            type="number"
-                            class="form-control presupuesto-total"
-                            [(ngModel)]="ingreso.total"
-                            [name]="'presupuestoTotal_' + i"
-                            readonly>
+        <tr>
 
-                        </td>
+          <td
+            colspan="3"
+            class="text-end fw-bold">
 
-                      </tr>
+            TOTAL EGRESOS
 
+          </td>
 
-                      <!-- ========================================= -->
-                      <!-- TOTAL INGRESOS -->
-                      <!-- ========================================= -->
+          <td
+            class="text-end fw-bold">
 
-                      <tr>
+            {{ calcularTotalGeneral() | number:'1.2-2' }}
 
-                        <td
-                          colspan="3"
-                          class="total-ingresos-label">
+          </td>
 
-                          Total ingresos
+          <td></td>
 
-                        </td>
+        </tr>
 
-                        <td>
+      </tbody>
 
-                          <input
-                            type="number"
-                            class="form-control presupuesto-total"
-                            [(ngModel)]="formato6.presupuesto.totalIngresos"
-                            name="presupuestoTotalIngresos"
-                            readonly>
+    </table>
 
-                        </td>
+  </div>
 
-                      </tr>
 
-                    </tbody>
+  <!-- ===============================================
+       AGREGAR FILA
+       =============================================== -->
 
-                  </table>
+  <div class="mt-3">
 
-                </div>
+    <button
+      type="button"
+      class="btn"
+      style="background-color: #6c1313; color:white"
+      (click)="agregarFilaPresupuesto()">
 
-              </div>
+      + Agregar partida
+
+    </button>
+
+  </div>
+
+</div>
+
+
+
 
 
               <!-- ===================================================== -->
@@ -1677,191 +1818,6 @@ Miércoles 18:00 a 22:00 y Sábado 08:00 a 13:00">
 
 }
 
-
-/* ========================================= */
-/* TOTAL DE HORAS */
-/* ========================================= */
-
-.total-horas {
-
-  text-align: center;
-
-}
-
-
-/* ========================================= */
-/* PRESUPUESTO */
-/* ========================================= */
-
-.presupuesto-curso {
-
-  background-color: #faf7f2;
-  border: 1px solid #ddd;
-  padding: 15px;
-  margin-bottom: 15px;
-  text-align: center;
-  font-size: 18px;
-  color: var(--institucional-sec);
-
-}
-
-
-/* ========================================= */
-/* TABLA PRESUPUESTO */
-/* ========================================= */
-
-.presupuesto-table {
-
-  width: 100%;
-  border-color: #ddd;
-
-}
-
-
-.presupuesto-table th {
-
-  background-color: #faf7f2;
-  color: var(--institucional-sec);
-  font-weight: 700;
-  text-align: center;
-  vertical-align: middle;
-
-}
-
-
-.presupuesto-table td {
-
-  vertical-align: middle;
-  padding: 10px;
-
-}
-
-
-/* ========================================= */
-/* TÍTULO INGRESOS */
-/* ========================================= */
-
-.presupuesto-titulo {
-
-  background-color: #faf7f2 !important;
-  color: var(--institucional-sec) !important;
-  font-weight: 700;
-  font-size: 17px;
-  text-align: center;
-
-}
-
-
-.ingresos-titulo {
-
-  width: 25%;
-
-}
-
-
-/* ========================================= */
-/* DATOS INGRESOS */
-/* ========================================= */
-
-.presupuesto-dato {
-
-  background-color: #fff;
-  width: 25%;
-
-}
-
-
-.presupuesto-inline {
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-}
-
-
-.presupuesto-inline b {
-
-  white-space: nowrap;
-  color: var(--institucional-sec);
-
-}
-
-
-.presupuesto-numero {
-
-  width: 120px;
-  text-align: center;
-
-}
-
-
-/* ========================================= */
-/* COLUMNAS PRESUPUESTO */
-/* ========================================= */
-
-.col-n {
-
-  width: 15%;
-
-}
-
-
-.col-descripcion {
-
-  width: 45%;
-
-}
-
-
-.col-valor {
-
-  width: 20%;
-
-}
-
-
-.col-total {
-
-  width: 20%;
-
-}
-
-
-/* ========================================= */
-/* INPUTS PRESUPUESTO */
-/* ========================================= */
-
-.presupuesto-input {
-
-  width: 100%;
-
-}
-
-
-.presupuesto-total {
-
-  width: 100%;
-  text-align: center;
-  font-weight: 700;
-  background-color: #f8f8f8;
-
-}
-
-
-/* ========================================= */
-/* TOTAL INGRESOS */
-/* ========================================= */
-
-.total-ingresos-label {
-
-  text-align: right;
-  font-weight: 700;
-  color: var(--institucional-sec);
-  background-color: #faf7f2;
-
-}
 
 
 /* ========================================= */

@@ -1699,61 +1699,105 @@ public function insertCursoDefinido($filtros) {
 // GUARDAR FORMATO 6
 // =====================================================
 
+
+
+
 public function insertformato6($datos)
 {
+    file_put_contents(
+    'debug_formato6.txt',
+    print_r($datos, true)
+);
 
     try {
 
         $result = array();
 
         // =====================================================
-        // INSERTAR DATOS DEL FORMATO 6
+        // CONEXIÓN
         // =====================================================
-
-        $insert = "
-            INSERT INTO formato6 (
-                formato1_codigo,
-                formato6_fecha_elaboracion,
-                formato6_requerimiento,
-                formato6_unidad_responsable,
-                formato6_instructores,
-                formato6_beneficiarios,
-                formato6_paralelo,
-                formato6_modalidad,
-                formato6_area,
-                formato6_carga_horaria,
-                formato6_periodos,
-                formato6_horario,
-                formato6_lugar,
-                formato6_prerrequisitos,
-                formato6_tipo_certificado,
-                formato6_inversion
-            )
-            VALUES (
-                :formato1_codigo,
-                :formato6_fecha_elaboracion,
-                :formato6_requerimiento,
-                :formato6_unidad_responsable,
-                :formato6_instructores,
-                :formato6_beneficiarios,
-                :formato6_paralelo,
-                :formato6_modalidad,
-                :formato6_area,
-                :formato6_carga_horaria,
-                :formato6_periodos,
-                :formato6_horario,
-                :formato6_lugar,
-                :formato6_prerrequisitos,
-                :formato6_tipo_certificado,
-                :formato6_inversion
-            )
-        ";
 
         $dbc = $this->getInitDatabase();
 
-        if ($dbc->getEstado()->codigo == 0) {
+        if ($dbc->getEstado()->codigo != 0) {
+
+            $this->estado = new Exception_Object(
+                -2,
+                'Error no es posible abrir la conexion'
+            );
+
+            $this->estado->setLastID(-2);
+
+        } else {
+
+            // =====================================================
+            // INICIAR TRANSACCIÓN
+            // =====================================================
+
+            $dbc->beginTransaction();
+
+
+            // =====================================================
+            // INSERTAR DATOS DEL FORMATO 6
+            // =====================================================
+
+            $insert = "
+                INSERT INTO formato6 (
+                    formato1_codigo,
+                    formato6_fecha_elaboracion,
+                    formato6_requerimiento,
+                    formato6_unidad_responsable,
+                    formato6_instructores,
+                    formato6_beneficiarios,
+                    formato6_paralelo,
+                    formato6_modalidad,
+                    formato6_area,
+                    formato6_carga_horaria,
+                    inscripcion_matricula_desde,
+                    inscripcion_matricula_hasta,
+                    formato6_lugar,
+                    formato6_prerrequisitos,
+                    formato6_tipo_certificado,
+                    formato6_inversion,
+                    formato6_introduccion,
+                    formato6_justificacion,
+                    formato6_objetivo_general,
+                    formato6_objetivos_especificos,
+                    formato6_metodologia,
+                    formato6_planificacion_contenidos,
+                    formato6_evaluacion,
+                    formato6_acreditacion
+                )
+                VALUES (
+                    :formato1_codigo,
+                    :formato6_fecha_elaboracion,
+                    :formato6_requerimiento,
+                    :formato6_unidad_responsable,
+                    :formato6_instructores,
+                    :formato6_beneficiarios,
+                    :formato6_paralelo,
+                    :formato6_modalidad,
+                    :formato6_area,
+                    :formato6_carga_horaria,
+                    :inscripcion_matricula_desde,
+                    :inscripcion_matricula_hasta,
+                    :formato6_lugar,
+                    :formato6_prerrequisitos,
+                    :formato6_tipo_certificado,
+                    :formato6_inversion,
+                    :formato6_introduccion,
+                    :formato6_justificacion,
+                    :formato6_objetivo_general,
+                    :formato6_objetivos_especificos,
+                    :formato6_metodologia,
+                    :formato6_planificacion_contenidos,
+                    :formato6_evaluacion,
+                    :formato6_acreditacion
+                )
+            ";
 
             $dbc->query($insert);
+
 
             // =====================================================
             // DATOS DEL FORMATO 1
@@ -1763,6 +1807,7 @@ public function insertformato6($datos)
                 ":formato1_codigo",
                 $datos->formato1_codigo
             );
+
 
             // =====================================================
             // DATOS DEL FORMATO 6
@@ -1813,15 +1858,29 @@ public function insertformato6($datos)
                 $datos->cargaHoraria
             );
 
+
+            // =====================================================
+            // FECHAS DE INSCRIPCIÓN / MATRÍCULA
+            // =====================================================
+
             $dbc->bind(
-                ":formato6_periodos",
-                json_encode($datos->periodos, JSON_UNESCAPED_UNICODE)
+                ":inscripcion_matricula_desde",
+                isset($datos->inscripcionMatriculaDesde)
+                    ? $datos->inscripcionMatriculaDesde
+                    : null
             );
 
             $dbc->bind(
-                ":formato6_horario",
-                json_encode($datos->horario, JSON_UNESCAPED_UNICODE)
+                ":inscripcion_matricula_hasta",
+                isset($datos->inscripcionMatriculaHasta)
+                    ? $datos->inscripcionMatriculaHasta
+                    : null
             );
+
+
+            // =====================================================
+            // DATOS ADICIONALES
+            // =====================================================
 
             $dbc->bind(
                 ":formato6_lugar",
@@ -1843,59 +1902,471 @@ public function insertformato6($datos)
                 $datos->inversion
             );
 
+            $dbc->bind(
+                ":formato6_introduccion",
+                $datos->introduccion
+            );
+
+            $dbc->bind(
+                ":formato6_justificacion",
+                $datos->justificacion
+            );
+
+            $dbc->bind(
+                ":formato6_objetivo_general",
+                $datos->objetivos->general
+            );
+
+            $dbc->bind(
+                ":formato6_objetivos_especificos",
+                json_encode(
+                    $datos->objetivos->especificos,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
+
+            $dbc->bind(
+                ":formato6_metodologia",
+                $datos->metodologiaCurso
+            );
+
+            $dbc->bind(
+                ":formato6_planificacion_contenidos",
+                $datos->planificacionContenidos
+            );
+
+            $dbc->bind(
+                ":formato6_evaluacion",
+                $datos->evaluacion
+            );
+
+            $dbc->bind(
+                ":formato6_acreditacion",
+                $datos->acreditacionCalificacion
+            );
+            error_log(
+    'INSCRIPCION DESDE: ' .
+    ($datos->inscripcionMatriculaDesde ?? 'NO LLEGO')
+);
+
+error_log(
+    'INSCRIPCION HASTA: ' .
+    ($datos->inscripcionMatriculaHasta ?? 'NO LLEGO')
+);
+
+error_log(
+    'EJECUCION DESDE: ' .
+    ($datos->ejecucionDesde ?? 'NO LLEGO')
+);
+
+error_log(
+    'EJECUCION HASTA: ' .
+    ($datos->ejecucionHasta ?? 'NO LLEGO')
+);
+
+error_log(
+    'MODULOS: ' .
+    print_r($datos->modulos ?? 'NO LLEGO', true)
+);
+
+            // =====================================================
+            // EJECUTAR INSERT DEL FORMATO 6
+            // =====================================================
+
             $dbc->execute();
 
+
             // =====================================================
-            // VERIFICAR SI SE INSERTÓ
+            // OBTENER ID REAL DEL FORMATO 6
             // =====================================================
 
-            if ($dbc->rowCount() > 0) {
+            $formato6Codigo = $dbc->lastInsertId();
 
-                $this->estado =
-                    new Exception_Object(
-                        1,
-                        'Formato 6 guardado correctamente.'
-                    );
+            if (!$formato6Codigo) {
 
-                $this->estado->setLastID(1);
-
-            } else {
-
-                $this->estado =
-                    new Exception_Object(
-                        -1,
-                        'No se pudo guardar el Formato 6.'
-                    );
-
-                $this->estado->setLastID(-1);
+                throw new Exception(
+                    'No se pudo obtener el código del Formato 6.'
+                );
             }
 
-        } else {
+
+            // =====================================================
+            // GUARDAR PRESUPUESTO
+            // =====================================================
+
+            if (
+                isset($datos->presupuesto) &&
+                is_array($datos->presupuesto)
+            ) {
+
+                foreach ($datos->presupuesto as $fila) {
+
+                    $partida =
+                        isset($fila->partida)
+                        ? $fila->partida
+                        : '';
+
+                    $descripcion =
+                        isset($fila->descripcion)
+                        ? $fila->descripcion
+                        : '';
+
+                    $valor =
+                        isset($fila->valor)
+                        ? $fila->valor
+                        : 0;
+
+                    $total =
+                        isset($fila->total)
+                        ? $fila->total
+                        : 0;
+
+
+                    // =================================================
+                    // INSERTAR PARTIDA
+                    // =================================================
+
+                    $insertPresupuesto = "
+                        INSERT INTO presupuesto_formato6 (
+                            formato6_codigo,
+                            partida,
+                            descripcion,
+                            valor,
+                            total
+                        )
+                        VALUES (
+                            :formato6_codigo,
+                            :partida,
+                            :descripcion,
+                            :valor,
+                            :total
+                        )
+                    ";
+
+                    $dbc->query($insertPresupuesto);
+
+
+                    // =================================================
+                    // BIND PRESUPUESTO
+                    // =================================================
+
+                    $dbc->bind(
+                        ":formato6_codigo",
+                        $formato6Codigo
+                    );
+
+                    $dbc->bind(
+                        ":partida",
+                        $partida
+                    );
+
+                    $dbc->bind(
+                        ":descripcion",
+                        $descripcion
+                    );
+
+                    $dbc->bind(
+                        ":valor",
+                        $valor
+                    );
+
+                    $dbc->bind(
+                        ":total",
+                        $total
+                    );
+
+
+                    // =================================================
+                    // EJECUTAR
+                    // =================================================
+
+                    $dbc->execute();
+                }
+            }
+
+
+            // =====================================================
+            // GUARDAR HORARIOS DE EJECUCIÓN
+            // =====================================================
+
+            if (
+                isset($datos->modulos) &&
+                is_array($datos->modulos)
+            ) {
+
+                foreach ($datos->modulos as $modulo) {
+
+
+                    // =================================================
+                    // FECHAS GENERALES DE EJECUCIÓN
+                    // =================================================
+
+                    $ejecucionDesde =
+                        isset($datos->ejecucionDesde)
+                        ? $datos->ejecucionDesde
+                        : null;
+
+                    $ejecucionHasta =
+                        isset($datos->ejecucionHasta)
+                        ? $datos->ejecucionHasta
+                        : null;
+
+
+                    // =================================================
+                    // DATOS DEL MÓDULO
+                    // =================================================
+
+                    $moduloNombre =
+                        isset($modulo->nombre)
+                        ? $modulo->nombre
+                        : '';
+
+                    $moduloDesde =
+                        isset($modulo->desde)
+                        ? $modulo->desde
+                        : null;
+
+                    $moduloHasta =
+                        isset($modulo->hasta)
+                        ? $modulo->hasta
+                        : null;
+
+
+                    // =================================================
+                    // VERIFICAR HORARIOS DEL MÓDULO
+                    // =================================================
+
+                    if (
+                        !isset($modulo->horario) ||
+                        !is_array($modulo->horario)
+                    ) {
+
+                        continue;
+                    }
+
+
+                    // =================================================
+                    // RECORRER LOS HORARIOS DEL MÓDULO
+                    // =================================================
+
+                    foreach ($modulo->horario as $horario) {
+
+
+                        // =============================================
+                        // VERIFICAR DÍAS
+                        // =============================================
+
+                        if (
+                            !isset($horario->dias) ||
+                            !is_array($horario->dias) ||
+                            count($horario->dias) == 0
+                        ) {
+
+                            continue;
+                        }
+
+
+                        // =============================================
+                        // CREAR ARRAY DE DÍAS Y HORAS
+                        // =============================================
+
+                        $diasHorarios = array();
+
+
+                        foreach ($horario->dias as $dia) {
+
+                            $diasHorarios[] = array(
+
+                                'dia' => $dia,
+
+                                'horaDesde' =>
+                                    isset($horario->horaDesde)
+                                    ? $horario->horaDesde
+                                    : '',
+
+                                'horaHasta' =>
+                                    isset($horario->horaHasta)
+                                    ? $horario->horaHasta
+                                    : ''
+
+                            );
+                        }
+
+
+                        // =============================================
+                        // INSERTAR HORARIO
+                        // =============================================
+
+                        $insertHorario = "
+                            INSERT INTO horario_ejecucion (
+                                formato6_codigo,
+                                ejecucion_desde,
+                                ejecucion_hasta,
+                                modulo_nombre,
+                                modulo_desde,
+                                modulo_hasta,
+                                tipo_actividad,
+                                dias_horarios
+                            )
+                            VALUES (
+                                :formato6_codigo,
+                                :ejecucion_desde,
+                                :ejecucion_hasta,
+                                :modulo_nombre,
+                                :modulo_desde,
+                                :modulo_hasta,
+                                :tipo_actividad,
+                                :dias_horarios
+                            )
+                        ";
+
+                        $dbc->query($insertHorario);
+
+
+                        // =============================================
+                        // BIND HORARIO
+                        // =============================================
+
+                        $dbc->bind(
+                            ":formato6_codigo",
+                            $formato6Codigo
+                        );
+
+                        $dbc->bind(
+                            ":ejecucion_desde",
+                            $ejecucionDesde
+                        );
+
+                        $dbc->bind(
+                            ":ejecucion_hasta",
+                            $ejecucionHasta
+                        );
+
+                        $dbc->bind(
+                            ":modulo_nombre",
+                            $moduloNombre
+                        );
+
+                        $dbc->bind(
+                            ":modulo_desde",
+                            $moduloDesde
+                        );
+
+                        $dbc->bind(
+                            ":modulo_hasta",
+                            $moduloHasta
+                        );
+
+                        $dbc->bind(
+                            ":tipo_actividad",
+                            isset($horario->tipo)
+                            ? $horario->tipo
+                            : ''
+                        );
+
+                        $dbc->bind(
+                            ":dias_horarios",
+                            json_encode(
+                                $diasHorarios,
+                                JSON_UNESCAPED_UNICODE
+                            )
+                        );
+
+
+                        // =============================================
+                        // EJECUTAR
+                        // =============================================
+
+                        $dbc->execute();
+                    }
+                }
+            }
+
+
+            // =====================================================
+            // CONFIRMAR TRANSACCIÓN
+            // =====================================================
+
+            $dbc->endTransaction();
+
+
+            // =====================================================
+            // RESPUESTA EXITOSA
+            // =====================================================
 
             $this->estado =
                 new Exception_Object(
-                    -2,
-                    'Error no es posible abrir la conexión.'
+                    1,
+                    'Formato 6, presupuesto y horarios guardados correctamente.'
                 );
 
-            $this->estado->setLastID(-2);
+            $this->estado->setLastID(
+                $formato6Codigo
+            );
+
+
+            $result[] = array(
+                'formato6_codigo' =>
+                    $formato6Codigo
+            );
         }
 
+
+        // =====================================================
+        // CERRAR CONEXIÓN
+        // =====================================================
+
         try {
+
             $dbc->closeAll();
+
         } catch (Exception $e) {
         }
 
+
     } catch (Exception $e) {
+
+
+        // =====================================================
+        // CANCELAR TRANSACCIÓN SI HUBO ERROR
+        // =====================================================
+
+        if (
+            isset($dbc) &&
+            $dbc != null
+        ) {
+
+            try {
+
+                $dbc->cancelTransaction();
+
+            } catch (Exception $error) {
+            }
+
+
+            try {
+
+                $dbc->closeAll();
+
+            } catch (Exception $error) {
+            }
+        }
+
+
+        // =====================================================
+        // ERROR
+        // =====================================================
 
         $this->estado =
             new Exception_Object(
                 -3,
-                'Error al guardar el Formato 6.'
+                'Error al guardar el Formato 6 y sus horarios: '
+                . $e->getMessage()
             );
 
         $this->estado->setLastID(-3);
     }
+
 
     // =====================================================
     // RESPUESTA
@@ -1906,7 +2377,9 @@ public function insertformato6($datos)
     $resultados->data = new stdClass();
 
     $resultados->data->success =
-        $this->estado->getLastID() >= 1 ? True : false;
+        $this->estado->getLastID() >= 1
+        ? true
+        : false;
 
     $resultados->data->message =
         $this->estado->getMessage();
@@ -1917,17 +2390,25 @@ public function insertformato6($datos)
     $resultados->data->item =
         $result;
 
+
     if ($this->isHTML == true) {
 
-        header('Content-type: application/json');
+        header(
+            'Content-type: application/json'
+        );
 
-        echo json_encode($resultados);
+        echo json_encode(
+            $resultados
+        );
 
     } else {
 
         return $resultados;
     }
 }
+
+
+
 
 
 
@@ -2711,41 +3192,91 @@ public function getformato1CursoDefinido($d){
     }
 }
 
-public function updateformato6($d){
+
+public function updateformato6($d)
+{
 
     $codigo = $d->formato6_codigo;
 
     try {
 
-        $get_Dataa = "
-            UPDATE formato6
-            SET
-                formato1_codigo = :formato1_codigo,
-                formato6_fecha_elaboracion = :fechaElaboracion,
-                formato6_requerimiento = :requerimiento,
-                formato6_unidad_responsable = :unidadResponsable,
-                formato6_instructores = :instructores,
-                formato6_beneficiarios = :beneficiarios,
-                formato6_paralelo = :paralelo,
-                formato6_modalidad = :modalidad,
-                formato6_area = :area,
-                formato6_carga_horaria = :cargaHoraria,
-                formato6_periodos = :periodos,
-                formato6_horario = :horario,
-                formato6_lugar = :lugar,
-                formato6_prerrequisitos = :prerrequisitos,
-                formato6_tipo_certificado = :tipoCertificado,
-                formato6_inversion = :inversion
+        $result = array();
 
-            WHERE formato6_codigo = :formato6_codigo
-            AND formato6_estado = 'Activo'
-        ";
+        // =====================================================
+        // CONEXIÓN
+        // =====================================================
 
         $dbc = $this->getInitDatabase();
 
-        if ($dbc->getEstado()->codigo == 0) {
+        if ($dbc->getEstado()->codigo != 0) {
 
-            $dbc->query($get_Dataa);
+            $this->estado =
+                new Exception_Object(
+                    -2,
+                    'Error no es posible abrir la conexión.'
+                );
+
+            $this->estado->setLastID(-2);
+
+        } else {
+
+            // =====================================================
+            // INICIAR TRANSACCIÓN
+            // =====================================================
+
+            $dbc->beginTransaction();
+
+
+            // =====================================================
+            // ACTUALIZAR FORMATO 6
+            // =====================================================
+
+            $update = "
+                UPDATE formato6
+                SET
+                    formato1_codigo = :formato1_codigo,
+                    formato6_fecha_elaboracion = :fechaElaboracion,
+                    formato6_requerimiento = :requerimiento,
+                    formato6_unidad_responsable = :unidadResponsable,
+                    formato6_instructores = :instructores,
+                    formato6_beneficiarios = :beneficiarios,
+                    formato6_paralelo = :paralelo,
+                    formato6_modalidad = :modalidad,
+                    formato6_area = :area,
+                    formato6_carga_horaria = :cargaHoraria,
+
+                    inscripcion_matricula_desde =
+                        :inscripcion_matricula_desde,
+
+                    inscripcion_matricula_hasta =
+                        :inscripcion_matricula_hasta,
+
+                    formato6_lugar = :lugar,
+                    formato6_prerrequisitos = :prerrequisitos,
+                    formato6_tipo_certificado = :tipoCertificado,
+                    formato6_inversion = :inversion,
+
+                    formato6_introduccion = :formato6_introduccion,
+                    formato6_justificacion = :formato6_justificacion,
+                    formato6_objetivo_general = :formato6_objetivo_general,
+                    formato6_objetivos_especificos =
+                        :formato6_objetivos_especificos,
+                    formato6_metodologia = :formato6_metodologia,
+                    formato6_planificacion_contenidos =
+                        :formato6_planificacion_contenidos,
+                    formato6_evaluacion = :formato6_evaluacion,
+                    formato6_acreditacion = :formato6_acreditacion
+
+                WHERE formato6_codigo = :formato6_codigo
+                AND formato6_estado = 'Activo'
+            ";
+
+            $dbc->query($update);
+
+
+            // =====================================================
+            // DATOS PRINCIPALES
+            // =====================================================
 
             $dbc->bind(
                 ":formato6_codigo",
@@ -2802,15 +3333,29 @@ public function updateformato6($d){
                 $d->cargaHoraria
             );
 
+
+            // =====================================================
+            // FECHAS DE INSCRIPCIÓN
+            // =====================================================
+
             $dbc->bind(
-                ":periodos",
-                $d->periodos
+                ":inscripcion_matricula_desde",
+                isset($d->inscripcionMatriculaDesde)
+                    ? $d->inscripcionMatriculaDesde
+                    : null
             );
 
             $dbc->bind(
-                ":horario",
-                $d->horario
+                ":inscripcion_matricula_hasta",
+                isset($d->inscripcionMatriculaHasta)
+                    ? $d->inscripcionMatriculaHasta
+                    : null
             );
+
+
+            // =====================================================
+            // DATOS ADICIONALES
+            // =====================================================
 
             $dbc->bind(
                 ":lugar",
@@ -2832,26 +3377,384 @@ public function updateformato6($d){
                 $d->inversion
             );
 
+
+            // =====================================================
+            // CONTENIDO
+            // =====================================================
+
+            $dbc->bind(
+                ":formato6_introduccion",
+                $d->introduccion
+            );
+
+            $dbc->bind(
+                ":formato6_justificacion",
+                $d->justificacion
+            );
+
+            $dbc->bind(
+                ":formato6_objetivo_general",
+                $d->objetivos->general
+            );
+
+            $dbc->bind(
+                ":formato6_objetivos_especificos",
+                json_encode(
+                    $d->objetivos->especificos,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
+
+            $dbc->bind(
+                ":formato6_metodologia",
+                $d->metodologiaCurso
+            );
+
+            $dbc->bind(
+                ":formato6_planificacion_contenidos",
+                $d->planificacionContenidos
+            );
+
+            $dbc->bind(
+                ":formato6_evaluacion",
+                $d->evaluacion
+            );
+
+            $dbc->bind(
+                ":formato6_acreditacion",
+                $d->acreditacionCalificacion
+            );
+
+
+            // =====================================================
+            // EJECUTAR UPDATE
+            // =====================================================
+
             $dbc->execute();
+
+
+            // =====================================================
+            // ELIMINAR PRESUPUESTO ANTERIOR
+            // =====================================================
+
+            $deletePresupuesto = "
+                DELETE FROM presupuesto_formato6
+                WHERE formato6_codigo = :formato6_codigo
+            ";
+
+            $dbc->query($deletePresupuesto);
+
+            $dbc->bind(
+                ":formato6_codigo",
+                $codigo
+            );
+
+            $dbc->execute();
+
+
+            // =====================================================
+            // GUARDAR PRESUPUESTO NUEVO
+            // =====================================================
+
+            if (
+                isset($d->presupuesto) &&
+                is_array($d->presupuesto)
+            ) {
+
+                foreach ($d->presupuesto as $fila) {
+
+                    $partida =
+                        isset($fila->partida)
+                        ? $fila->partida
+                        : '';
+
+                    $descripcion =
+                        isset($fila->descripcion)
+                        ? $fila->descripcion
+                        : '';
+
+                    $valor =
+                        isset($fila->valor)
+                        ? $fila->valor
+                        : 0;
+
+                    $total =
+                        isset($fila->total)
+                        ? $fila->total
+                        : 0;
+
+
+                    $insertPresupuesto = "
+                        INSERT INTO presupuesto_formato6 (
+                            formato6_codigo,
+                            partida,
+                            descripcion,
+                            valor,
+                            total
+                        )
+                        VALUES (
+                            :formato6_codigo,
+                            :partida,
+                            :descripcion,
+                            :valor,
+                            :total
+                        )
+                    ";
+
+                    $dbc->query($insertPresupuesto);
+
+                    $dbc->bind(
+                        ":formato6_codigo",
+                        $codigo
+                    );
+
+                    $dbc->bind(
+                        ":partida",
+                        $partida
+                    );
+
+                    $dbc->bind(
+                        ":descripcion",
+                        $descripcion
+                    );
+
+                    $dbc->bind(
+                        ":valor",
+                        $valor
+                    );
+
+                    $dbc->bind(
+                        ":total",
+                        $total
+                    );
+
+                    $dbc->execute();
+                }
+            }
+
+
+            // =====================================================
+            // ELIMINAR HORARIOS ANTERIORES
+            // =====================================================
+
+            $deleteHorario = "
+                DELETE FROM horario_ejecucion
+                WHERE formato6_codigo = :formato6_codigo
+            ";
+
+            $dbc->query($deleteHorario);
+
+            $dbc->bind(
+                ":formato6_codigo",
+                $codigo
+            );
+
+            $dbc->execute();
+
+
+            // =====================================================
+            // GUARDAR HORARIOS ACTUALES
+            // =====================================================
+
+            if (
+                isset($d->modulos) &&
+                is_array($d->modulos)
+            ) {
+
+                foreach ($d->modulos as $modulo) {
+
+                    // =============================================
+                    // EJECUCIÓN GENERAL
+                    // =============================================
+
+                    $ejecucionDesde =
+                        isset($d->ejecucionDesde)
+                        ? $d->ejecucionDesde
+                        : null;
+
+                    $ejecucionHasta =
+                        isset($d->ejecucionHasta)
+                        ? $d->ejecucionHasta
+                        : null;
+
+
+                    // =============================================
+                    // DATOS DEL MÓDULO
+                    // =============================================
+
+                    $moduloNombre =
+                        isset($modulo->nombre)
+                        ? $modulo->nombre
+                        : '';
+
+                    $moduloDesde =
+                        isset($modulo->desde)
+                        ? $modulo->desde
+                        : null;
+
+                    $moduloHasta =
+                        isset($modulo->hasta)
+                        ? $modulo->hasta
+                        : null;
+
+
+                    // =============================================
+                    // VERIFICAR HORARIOS
+                    // =============================================
+
+                    if (
+                        !isset($modulo->horario) ||
+                        !is_array($modulo->horario)
+                    ) {
+                        continue;
+                    }
+
+
+                    foreach ($modulo->horario as $horario) {
+
+                        if (
+                            !isset($horario->dias) ||
+                            !is_array($horario->dias) ||
+                            count($horario->dias) == 0
+                        ) {
+                            continue;
+                        }
+
+
+                        // =========================================
+                        // CREAR JSON DE DÍAS Y HORAS
+                        // =========================================
+
+                        $diasHorarios = array();
+
+                        foreach ($horario->dias as $dia) {
+
+                            $diasHorarios[] = array(
+                                'dia' => $dia,
+
+                                'horaDesde' =>
+                                    isset($horario->horaDesde)
+                                    ? $horario->horaDesde
+                                    : '',
+
+                                'horaHasta' =>
+                                    isset($horario->horaHasta)
+                                    ? $horario->horaHasta
+                                    : ''
+                            );
+                        }
+
+
+                        // =========================================
+                        // INSERTAR HORARIO
+                        // =========================================
+
+                        $insertHorario = "
+                            INSERT INTO horario_ejecucion (
+                                formato6_codigo,
+                                ejecucion_desde,
+                                ejecucion_hasta,
+                                modulo_nombre,
+                                modulo_desde,
+                                modulo_hasta,
+                                tipo_actividad,
+                                dias_horarios
+                            )
+                            VALUES (
+                                :formato6_codigo,
+                                :ejecucion_desde,
+                                :ejecucion_hasta,
+                                :modulo_nombre,
+                                :modulo_desde,
+                                :modulo_hasta,
+                                :tipo_actividad,
+                                :dias_horarios
+                            )
+                        ";
+
+                        $dbc->query($insertHorario);
+
+
+                        $dbc->bind(
+                            ":formato6_codigo",
+                            $codigo
+                        );
+
+                        $dbc->bind(
+                            ":ejecucion_desde",
+                            $ejecucionDesde
+                        );
+
+                        $dbc->bind(
+                            ":ejecucion_hasta",
+                            $ejecucionHasta
+                        );
+
+                        $dbc->bind(
+                            ":modulo_nombre",
+                            $moduloNombre
+                        );
+
+                        $dbc->bind(
+                            ":modulo_desde",
+                            $moduloDesde
+                        );
+
+                        $dbc->bind(
+                            ":modulo_hasta",
+                            $moduloHasta
+                        );
+
+                        $dbc->bind(
+                            ":tipo_actividad",
+                            isset($horario->tipo)
+                            ? $horario->tipo
+                            : ''
+                        );
+
+                        $dbc->bind(
+                            ":dias_horarios",
+                            json_encode(
+                                $diasHorarios,
+                                JSON_UNESCAPED_UNICODE
+                            )
+                        );
+
+
+                        $dbc->execute();
+                    }
+                }
+            }
+
+
+            // =====================================================
+            // CONFIRMAR TRANSACCIÓN
+            // =====================================================
+
+            $dbc->endTransaction();
+
+
+            // =====================================================
+            // RESPUESTA
+            // =====================================================
 
             $this->estado =
                 new Exception_Object(
                     1,
-                    'Formato 6 actualizado correctamente.'
+                    'Formato 6, presupuesto y horarios actualizados correctamente.'
                 );
 
             $this->estado->setLastID(1);
 
-        } else {
-
-            $this->estado =
-                new Exception_Object(
-                    -2,
-                    'Error no es posible abrir la conexión.'
-                );
-
-            $this->estado->setLastID(-2);
+            $result[] = array(
+                'formato6_codigo' => $codigo
+            );
         }
+
+
+        // =====================================================
+        // CERRAR CONEXIÓN
+        // =====================================================
 
         try {
 
@@ -2860,12 +3763,43 @@ public function updateformato6($d){
         } catch (Exception $e) {
         }
 
+
     } catch (Exception $e) {
+
+        // =====================================================
+        // ROLLBACK
+        // =====================================================
+
+        if (
+            isset($dbc) &&
+            $dbc != null
+        ) {
+
+            try {
+
+                $dbc->cancelTransaction();
+
+            } catch (Exception $error) {
+            }
+
+            try {
+
+                $dbc->closeAll();
+
+            } catch (Exception $error) {
+            }
+        }
+
+
+        // =====================================================
+        // ERROR
+        // =====================================================
 
         $this->estado =
             new Exception_Object(
                 -3,
-                'No es posible actualizar el Formato 6.'
+                'Error al actualizar el Formato 6: '
+                . $e->getMessage()
             );
 
         $this->estado->setLastID(-3);
@@ -2873,7 +3807,7 @@ public function updateformato6($d){
 
 
     // =====================================================
-    // PREPARAR RESPUESTA
+    // RESPUESTA FINAL
     // =====================================================
 
     $resultados = new stdClass();
@@ -2881,7 +3815,9 @@ public function updateformato6($d){
     $resultados->data = new stdClass();
 
     $resultados->data->success =
-        $this->estado->getLastID() >= 1 ? true : false;
+        $this->estado->getLastID() >= 1
+        ? true
+        : false;
 
     $resultados->data->message =
         $this->estado->getMessage();
@@ -2889,12 +3825,15 @@ public function updateformato6($d){
     $resultados->data->estado =
         $this->estado->getCode();
 
-    $resultados->data->item = array();
+    $resultados->data->item =
+        $result;
 
 
     if ($this->isHTML == true) {
 
-        header('Content-type: application/json');
+        header(
+            'Content-type: application/json'
+        );
 
         echo json_encode($resultados);
 
@@ -2903,6 +3842,8 @@ public function updateformato6($d){
         return $resultados;
     }
 }
+
+
 
 }//fin
 
