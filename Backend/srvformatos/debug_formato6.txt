@@ -1,40 +1,53 @@
 stdClass Object
 (
-    [formato1_codigo] => 110
+    [formato1_codigo] => 109
     [fechaElaboracion] => 2026-09-09
     [requerimiento] => Plan Bi Anual
-    [unidadResponsable] => joelpruebaaaa
-    [instructores] => a, as, asd
-    [beneficiarios] => joelpruebaaaa
-    [paralelo] => 12
+    [unidadResponsable] => 
+    [instructores] => i1, i2, i3
+    [beneficiarios] => 
+    [paralelo] => 
     [modalidad] => E-LEARNING
-    [area] => joelpruebaaaa
-    [cargaHoraria] => 15
-    [inscripcionMatriculaDesde] => 2026-09-16
-    [inscripcionMatriculaHasta] => 2026-09-24
-    [ejecucionDesde] => 2026-09-10
-    [ejecucionHasta] => 2026-09-16
+    [area] => 
+    [cargaHoraria] => 125
+    [inscripcionMatriculaDesde] => 2026-09-17
+    [inscripcionMatriculaHasta] => 2026-09-18
+    [ejecucionDesde] => 2026-09-09
+    [ejecucionHasta] => 2026-10-30
     [modulos] => Array
         (
             [0] => stdClass Object
                 (
-                    [nombre] => joelpruebaaaa
-                    [desde] => 2026-09-17
-                    [hasta] => 2026-09-20
+                    [nombre] => modulo 1
+                    [desde] => 2026-09-16
+                    [hasta] => 2026-09-23
+                    [contenido] => introduccion, 
                     [horario] => Array
                         (
                             [0] => stdClass Object
                                 (
-                                    [tipo] => Clases en vivo (sincrónico)
+                                    [tipo] => Trabajo autónomo (asincrónico)
                                     [dias] => Array
                                         (
-                                            [0] => Viernes
-                                            [1] => Lunes
-                                            [2] => Martes
+                                            [0] => Lunes
+                                            [1] => Martes
+                                            [2] => Miércoles
+                                            [3] => Sábado
                                         )
 
                                     [horaDesde] => 08:00
                                     [horaHasta] => 13:00
+                                )
+
+                            [1] => stdClass Object
+                                (
+                                    [tipo] => Clases en vivo (sincrónico)
+                                    [dias] => Array
+                                        (
+                                        )
+
+                                    [horaDesde] => 
+                                    [horaHasta] => 
                                 )
 
                         )
@@ -43,9 +56,9 @@ stdClass Object
 
         )
 
-    [lugar] => joelpruebaaaa
-    [prerrequisitos] => joelpruebaaaa
-    [tipoCertificado] => joelpruebaaaa
+    [lugar] => asd
+    [prerrequisitos] => asdas1
+    [tipoCertificado] => adsdasd
     [inversion] => 125
     [introduccion] => La educación superior se encuentra en un proceso de transformación profunda impulsada por los avances tecnológicos y las demandas de un mundo globalizado. En este contexto, la Educación 4.0 surge como un modelo innovador que integra tecnologías emergentes, como la inteligencia artificial (IA), para responder a los desafíos educativos del siglo XXI.
 
@@ -59,18 +72,18 @@ La participación en este evento de educación continua fortalece el perfil prof
 De esta manera, el curso no solo contribuye al desarrollo de competencias técnicas y pedagógicas, sino que también posiciona a los docentes como agentes de cambio capaces de impulsar la evolución de la educación superior, elevando su competitividad y proyección profesional en un mercado académico global. 
     [objetivos] => stdClass Object
         (
-            [general] => joelpruebaaaa
+            [general] => asddsad
             [especificos] => Array
                 (
-                    [0] => joelpruebaaaa
-                    [1] => joelpruebaaaa
-                    [2] => joelpruebaaaa
+                    [0] => asadsd
+                    [1] => fsfdsfd
+                    [2] => fgdgrse
                 )
 
         )
 
-    [metodologiaCurso] => joelpruebaaaa
-    [planificacionContenidos] => 
+    [metodologiaCurso] => asdadsd
+    [planificacionContenidos] => Módulo 1: introduccion, 
     [evaluacion] => Se proporciconará, permanentemente, una evaluación potencializadora del talento humano en términos de auto evaluación y hetero-evaluación
     [acreditacionCalificacion] => REGLAMENTO DE LA DIRECCIÓN DE EDUCACIÓN CONTINUA, A DISTANCIA Y VIRTUAL DE LA UNIVERSIDAD TÉCNICA DE AMBATO aprobado por Consejo Universitario mediante Resolución 1000-CU-P-2023 de fecha 15 de septiembre de 2023.
  Artículo 40. De la acreditación de los cursos y/o programas de educación continua.- Para la acreditación (Aprobación) de los cursos y/o programas de educación continua se considerará:
@@ -81,11 +94,19 @@ Modalidad B-learning (híbrida o mixta)
         (
             [0] => stdClass Object
                 (
-                    [partida] => 1
+                    [partida] => 530606
                     [numeroInstructores] => 1
-                    [valor] => 20
-                    [total] => 300
+                    [valor] => 30
+                    [total] => 3750
                     [descripcion] => 
+                )
+
+            [1] => stdClass Object
+                (
+                    [partida] => 4845485
+                    [descripcion] => gjhjh
+                    [valor] => varios
+                    [total] => 0
                 )
 
         )

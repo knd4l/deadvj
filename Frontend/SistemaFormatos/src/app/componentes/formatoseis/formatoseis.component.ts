@@ -69,6 +69,10 @@ export class FormatoseisComponent implements OnInit {
 
   ngOnInit(): void {
 
+    this.modulos=[];
+
+      this.agregarModulo();
+
     // Recuperamos el curso guardado desde Formato 1
     const curso = sessionStorage.getItem('cursoFormato6');
 
@@ -129,6 +133,7 @@ guardarModulo(modulo: any): void {
     nombre: modulo.nombre,
     desde: modulo.desde,
     hasta: modulo.hasta,
+    contenido:modulo.contenido,
     horario: modulo.horario.map(
       (horario: HorarioModulo) => ({
         tipo: horario.tipo,
@@ -392,6 +397,8 @@ agregarModulo(): void {
     desde: '',
 
     hasta: '',
+
+    contenido:'',
 
     horario: [
       {
@@ -728,7 +735,14 @@ guardarFormato6(): void {
         },
 
         metodologiaCurso: this.formato6.metodologiaCurso,
-        planificacionContenidos: this.formato6.planificacionContenidos,
+
+        planificacionContenidos: this.modulos
+                .map(
+                  (modulo: any, index: number) =>
+                    `Módulo ${index + 1}: ${modulo.contenido || ''}`
+                )
+                .join('\n'),
+
         evaluacion: this.formato6.evaluacion,
         acreditacionCalificacion:this.formato6.acreditacionCalificacion,
 
@@ -894,9 +908,13 @@ guardarFormato6(): void {
       },
 
       metodologiaCurso: this.formato6.metodologiaCurso,
-      planificacionContenidos:
-        this.formato6.planificacionContenidos,
 
+      planificacionContenidos: this.modulos
+                  .map(
+                    (modulo: any, index: number) =>
+                      `Módulo ${index + 1}: ${modulo.contenido || ''}`
+                  )
+                  .join('\n'),
       evaluacion: this.formato6.evaluacion,
 
       acreditacionCalificacion:this.formato6.acreditacionCalificacion,
@@ -904,6 +922,8 @@ guardarFormato6(): void {
       presupuesto:this.presupuesto
 
     }
+
+
 
   };
 
@@ -952,6 +972,42 @@ console.log(
   '==================================='
 );
 
+console.log('========== PLANIFICACIÓN ==========');
+
+console.log(
+  'MODULOS:',
+  this.modulos
+);
+
+console.log(
+  'MODULOS GUARDADOS:',
+  this.modulosGuardados
+);
+
+console.log(
+  'PLANIFICACIÓN ACTUAL:',
+  this.formato6.planificacionContenidos
+);
+
+console.log(
+  '====================================');
+
+
+  console.log(
+  'PLANIFICACIÓN QUE SE ENVÍA:',
+  objetoopciones.d.planificacionContenidos
+);
+
+console.log(
+  'TIPO PLANIFICACION:',
+  typeof objetoopciones.d.planificacionContenidos
+);
+
+console.log(
+  'VALOR PLANIFICACION:',
+  objetoopciones.d.planificacionContenidos
+);
+
   this.miServicio.insertformato6(
     objetoopciones
   ).subscribe({
@@ -984,6 +1040,10 @@ console.log(
           title: 'Guardado correctamente',
           text: respuesta.data.message
         });
+
+        
+
+        
 
       } else {
 
@@ -1018,6 +1078,7 @@ console.log(
   });
 
 }
+
 
 
 
@@ -1130,6 +1191,89 @@ console.log(
     });
 
 }
+
+//Limpia lso datos una vez que son guardados
+limpiarFormato6(): void {
+
+  // ==========================================
+  // LIMPIAR DATOS DEL FORMATO 6
+  // ==========================================
+
+  this.formato6 = {
+
+    fechaElaboracion: '',
+    requerimiento: '',
+    unidadResponsable: '',
+    instructores: '',
+    beneficiarios: '',
+    paralelo: '',
+    modalidad: '',
+    area: '',
+    cargaHoraria: '',
+
+    inscripcionMatriculaDesde: '',
+    inscripcionMatriculaHasta: '',
+
+    ejecucionDesde: '',
+    ejecucionHasta: '',
+
+    lugar: '',
+    prerrequisitos: '',
+    tipoCertificado: '',
+    inversion: '',
+
+    introduccion: '',
+    justificacion: '',
+
+    objetivos: {
+      general: '',
+      especificos: []
+    },
+
+    metodologiaCurso: '',
+    planificacionContenidos: '',
+    evaluacion: '',
+    acreditacionCalificacion: ''
+  };
+
+
+  // ==========================================
+  // LIMPIAR MÓDULOS
+  // ==========================================
+
+  this.modulos = [];
+
+  this.modulosGuardados = [];
+
+
+  // ==========================================
+  // LIMPIAR PRESUPUESTO
+  // ==========================================
+
+  this.presupuesto = [
+    {
+      partida: 1,
+      numeroInstructores: 1,
+      valor: 0,
+      total: 0
+    }
+  ];
+
+
+  // ==========================================
+  // REINICIAR ESTADO
+  // ==========================================
+
+  this.formato6Existe = false;
+  this.formato6Codigo = 0;
+
+
+  console.log(
+    'Formato 6 limpiado correctamente'
+  );
+}
+
+
 
 //Funcion para describir la fecha en texto
 formatearFecha(desde: string, hasta: string): string {

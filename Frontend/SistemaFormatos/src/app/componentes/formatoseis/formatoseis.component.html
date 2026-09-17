@@ -265,12 +265,37 @@
 
                       <td>
 
-                        <input
+                        <select
                           type="text"
                           class="form-control"
                           [(ngModel)]="formato6.area"
                           name="area"
-                          placeholder="Ingrese el área">
+                          placeholder="seleccione el area">
+
+                          <option value="" disabled>
+                            Seleccione un area
+                          </option>
+
+                          <option value="Docencia">
+                              Docencia
+                          </option>
+
+                          <option value="Tics">
+                            TICS
+                          </option>
+
+                          <option value="Investigacion">
+                            Investigacion
+                          </option>
+
+                          <option value="Salud">
+                            Salud
+                          </option>
+
+                          <option value="GERENCIAL"> 
+                            Gerencial 
+                          </option>
+                          </select>
 
                       </td>
 
@@ -611,7 +636,8 @@
             type="button"
             class="btn"
             style="background-color: #6c1313; color:white"
-            (click)="agregarHorarioModulo(modulo)"
+            (click)="guardarModulo(modulo)"
+          
           >
             Agregar horario
           </button>
@@ -640,20 +666,7 @@
     <!-- GUARDAR MÓDULO -->
     <!-- ========================================= -->
 
-    <div class="mt-3">
-
-      <button
-        type="button"
-        class="btn"
-        style="background-color: #6c1313; color:white"
-        (click)="guardarModulo(modulo)"
-      >
-        Guardar módulo
-      </button>
-
-    </div>
-
-
+  
   </div>
 
 
@@ -661,14 +674,7 @@
   <!-- AGREGAR MÓDULO -->
   <!-- ========================================= -->
 
-  <button
-    type="button"
-    class="btn"
-    style="background-color: #6c1313; color:white"
-    (click)="agregarModulo()"
-  >
-    + Agregar módulo
-  </button>
+ 
 
 
   <!-- ========================================= -->
@@ -835,6 +841,15 @@
             </td>
 
           </tr>
+
+           <button
+              type="button"
+              class="btn"
+              style="background-color: #6c1313; color:white"
+              (click)="agregarModulo()"
+            >
+              + Agregar módulo
+            </button>
 
         </tbody>
 
@@ -1199,6 +1214,7 @@
                       type="text"
                       class="form-control"
                       [name]="'contenidoModulo' + i"
+                      [(ngModel)]="modulo.contenido"
                       placeholder="Ingrese los contenidos que tendrá este módulo...">
 
                   </div>
