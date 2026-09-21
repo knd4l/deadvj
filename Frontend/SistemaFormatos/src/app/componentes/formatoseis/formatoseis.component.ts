@@ -251,39 +251,7 @@ cargarFormatos1Definidos(): void {
     ejecucionDesde: '',
     ejecucionHasta: '', 
 
-    /*periodos:{
-      matriculaDesde:'',
-      matriculaHasta:'',
-      ejecucionDesde:'',
-      ejecucionHasta:'',
-      ejecucion:'',
-
-      modulos:[
-        {
-          nombre:'',
-          desde:'',
-          hasta:'',
-          horario:[
-            {
-              tipo: 'Clases en vivo (sincrónico)',
-              dias: []as string[],
-              horaDesde: '',
-              horaHasta: ''
-            }
-          ]as HorarioModulo[]
-        }
-      ]
-    },
-    
-    horario:[
-      {
-        tipo:'Clases en vivo (sincrónico)',
-        dias:[],
-        horaDesde:'',
-        horaHasta:''
-      }
-    ]as HorarioModulo[],
-      */
+   
     lugar: '',
     prerrequisitos: '',
     tipoCertificado: '',
@@ -303,7 +271,7 @@ cargarFormatos1Definidos(): void {
       ]
     },
     metodologiaCurso: '',
-    planificacionContenidos: '',
+    planificacionContenidos: [''],
 
     //Modulo 4
     evaluacion:'Se proporciconará, permanentemente, una evaluación potencializadora del talento humano en términos de auto evaluación y hetero-evaluación',
@@ -311,7 +279,7 @@ cargarFormatos1Definidos(): void {
 
     
   
-  };
+  }
   horasCargaHoraria: number = 0;
 
   obtenerHorasCargaHoraria(): void {
@@ -377,6 +345,21 @@ convertirNumero(valor: any): number {
         suma + (Number(fila.total) || 0),0 ); 
 }
 
+//Agregar inputs y elimnarlos 
+
+agregarContenido(i:number):void{
+  this.modulos[i].contenidos.push('');
+}
+
+//Elimina el contenido
+eliminarContenido(i: number, j:number): void {
+  this.modulos[i].contenidos.splice(j,1);
+}
+
+trackByContenido(index: number, contenido: any): any {
+  return contenido;
+}
+
 agregarObjetivoEspecifico(): void {
   this.formato6.objetivos.especificos.push('');
 }
@@ -398,11 +381,13 @@ agregarModulo(): void {
 
     hasta: '',
 
-    contenido:'',
+    contenidos:[
+      ''
+    ],
 
     horario: [
       {
-        tipo: 'Clases en vivo (sincrónico)',
+        tipo: '',
         dias: [],
         horaDesde: '',
         horaHasta: ''
@@ -1192,86 +1177,8 @@ console.log(
 
 }
 
-//Limpia lso datos una vez que son guardados
-limpiarFormato6(): void {
-
-  // ==========================================
-  // LIMPIAR DATOS DEL FORMATO 6
-  // ==========================================
-
-  this.formato6 = {
-
-    fechaElaboracion: '',
-    requerimiento: '',
-    unidadResponsable: '',
-    instructores: '',
-    beneficiarios: '',
-    paralelo: '',
-    modalidad: '',
-    area: '',
-    cargaHoraria: '',
-
-    inscripcionMatriculaDesde: '',
-    inscripcionMatriculaHasta: '',
-
-    ejecucionDesde: '',
-    ejecucionHasta: '',
-
-    lugar: '',
-    prerrequisitos: '',
-    tipoCertificado: '',
-    inversion: '',
-
-    introduccion: '',
-    justificacion: '',
-
-    objetivos: {
-      general: '',
-      especificos: []
-    },
-
-    metodologiaCurso: '',
-    planificacionContenidos: '',
-    evaluacion: '',
-    acreditacionCalificacion: ''
-  };
 
 
-  // ==========================================
-  // LIMPIAR MÓDULOS
-  // ==========================================
-
-  this.modulos = [];
-
-  this.modulosGuardados = [];
-
-
-  // ==========================================
-  // LIMPIAR PRESUPUESTO
-  // ==========================================
-
-  this.presupuesto = [
-    {
-      partida: 1,
-      numeroInstructores: 1,
-      valor: 0,
-      total: 0
-    }
-  ];
-
-
-  // ==========================================
-  // REINICIAR ESTADO
-  // ==========================================
-
-  this.formato6Existe = false;
-  this.formato6Codigo = 0;
-
-
-  console.log(
-    'Formato 6 limpiado correctamente'
-  );
-}
 
 
 
@@ -1302,6 +1209,9 @@ formatearFecha(desde: string, hasta: string): string {
 
  return `${diaDesde} de ${meses[Number(mesDesde) - 1]} al ${diaHasta} de ${meses[Number(mesHasta) - 1]} del ${anioHasta}`;
 }
+
+
+
 
 
 

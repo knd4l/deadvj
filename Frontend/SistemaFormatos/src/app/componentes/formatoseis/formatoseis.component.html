@@ -266,11 +266,11 @@
                       <td>
 
                         <select
-                          type="text"
+                          
                           class="form-control"
                           [(ngModel)]="formato6.area"
                           name="area"
-                          placeholder="seleccione el area">
+                          >
 
                           <option value="" disabled>
                             Seleccione un area
@@ -281,7 +281,7 @@
                           </option>
 
                           <option value="Tics">
-                            TICS
+                            Tics
                           </option>
 
                           <option value="Investigacion">
@@ -292,9 +292,10 @@
                             Salud
                           </option>
 
-                          <option value="GERENCIAL"> 
+                          <option value="Gerencial"> 
                             Gerencial 
-                          </option>
+                          </option> 
+
                           </select>
 
                       </td>
@@ -812,6 +813,16 @@
                 <div *ngFor="let fecha of obtenerFechasHorario(modulo, horario)">
                   {{ fecha }}
                 </div>
+
+
+                <button
+              type="button"
+              class="btn"
+              style="background-color: #6c1313; color:white"
+              (click)="agregarModulo()"
+            >
+              + Agregar módulo
+            </button>
               </div>
 
               </div>
@@ -842,14 +853,7 @@
 
           </tr>
 
-           <button
-              type="button"
-              class="btn"
-              style="background-color: #6c1313; color:white"
-              (click)="agregarModulo()"
-            >
-              + Agregar módulo
-            </button>
+           
 
         </tbody>
 
@@ -1201,8 +1205,7 @@
 
                   <div
                     *ngFor="let modulo of modulos; let i = index"
-                    class="mb-4"
-                  >
+                    class="mb-4">
 
                     <!-- TÍTULO DEL MÓDULO -->
                     <label class="form-label fw-bold">
@@ -1210,14 +1213,49 @@
                     </label>
 
                     <!-- CONTENIDOS -->
-                    <input
-                      type="text"
-                      class="form-control"
-                      [name]="'contenidoModulo' + i"
-                      [(ngModel)]="modulo.contenido"
-                      placeholder="Ingrese los contenidos que tendrá este módulo...">
+
+                    
+                     <div
+                      *ngFor="
+                        let contenido of modulo.contenidos;
+                        let j = index; trackBy: trackByIndex"
+                        class="mb-2">
+
+                      <label class="form-label">
+                        Contenido {{ j + 1 }}
+                      </label>
+
+                      <input
+                        type="text"
+                        class="form-control"
+                        [name]="'contenidoModulo' + i + '_' + j"
+                        [(ngModel)]="modulos[i].contenidos[j]">  
+                        
+                       <button
+                        type="button"
+                        class="btn mt-2"
+                        style="background-color: #6c1313; color: white;"
+                        (click)="eliminarContenido(i, j)">
+                        Eliminar
+                      </button>
+                  
+                </div>
+                 <!-- BOTÓN AGREGAR -->
+                    <button
+                      type="button"
+                      class="btn mt-2"
+                      style="background-color: #6c1313; color:white"
+                      (click)="agregarContenido(i)">
+                      + Agregar contenido
+                    </button>
+
+                    
+                   
+
+
 
                   </div>
+                    
 
                 </div>
 

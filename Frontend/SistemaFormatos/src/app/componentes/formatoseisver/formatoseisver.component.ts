@@ -30,6 +30,60 @@ export class FormatoseisverComponent implements OnInit {
 
   }
 
+  //Convierte la imagen a base 64
+
+  convertirImagenBase64(url: string): Promise<string> {
+
+  return fetch(url)
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error(
+          `No se pudo cargar la imagen: ${url}`
+        );
+      }
+
+      return response.blob();
+    })
+    .then(blob => {
+
+      return new Promise<string>((resolve, reject) => {
+
+        const lector =
+          new FileReader();
+
+        lector.onloadend = () => {
+
+          if (typeof lector.result === 'string') {
+
+            resolve(lector.result);
+
+          } else {
+
+            reject(
+              'No se pudo convertir la imagen a Base64'
+            );
+
+          }
+
+        };
+
+        lector.onerror = () => {
+
+          reject(
+            'Error al leer la imagen'
+          );
+
+        };
+
+        lector.readAsDataURL(blob);
+
+      });
+
+    });
+
+}
+
   // =====================================================
   // CARGAR FORMATOS 6
   // =====================================================
@@ -61,37 +115,25 @@ export class FormatoseisverComponent implements OnInit {
 
         next: (res: any) => {
 
-          console.log(
-            'RESPUESTA FORMATOS 06:',
-            res
-          );
+          console.log('RESPUESTA FORMATOS 06:',res);
+          console.log('TIPO DE RESPUESTA:', typeof res);
+          console.log('ES ARRAY:', Array.isArray(res));
+          console.log('DATOS:', JSON.stringify(res, null, 2));
 
-          if (
-            res &&
-            res.data &&
-            res.data.success &&
-            Array.isArray(res.data.item)
-          ) {
+          if (res && res.data && res.data.success && Array.isArray(res.data.item)) 
+            {
 
-            this.listaformatos6 =
-              res.data.item;
+            this.listaformatos6 =res.data.item;
 
-            console.log(
-              'FORMATOS 06 ENCONTRADOS:',
-              this.listaformatos6.length
-            );
-
-            console.table(
-              this.listaformatos6
-            );
+            console.log('FORMATOS 06 ENCONTRADOS:',this.listaformatos6.length);
+            
+            console.table(this.listaformatos6);
 
           } else {
 
             this.listaformatos6 = [];
 
-            console.warn(
-              'No existen registros de Formato 06'
-            );
+            console.warn('No existen registros de Formato 06');
 
           }
 
@@ -138,10 +180,7 @@ export class FormatoseisverComponent implements OnInit {
 
   };
 
-  this.modulosService
-    .obtenerFormato6Reporte(data)
-    .subscribe({
-      next: (res: any) => {
+  this.modulosService.obtenerFormato6Reporte(data).subscribe({next: (res: any) => {
 
         console.log('DATOS PARA REPORTE:', res);
 
@@ -225,377 +264,958 @@ export class FormatoseisverComponent implements OnInit {
 // GENERAR PDF FORMATO 6
 // =====================================================
 
-generarPDFFormato6(formato: any): void {
+async generarPDFFormato6(formato: any): Promise<void>{
 
-  Promise.all([
-    this.imagenBase64('assets/img/encabezado.jpg'),
-    this.imagenBase64('assets/img/footer.jpeg')
-  ])
-  .then(([logoEncabezado, logoPiePagina]) => {
+  try{
 
-    const documentDefinition: any = {
+  // =====================================================
+  // CONFIGURACIÓN GENERAL
+  // =====================================================
 
-      pageSize: 'A4',
+  const encabezado =
+    await this.convertirImagenBase64(
+    'assets/img/encabezado.jpg');
 
-      pageMargins: [40, 80, 40, 80],
+  const pie =
+      await this.convertirImagenBase64(
+        'assets/img/footer.jpeg'
+      );
+    console.log(
+      'ENCABEZADO BASE64:',
+      encabezado.substring(0, 80)
+    );
 
-      header: {
-        image: 'logoEncabezado',
-        width: 500,
-        alignment: 'center',
-        margin: [0, 10, 0, 10]
+    console.log(
+      'PIE BASE64:',
+      pie.substring(0, 80)
+    );
+
+  // =====================================================
+  // FUNCIÓN PARA TÍTULOS DE SECCIÓN
+  // =====================================================
+
+  const tituloSeccion = (
+    texto: string
+  ) => {
+
+    return {
+      text: texto,
+      bold: true,
+      fontSize: 12,
+      margin: [0, 8, 0, 8]
+    };
+  };
+
+
+  // =====================================================
+  // OBJETIVOS ESPECÍFICOS
+  // =====================================================
+
+  const objetivosEspecificos =
+    formato.objetivos_especificos || [];
+
+
+  // =====================================================
+  // CONTENIDOS
+  // =====================================================
+
+  const contenidos =
+    formato.contenidos || [];
+
+
+  // =====================================================
+  // CRONOGRAMA
+  // =====================================================
+
+  const cronograma =
+    formato.cronograma || [];
+
+
+  // =====================================================
+  // PRESUPUESTO
+  // =====================================================
+
+  const presupuesto =
+    formato.presupuesto || [];
+
+
+  // =====================================================
+  // PLANIFICACIÓN DE CONTENIDOS
+  // =====================================================
+
+  const contenidosPorModulo: {
+    [key: string]: any[]
+  } = {};
+
+
+  contenidos.forEach((item: any) => {
+
+    const moduloId =
+      item.modulo_id || 1;
+
+    if (!contenidosPorModulo[moduloId]) {
+
+      contenidosPorModulo[moduloId] =
+        [];
+    }
+
+    contenidosPorModulo[moduloId]
+      .push(item);
+  });
+
+
+  // =====================================================
+  // TABLA DE PLANIFICACIÓN
+  // =====================================================
+
+  const tablaPlanificacion: any[] = [
+
+    [
+      {
+        text: 'Módulo',
+        bold: true,
+        alignment: 'center'
       },
-
-      footer: function(currentPage: number, pageCount: number) {
-        return {
-          stack: [
-            {
-              image: 'logoPiePagina',
-              width: 500,
-              alignment: 'center',
-              margin: [0, 40, 0, 5]
-            }
-          ]
-        };
-      },
-
-      images: {
-        logoEncabezado: logoEncabezado,
-        logoPiePagina: logoPiePagina
-      },
-
-      content: [
-
-        // =====================================================
-        // TITULO
-        // =====================================================
-
-       {
-  table: {
-    widths: ['*'],
-    body: [
-      [
-        {
-          text: '1. DATOS INFORMATIVOS',
-          alignment:'left',
-          bold: true,
-          fontSize: 14,
-          margin: [0, 2, 0, 2],
-
-        }
-      ]
+      {
+        text: 'Contenidos',
+        bold: true,
+        alignment: 'center'
+      }
     ]
-  },
+  ];
 
-  layout: {
-    hLineWidth: function(i: number, node: any) {
-      return 1.5;
+
+  Object.keys(
+    contenidosPorModulo
+  ).forEach((moduloId: string) => {
+
+    const lista =
+      contenidosPorModulo[moduloId];
+
+    const contenidosTexto =
+      lista
+        .map(
+          (item: any, index: number) =>
+            `${index + 1}. ${item.contenido}`
+        )
+        .join('\n');
+
+    tablaPlanificacion.push([
+
+      {
+        text:
+          `Módulo ${moduloId}`,
+        bold: true
+      },
+
+      {
+        text:
+          contenidosTexto
+      }
+
+    ]);
+  });
+
+
+  // =====================================================
+  // TABLA DE CRONOGRAMA
+  // =====================================================
+
+  const tablaCronograma: any[] = [
+
+    [
+      {
+        text: 'Módulo',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Actividad',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Fechas',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Horario',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Horas',
+        bold: true,
+        alignment: 'center'
+      }
+    ]
+  ];
+
+
+  cronograma.forEach((item: any) => {
+
+    tablaCronograma.push([
+
+      item.modulo || '',
+
+      item.actividad || '',
+
+      (
+        item.desde || ''
+      ) +
+      (
+        item.hasta
+          ? ' al ' + item.hasta
+          : ''
+      ),
+
+      item.horario || '',
+
+      String(
+        item.horas_totales || 0
+      )
+
+    ]);
+  });
+
+
+  // =====================================================
+  // TABLA DE PRESUPUESTO
+  // =====================================================
+
+  const tablaPresupuesto: any[] = [
+
+    [
+      {
+        text: 'Partida',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Descripción',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Valor',
+        bold: true,
+        alignment: 'center'
+      },
+
+      {
+        text: 'Total',
+        bold: true,
+        alignment: 'center'
+      }
+    ]
+  ];
+
+
+  presupuesto.forEach((item: any) => {
+
+    tablaPresupuesto.push([
+
+      item.partida || '',
+
+      item.descripcion || '',
+
+      String(
+        item.valor || 0
+      ),
+
+      String(
+        item.total || 0
+      )
+
+    ]);
+  });
+
+
+  // =====================================================
+  // DOCUMENTO PDF
+  // =====================================================
+
+  const documentDefinition: any = {
+
+    pageSize: 'A4',
+
+    pageMargins: [
+      40,
+      80,
+      40,
+      80
+    ],
+
+
+    // ===================================================
+    // ENCABEZADO
+    // ===================================================
+
+    header: {
+
+      image: encabezado,
+
+      width: 515,
+
+      alignment: 'center',
+
+      margin: [
+        0,
+        15,
+        0,
+        0
+      ]
     },
 
-    vLineWidth: function(i: number, node: any) {
-      return 1.5;
+
+    // ===================================================
+    // PIE DE PÁGINA
+    // ===================================================
+
+    footer: {
+
+      image: pie,
+
+      width: 515,
+
+      alignment: 'center',
+
+      margin: [
+        0,
+        0,
+        0,
+        15
+      ]
     },
 
-    hLineColor: function(i: number, node: any) {
-      return '#000000';
-    },
 
-    vLineColor: function(i: number, node: any) {
-      return '#000000';
-    },
+    // ===================================================
+    // CONTENIDO
+    // ===================================================
 
-    paddingLeft: function(i: number, node: any) {
-      return 5;
-    },
+    content: [
 
-    paddingRight: function(i: number, node: any) {
-      return 5;
-    },
 
-    paddingTop: function(i: number, node: any) {
-      return 5;
-    },
+      // =================================================
+      // PÁGINA 1
+      // DATOS INFORMATIVOS
+      // =================================================
 
-    paddingBottom: function(i: number, node: any) {
-      return 5;
-    }
-  },
+      {
 
-    canvas: [
-    {
-      type: 'rect',
-      x: 0,
-      y: 0,
-      w: 515,
-      h: 35,
-      r: 8,
-      lineWidth: 1.5
-    }
-  ],
+        text:
+          '1. DATOS INFORMATIVOS',
 
-  margin: [0, 5, 0, 15]
-},
+        bold: true,
 
-        // =====================================================
-        // UNA SOLA TABLA CON TODO EL FORMATO 06
-        // =====================================================
+        fontSize: 14,
 
-        {
-          table: {
+        alignment: 'center',
 
-            widths: [170, '*'],
+        margin: [
+          0,
+          0,
+          0,
+          15
+        ]
+      },
 
-            body: [
 
-              // INFORMACIÓN GENERAL
+      {
+        table: {
 
-             [
+          widths: [
+            '35%',
+            '65%'
+          ],
+
+          body: [
+
+            [
               {
-                text: 'Fecha de elaboración',
+                text:
+                  'Fecha de elaboración',
                 bold: true
               },
+
               {
-                columns: [
-                  {
-                    text: formato.formato6_fecha_elaboracion || '',
-                    width: '*'
-                  },
-                  {
-                    table: {
-                      widths: [30], // 1.5 cm aproximadamente
-                      body: [
-                        [
-                          {
-                            text: 'NSIA',
-                            color: 'white',
-                            bold: true,
-                            fontSize: 8,
-                            alignment: 'center',
-                            margin: [0, 0, 0, 0]
-                          }
-                        ]
-                      ]
-                    },
-                    layout: {
-                      fillColor: function(rowIndex: number, node: any) {
-                        return '#008000'; // VERDE
-                      },
-                      hLineWidth: function(i: number, node: any) {
-                        return 0;
-                      },
-                      vLineWidth: function(i: number, node: any) {
-                        return 0;
-                      }
-                    },
-                    width: 43
-                  }
-                ],
-                columnGap: 5
+                text:
+                  formato.formato6_fecha_elaboracion
+                  || ''
               }
             ],
 
-              [
-                {
-                  text: 'Requerimiento',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_requerimiento || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Requerimiento',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Unidad responsable',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_unidad_responsable || ''
-                }
-              ],
+              {
+                text:
+                  formato.formato6_requerimiento
+                  || ''
+              }
+            ],
 
-              [
-                {
-                  text: 'Instructores',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_instructores || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Unidad responsable',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Beneficiarios',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_beneficiarios || ''
-                }
-              ],
+              {
+                text:
+                  formato.formato6_unidad_responsable
+                  || ''
+              }
+            ],
 
-              [
-                {
-                  text: 'Paralelo',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_paralelo || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Instructores',
+                bold: true
+              },
 
-              // DETALLE DE CAPACITACIÓN
+              {
+                text:
+                  formato.formato6_instructores
+                  || ''
+              }
+            ],
 
-              [
-                {
-                  text: 'Modalidad',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_modalidad || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Beneficiarios',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Área',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_area || ''
-                }
-              ],
+              {
+                text:
+                  formato.formato6_beneficiarios
+                  || ''
+              }
+            ],
 
-              [
-                {
-                  text: 'Carga horaria',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_carga_horaria || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Paralelo',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Períodos',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_periodos || ''
-                }
-              ],
+              {
+                text:
+                  formato.formato6_paralelo
+                  || ''
+              }
+            ],
 
-              [
-                {
-                  text: 'Horario',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_horario || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Modalidad',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Lugar',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_lugar || ''
-                }
-              ],
+              {
+                text:
+                  formato.formato6_modalidad
+                  || ''
+              }
+            ],
 
-              // REQUISITOS Y CERTIFICACIÓN
+            [
+              {
+                text:
+                  'Área',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Prerrequisitos',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_prerrequisitos || ''
-                }
-              ],
+              {
+                text:
+                  formato.formato6_area
+                  || ''
+              }
+            ],
 
-              [
-                {
-                  text: 'Tipo de certificado',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_tipo_certificado || ''
-                }
-              ],
+            [
+              {
+                text:
+                  'Carga horaria',
+                bold: true
+              },
 
-              [
-                {
-                  text: 'Inversión',
-                  bold: true
-                },
-                {
-                  text: formato.formato6_inversion || ''
-                }
-              ]
+              {
+                text:
+                  formato.formato6_carga_horaria
+                  || ''
+              }
+            ],
 
+            // =========================================
+            // PERÍODOS
+            // =========================================
+
+            [
+              {
+                text:
+                  'Períodos',
+                bold: true
+              },
+
+              {
+                text:
+                  formato.periodos
+                  || ''
+              }
+            ],
+
+            // =========================================
+            // HORARIO
+            // =========================================
+
+            [
+              {
+                text:
+                  'Horario',
+                bold: true
+              },
+
+              {
+                text:
+                  formato.horario
+                  || ''
+              }
+            ],
+
+            [
+              {
+                text:
+                  'Lugar',
+                bold: true
+              },
+
+              {
+                text:
+                  formato.formato6_lugar
+                  || ''
+              }
+            ],
+
+            [
+              {
+                text:
+                  'Prerrequisitos',
+                bold: true
+              },
+
+              {
+                text:
+                  formato.formato6_prerrequisitos
+                  || ''
+              }
+            ],
+
+            [
+              {
+                text:
+                  'Tipo de certificado',
+                bold: true
+              },
+
+              {
+                text:
+                  formato.formato6_tipo_certificado
+                  || ''
+              }
+            ],
+
+            [
+              {
+                text:
+                  'Inversión',
+                bold: true
+              },
+
+              {
+                text:
+                  formato.formato6_inversion
+                  || ''
+              }
             ]
 
-          },
-
-          layout: {
-
-            hLineWidth: function(i: number, node: any) {
-              return 0.8;
-            },
-
-            vLineWidth: function(i: number, node: any) {
-              return 0.8;
-            },
-
-            paddingLeft: function(i: number, node: any) {
-              return 6;
-            },
-
-            paddingRight: function(i: number, node: any) {
-              return 6;
-            },
-
-            paddingTop: function(i: number, node: any) {
-              return 6;
-            },
-
-            paddingBottom: function(i: number, node: any) {
-              return 6;
-            }
-
-          },
-
-          margin: [0, 0, 0, 15]
+          ]
         },
 
-      ]
-    };
+        layout: 'lightHorizontalLines'
 
-    // =====================================================
-    // GENERAR PDF
-    // =====================================================
+      },
 
-    (pdfMake as any)
-      .createPdf(documentDefinition)
-      .open();
 
-  })
-  .catch((error) => {
+      // =================================================
+      // PÁGINA 2
+      // INTRODUCCIÓN Y JUSTIFICACIÓN
+      // =================================================
 
-    console.error('ERROR AL CARGAR IMÁGENES DEL PDF:', error);
+      {
+        text: '',
+        pageBreak: 'before'
+      },
+
+
+      tituloSeccion(
+        '2. INTRODUCCIÓN'
+      ),
+
+
+      {
+        text:
+          formato.formato6_introduccion
+          || '',
+
+        alignment: 'justify',
+
+        fontSize: 10,
+
+        lineHeight: 1.3,
+
+        margin: [
+          0,
+          0,
+          0,
+          15
+        ]
+      },
+
+
+      tituloSeccion(
+        '3. JUSTIFICACIÓN'
+      ),
+
+
+      {
+        text:
+          formato.formato6_justificacion
+          || '',
+
+        alignment: 'justify',
+
+        fontSize: 10,
+
+        lineHeight: 1.3
+      },
+
+
+      // =================================================
+      // PÁGINA 3
+      // OBJETIVOS + METODOLOGÍA + CONTENIDOS
+      // =================================================
+
+      {
+        text: '',
+        pageBreak: 'before'
+      },
+
+
+      tituloSeccion(
+        '4. OBJETIVOS'
+      ),
+
+
+      {
+        text:
+          'Objetivo general',
+
+        bold: true,
+
+        fontSize: 11,
+
+        margin: [
+          0,
+          0,
+          0,
+          5
+        ]
+      },
+
+
+      {
+        text:
+          formato.formato6_objetivo_general
+          || '',
+
+        alignment: 'justify',
+
+        fontSize: 10,
+
+        margin: [
+          0,
+          0,
+          0,
+          10
+        ]
+      },
+
+
+      {
+        text:
+          'Objetivos específicos',
+
+        bold: true,
+
+        fontSize: 11,
+
+        margin: [
+          0,
+          0,
+          0,
+          5
+        ]
+      },
+
+
+      {
+        ol:
+          objetivosEspecificos
+            .map(
+              (item: any) =>
+                item.objetivo || ''
+            ),
+
+        fontSize: 10,
+
+        margin: [
+          0,
+          0,
+          0,
+          15
+        ]
+      },
+
+
+      tituloSeccion(
+        '5. METODOLOGÍA DEL CURSO'
+      ),
+
+
+      {
+        text:
+          formato.formato6_metodologia
+          || '',
+
+        alignment: 'justify',
+
+        fontSize: 10,
+
+        lineHeight: 1.3,
+
+        margin: [
+          0,
+          0,
+          0,
+          15
+        ]
+      },
+
+
+      tituloSeccion(
+        '6. PLANIFICACIÓN DE CONTENIDOS'
+      ),
+
+
+      {
+        table: {
+
+          headerRows: 1,
+
+          widths: [
+            '25%',
+            '75%'
+          ],
+
+          body:
+            tablaPlanificacion
+        },
+
+        layout: 'lightHorizontalLines',
+
+        fontSize: 9
+      },
+
+
+      // =================================================
+      // PÁGINA 4
+      // EVALUACIÓN + ACREDITACIÓN + CRONOGRAMA
+      // =================================================
+
+      {
+        text: '',
+        pageBreak: 'before'
+      },
+
+
+      tituloSeccion(
+        '7. EVALUACIÓN'
+      ),
+
+
+      {
+        text:
+          formato.formato6_evaluacion
+          || '',
+
+        alignment: 'justify',
+
+        fontSize: 10,
+
+        lineHeight: 1.3,
+
+        margin: [
+          0,
+          0,
+          0,
+          15
+        ]
+      },
+
+
+      tituloSeccion(
+        '8. ACREDITACIÓN Y CALIFICACIÓN'
+      ),
+
+
+      {
+        text:
+          formato.formato6_acreditacion
+          || '',
+
+        alignment: 'justify',
+
+        fontSize: 10,
+
+        lineHeight: 1.3,
+
+        margin: [
+          0,
+          0,
+          0,
+          15
+        ]
+      },
+
+
+      tituloSeccion(
+        '9. CRONOGRAMA DEL EVENTO'
+      ),
+
+
+      {
+        table: {
+
+          headerRows: 1,
+
+          widths: [
+            '20%',
+            '18%',
+            '22%',
+            '25%',
+            '15%'
+          ],
+
+          body:
+            tablaCronograma
+        },
+
+        layout: 'lightHorizontalLines',
+
+        fontSize: 8
+      },
+
+
+      // =================================================
+      // PÁGINA 5
+      // PRESUPUESTO
+      // =================================================
+
+      {
+        text: '',
+        pageBreak: 'before'
+      },
+
+
+      tituloSeccion(
+        '10. PRESUPUESTO'
+      ),
+
+
+      {
+        table: {
+
+          headerRows: 1,
+
+          widths: [
+            '15%',
+            '45%',
+            '20%',
+            '20%'
+          ],
+
+          body:
+            tablaPresupuesto
+        },
+
+        layout: 'lightHorizontalLines',
+
+        fontSize: 9
+      }
+
+    ]
+
+  };
+
+
+  // =====================================================
+  // GENERAR PDF
+  // =====================================================
+  console.log(
+  'IMAGEN QUE RECIBE PDFMAKE:',
+  documentDefinition.header.image
+);
+
+console.log(
+  'PIE QUE RECIBE PDFMAKE:',
+  documentDefinition.footer.image
+);
+  pdfMake
+    .createPdf(documentDefinition)
+    .open();
+
+  }catch(error){
+
+    console.error(
+      'ERROR AL GENERAR PDF:',
+      error
+    );
 
     Swal.fire(
       'Error',
-      'No se pudo generar el PDF del Formato 06',
+      'No se pudo generar el PDF. Revisa la consola.',
       'error'
     );
 
-  });
+  }
 }
 
 }

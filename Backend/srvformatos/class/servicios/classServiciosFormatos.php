@@ -1704,11 +1704,6 @@ public function insertCursoDefinido($filtros) {
 
 public function insertformato6($datos)
 {
-    file_put_contents(
-    'debug_formato6.txt',
-    print_r($datos, true)
-);
-
     try {
 
         $result = array();
@@ -1932,7 +1927,10 @@ public function insertformato6($datos)
 
             $dbc->bind(
                 ":formato6_planificacion_contenidos",
-                $datos->planificacionContenidos
+                json_encode(
+                    $datos->planificacionContenidos,
+                    JSON_UNESCAPED_UNICODE
+                )
             );
 
             $dbc->bind(
@@ -1944,30 +1942,7 @@ public function insertformato6($datos)
                 ":formato6_acreditacion",
                 $datos->acreditacionCalificacion
             );
-            error_log(
-    'INSCRIPCION DESDE: ' .
-    ($datos->inscripcionMatriculaDesde ?? 'NO LLEGO')
-);
 
-error_log(
-    'INSCRIPCION HASTA: ' .
-    ($datos->inscripcionMatriculaHasta ?? 'NO LLEGO')
-);
-
-error_log(
-    'EJECUCION DESDE: ' .
-    ($datos->ejecucionDesde ?? 'NO LLEGO')
-);
-
-error_log(
-    'EJECUCION HASTA: ' .
-    ($datos->ejecucionHasta ?? 'NO LLEGO')
-);
-
-error_log(
-    'MODULOS: ' .
-    print_r($datos->modulos ?? 'NO LLEGO', true)
-);
 
             // =====================================================
             // EJECUTAR INSERT DEL FORMATO 6
@@ -1987,6 +1962,112 @@ error_log(
                 throw new Exception(
                     'No se pudo obtener el código del Formato 6.'
                 );
+            }
+
+
+            // =====================================================
+            // GUARDAR OBJETIVOS ESPECÍFICOS
+            // =====================================================
+
+            if (
+                isset($datos->objetivos) &&
+                isset($datos->objetivos->especificos) &&
+                is_array($datos->objetivos->especificos)
+            ) {
+
+                foreach ($datos->objetivos->especificos as $objetivo) {
+
+                    if (trim($objetivo) == '') {
+                        continue;
+                    }
+
+                    $insertObjetivo = "
+                        INSERT INTO objetivos_especificos_formato6 (
+                            formato6_codigo,
+                            objetivo
+                        )
+                        VALUES (
+                            :formato6_codigo,
+                            :objetivo
+                        )
+                    ";
+
+                    $dbc->query($insertObjetivo);
+
+                    $dbc->bind(
+                        ":formato6_codigo",
+                        $formato6Codigo
+                    );
+
+                    $dbc->bind(
+                        ":objetivo",
+                        $objetivo
+                    );
+
+                    $dbc->execute();
+                }
+            }
+
+
+            // =====================================================
+            // GUARDAR CONTENIDOS DE LOS MÓDULOS
+            // =====================================================
+
+            if (
+                isset($datos->modulos) &&
+                is_array($datos->modulos)
+            ) {
+
+                foreach ($datos->modulos as $i => $modulo) {
+
+                    $moduloId = $i + 1;
+
+                    if (
+                        !isset($modulo->contenidos) ||
+                        !is_array($modulo->contenidos)
+                    ) {
+                        continue;
+                    }
+
+                    foreach ($modulo->contenidos as $contenido) {
+
+                        if (trim($contenido) == '') {
+                            continue;
+                        }
+
+                        $insertContenido = "
+                            INSERT INTO planificacion_contenidos_formato6 (
+                                formato6_codigo,
+                                modulo_id,
+                                contenido
+                            )
+                            VALUES (
+                                :formato6_codigo,
+                                :modulo_id,
+                                :contenido
+                            )
+                        ";
+
+                        $dbc->query($insertContenido);
+
+                        $dbc->bind(
+                            ":formato6_codigo",
+                            $formato6Codigo
+                        );
+
+                        $dbc->bind(
+                            ":modulo_id",
+                            $moduloId
+                        );
+
+                        $dbc->bind(
+                            ":contenido",
+                            $contenido
+                        );
+
+                        $dbc->execute();
+                    }
+                }
             }
 
 
@@ -2022,10 +2103,6 @@ error_log(
                         : 0;
 
 
-                    // =================================================
-                    // INSERTAR PARTIDA
-                    // =================================================
-
                     $insertPresupuesto = "
                         INSERT INTO presupuesto_formato6 (
                             formato6_codigo,
@@ -2044,11 +2121,6 @@ error_log(
                     ";
 
                     $dbc->query($insertPresupuesto);
-
-
-                    // =================================================
-                    // BIND PRESUPUESTO
-                    // =================================================
 
                     $dbc->bind(
                         ":formato6_codigo",
@@ -2075,11 +2147,6 @@ error_log(
                         $total
                     );
 
-
-                    // =================================================
-                    // EJECUTAR
-                    // =================================================
-
                     $dbc->execute();
                 }
             }
@@ -2096,10 +2163,9 @@ error_log(
 
                 foreach ($datos->modulos as $modulo) {
 
-
-                    // =================================================
+                    // ---------------------------------------------
                     // FECHAS GENERALES DE EJECUCIÓN
-                    // =================================================
+                    // ---------------------------------------------
 
                     $ejecucionDesde =
                         isset($datos->ejecucionDesde)
@@ -2112,9 +2178,9 @@ error_log(
                         : null;
 
 
-                    // =================================================
+                    // ---------------------------------------------
                     // DATOS DEL MÓDULO
-                    // =================================================
+                    // ---------------------------------------------
 
                     $moduloNombre =
                         isset($modulo->nombre)
@@ -2132,46 +2198,38 @@ error_log(
                         : null;
 
 
-                    // =================================================
-                    // VERIFICAR HORARIOS DEL MÓDULO
-                    // =================================================
+                    // ---------------------------------------------
+                    // VERIFICAR HORARIOS
+                    // ---------------------------------------------
 
                     if (
                         !isset($modulo->horario) ||
                         !is_array($modulo->horario)
                     ) {
-
                         continue;
                     }
 
 
-                    // =================================================
-                    // RECORRER LOS HORARIOS DEL MÓDULO
-                    // =================================================
+                    // ---------------------------------------------
+                    // RECORRER HORARIOS
+                    // ---------------------------------------------
 
                     foreach ($modulo->horario as $horario) {
-
-
-                        // =============================================
-                        // VERIFICAR DÍAS
-                        // =============================================
 
                         if (
                             !isset($horario->dias) ||
                             !is_array($horario->dias) ||
                             count($horario->dias) == 0
                         ) {
-
                             continue;
                         }
 
 
-                        // =============================================
+                        // -----------------------------------------
                         // CREAR ARRAY DE DÍAS Y HORAS
-                        // =============================================
+                        // -----------------------------------------
 
                         $diasHorarios = array();
-
 
                         foreach ($horario->dias as $dia) {
 
@@ -2193,9 +2251,9 @@ error_log(
                         }
 
 
-                        // =============================================
+                        // -----------------------------------------
                         // INSERTAR HORARIO
-                        // =============================================
+                        // -----------------------------------------
 
                         $insertHorario = "
                             INSERT INTO horario_ejecucion (
@@ -2223,9 +2281,9 @@ error_log(
                         $dbc->query($insertHorario);
 
 
-                        // =============================================
+                        // -----------------------------------------
                         // BIND HORARIO
-                        // =============================================
+                        // -----------------------------------------
 
                         $dbc->bind(
                             ":formato6_codigo",
@@ -2273,9 +2331,9 @@ error_log(
                         );
 
 
-                        // =============================================
+                        // -----------------------------------------
                         // EJECUTAR
-                        // =============================================
+                        // -----------------------------------------
 
                         $dbc->execute();
                     }
@@ -2304,10 +2362,8 @@ error_log(
                 $formato6Codigo
             );
 
-
             $result[] = array(
-                'formato6_codigo' =>
-                    $formato6Codigo
+                'formato6_codigo' => $formato6Codigo
             );
         }
 
@@ -2326,36 +2382,22 @@ error_log(
 
     } catch (Exception $e) {
 
-
-        // =====================================================
-        // CANCELAR TRANSACCIÓN SI HUBO ERROR
-        // =====================================================
-
         if (
             isset($dbc) &&
             $dbc != null
         ) {
 
             try {
-
                 $dbc->cancelTransaction();
-
             } catch (Exception $error) {
             }
 
-
             try {
-
                 $dbc->closeAll();
-
             } catch (Exception $error) {
             }
         }
 
-
-        // =====================================================
-        // ERROR
-        // =====================================================
 
         $this->estado =
             new Exception_Object(
@@ -2411,7 +2453,6 @@ error_log(
 
 
 
-
 // OBTENER FORMATOS 6
 // =====================================================
 public function getformato6(){
@@ -2421,15 +2462,7 @@ public function getformato6(){
         $result = array();
 
         $get_Dataa = "
-            SELECT
-                formato6_codigo,
-                formato1_codigo,
-                formato6_unidad_responsable,
-                formato6_beneficiarios,
-                formato6_modalidad,
-                formato6_periodos,
-                formato6_prerrequisitos,
-                formato6_tipo_certificado
+            SELECT *
             FROM formato6
             WHERE formato6_estado = 'Activo'
             ORDER BY formato6_codigo DESC
@@ -2465,8 +2498,8 @@ public function getformato6(){
                     $item->formato6_modalidad =
                         $row['formato6_modalidad'];
 
-                    $item->formato6_periodos =
-                        $row['formato6_periodos'];
+                    $item->formato6_carga_horaria =
+                        $row['formato6_carga_horaria'];
 
                     $item->formato6_prerrequisitos =
                         $row['formato6_prerrequisitos'];
@@ -2515,7 +2548,7 @@ public function getformato6(){
         $this->estado =
             new Exception_Object(
                 -3,
-                'No es posible leer los datos requeridos.'
+                'Error'.$e->getMessage()
             );
 
         $this->estado->setLastID(-3);
@@ -2766,243 +2799,652 @@ public function getformato6PorFormato1($codigo){
 // OBTENER FORMATO 6 PARA REPORTE PDF
 // =====================================================
 
-    public function getformato6Reporte($filtros)
-    {
-        try {
+public function getformato6Reporte($filtros)
+{
+    try {
 
-            $result = array();
+        $result = array();
 
-            // OBTENER CÓDIGO DEL FORMATO 6
-            // ================================================
+        // =====================================================
+        // CONEXIÓN
+        // =====================================================
 
-            $formato6_codigo = isset($filtros->formato6_codigo)
-                ? $filtros->formato6_codigo
-                : 0;
+        $dbc = $this->getInitDatabase();
 
+        if ($dbc->getEstado()->codigo != 0) {
 
-            // ================================================
-            // CONSULTA
-            // ================================================
-
-            $get_Dataa = "
-                SELECT
-                    formato6_codigo,
-                    formato1_codigo,
-                    formato6_fecha_elaboracion,
-                    formato6_requerimiento,
-                    formato6_unidad_responsable,
-                    formato6_instructores,
-                    formato6_beneficiarios,
-                    formato6_paralelo,
-                    formato6_modalidad,
-                    formato6_area,
-                    formato6_carga_horaria,
-                    formato6_periodos,
-                    formato6_horario,
-                    formato6_lugar,
-                    formato6_prerrequisitos,
-                    formato6_tipo_certificado,
-                    formato6_inversion,
-                    formato6_estado
-                FROM formato6
-                WHERE formato6_codigo = $formato6_codigo
-                AND formato6_estado = 'Activo'
-                LIMIT 1
-            ";
+            throw new Exception(
+                'Error no es posible abrir la conexión'
+            );
+        }
 
 
-            // ================================================
-            // CONEXIÓN A BASE DE DATOS
-            // ================================================
+        // =====================================================
+        // CÓDIGO DEL FORMATO 6
+        // =====================================================
 
-            $dbc = $this->getInitDatabase();
+        $formato6Codigo =
+            isset($filtros->formato6_codigo)
+            ? $filtros->formato6_codigo
+            : null;
 
+        if (!$formato6Codigo) {
 
-            if ($dbc->getEstado()->codigo == 0) {
-
-                $dbc->query($get_Dataa);
-                $dbc->execute();
-
-                $tabla = $dbc->getTabla();
-
-
-                // ============================================
-                // VERIFICAR SI EXISTE EL REGISTRO
-                // ============================================
-
-                if ($dbc->rowCount() > 0) {
-
-                    foreach ($tabla as $row) {
-
-                        $item = new stdClass();
-
-                        $item->formato6_codigo =
-                            $row['formato6_codigo'];
-
-                        $item->formato1_codigo =
-                            $row['formato1_codigo'];
-
-                        $item->formato6_fecha_elaboracion =
-                            $row['formato6_fecha_elaboracion'];
-
-                        $item->formato6_requerimiento =
-                            $row['formato6_requerimiento'];
-
-                        $item->formato6_unidad_responsable =
-                            $row['formato6_unidad_responsable'];
-
-                        $item->formato6_instructores =
-                            $row['formato6_instructores'];
-
-                        $item->formato6_beneficiarios =
-                            $row['formato6_beneficiarios'];
-
-                        $item->formato6_paralelo =
-                            $row['formato6_paralelo'];
-
-                        $item->formato6_modalidad =
-                            $row['formato6_modalidad'];
-
-                        $item->formato6_area =
-                            $row['formato6_area'];
-
-                        $item->formato6_carga_horaria =
-                            $row['formato6_carga_horaria'];
-
-                        $item->formato6_periodos =
-                            $row['formato6_periodos'];
-
-                        $item->formato6_horario =
-                            $row['formato6_horario'];
-
-                        $item->formato6_lugar =
-                            $row['formato6_lugar'];
-
-                        $item->formato6_prerrequisitos =
-                            $row['formato6_prerrequisitos'];
-
-                        $item->formato6_tipo_certificado =
-                            $row['formato6_tipo_certificado'];
-
-                        $item->formato6_inversion =
-                            $row['formato6_inversion'];
-
-                        $item->formato6_estado =
-                            $row['formato6_estado'];
-
-                        $result[] = $item;
-                    }
+            throw new Exception(
+                'No se recibió el código del Formato 6.'
+            );
+        }
 
 
-                    // ========================================
-                    // REGISTRO ENCONTRADO
-                    // ========================================
+        // =====================================================
+        // 1. DATOS PRINCIPALES DEL FORMATO 6
+        // =====================================================
 
-                    $this->estado =
-                        new Exception_Object(1, '');
+        $sql = "
+            SELECT
+                formato6_codigo,
+                formato1_codigo,
+                formato6_fecha_elaboracion,
+                formato6_requerimiento,
+                formato6_unidad_responsable,
+                formato6_instructores,
+                formato6_beneficiarios,
+                formato6_paralelo,
+                formato6_modalidad,
+                formato6_area,
+                formato6_carga_horaria,
+                inscripcion_matricula_desde,
+                inscripcion_matricula_hasta,
+                formato6_lugar,
+                formato6_prerrequisitos,
+                formato6_tipo_certificado,
+                formato6_inversion,
+                formato6_estado,
+                formato6_introduccion,
+                formato6_justificacion,
+                formato6_objetivo_general,
+                formato6_metodologia,
+                formato6_evaluacion,
+                formato6_acreditacion
+            FROM formato6
+            WHERE formato6_codigo = :formato6_codigo
+            AND formato6_estado = 'Activo'
+        ";
 
-                    $this->estado->setLastID(1);
+        $dbc->query($sql);
+
+        $dbc->bind(
+            ":formato6_codigo",
+            $formato6Codigo
+        );
+
+        $formato = $dbc->single();
+
+        if (!$formato) {
+
+            throw new Exception(
+                'No se encontró el Formato 6 solicitado.'
+            );
+        }
+
+        // Convertir el resultado a objeto
+        $formato = (object) $formato;
 
 
-                } else {
+        // =====================================================
+        // 2. OBJETIVOS ESPECÍFICOS
+        // =====================================================
 
-                    // ========================================
-                    // NO EXISTE EL REGISTRO
-                    // ========================================
+        $sqlObjetivos = "
+            SELECT
+                objetivo_id,
+                objetivo
+            FROM objetivos_especificos_formato6
+            WHERE formato6_codigo = :formato6_codigo
+            ORDER BY objetivo_id ASC
+        ";
 
-                    $this->estado =
-                        new Exception_Object(
-                            -1,
-                            'No se encontró el Formato 6 solicitado.'
-                        );
+        $dbc->query($sqlObjetivos);
 
-                    $this->estado->setLastID(-1);
+        $dbc->bind(
+            ":formato6_codigo",
+            $formato6Codigo
+        );
+
+        $objetivos = $dbc->resultSet();
+        if (!$objetivos) {
+    $objetivos = array();
+}
+
+foreach ($objetivos as &$objetivo) {
+    $objetivo = (object) $objetivo;
+}
+
+unset($objetivo);
+
+$formato->objetivos_especificos = $objetivos;
+
+        $formato->objetivos_especificos =
+            $objetivos
+            ? $objetivos
+            : array();
+
+
+        // =====================================================
+        // 3. CONTENIDOS DE LA PLANIFICACIÓN
+        // =====================================================
+
+        $sqlContenidos = "
+            SELECT
+                contenido_id,
+                modulo_id,
+                contenido
+            FROM planificacion_contenidos_formato6
+            WHERE formato6_codigo = :formato6_codigo
+            ORDER BY modulo_id ASC, contenido_id ASC
+        ";
+
+        $dbc->query($sqlContenidos);
+
+        $dbc->bind(
+            ":formato6_codigo",
+            $formato6Codigo
+        );
+
+        $contenidos = $dbc->resultSet();
+
+        if (!$contenidos) {
+            $contenidos = array();
+        }
+
+        foreach ($contenidos as &$contenido) {
+            $contenido = (object) $contenido;
+        }
+
+        unset($contenido);
+
+        $formato->contenidos = $contenidos;
+
+        $formato->contenidos =
+            $contenidos
+            ? $contenidos
+            : array();
+
+
+        // =====================================================
+        // 4. HORARIOS DE EJECUCIÓN
+        // =====================================================
+
+        $sqlHorarios = "
+            SELECT
+                horario_ejecucion_id,
+                formato6_codigo,
+                ejecucion_desde,
+                ejecucion_hasta,
+                modulo_nombre,
+                modulo_desde,
+                modulo_hasta,
+                tipo_actividad,
+                dias_horarios
+            FROM horario_ejecucion
+            WHERE formato6_codigo = :formato6_codigo
+            ORDER BY horario_ejecucion_id ASC
+        ";
+
+        $dbc->query($sqlHorarios);
+
+        $dbc->bind(
+            ":formato6_codigo",
+            $formato6Codigo
+        );
+
+       $horarios = $dbc->resultSet();
+
+            if (!$horarios) {
+                $horarios = array();
+            }
+
+            // Convertir cada horario a objeto
+            foreach ($horarios as &$horario) {
+                $horario = (object) $horario;
+            }
+
+            unset($horario);
+
+            // Solo para comprobar
+            $formato->horarios_debug = $horarios;
+
+
+        // =====================================================
+        // 5. PERÍODOS
+        // =====================================================
+
+        $periodos = '';
+
+        if (count($horarios) > 0) {
+
+            $primerHorario = $horarios[0];
+
+            $desde =
+                isset($primerHorario->ejecucion_desde)
+                ? $primerHorario->ejecucion_desde
+                : '';
+
+            $hasta =
+                isset($primerHorario->ejecucion_hasta)
+                ? $primerHorario->ejecucion_hasta
+                : '';
+
+            if ($desde != '' && $hasta != '') {
+
+                $periodos =
+                    $desde . ' al ' . $hasta;
+
+            } elseif ($desde != '') {
+
+                $periodos = $desde;
+
+            } elseif ($hasta != '') {
+
+                $periodos = $hasta;
+            }
+        }
+
+        $formato->periodos = $periodos;
+
+
+        // =====================================================
+        // 6. HORARIO GENERAL
+        // =====================================================
+
+        $horarioTexto = '';
+
+        foreach ($horarios as $horario) {
+
+            if (
+                !isset($horario->dias_horarios) ||
+                $horario->dias_horarios == ''
+            ) {
+                continue;
+            }
+
+            $dias = json_decode(
+                $horario->dias_horarios,
+                true
+            );
+
+            if (!is_array($dias)) {
+                continue;
+            }
+
+            foreach ($dias as $dia) {
+
+                $nombreDia =
+                    isset($dia['dia'])
+                    ? $dia['dia']
+                    : '';
+
+                $horaDesde =
+                    isset($dia['horaDesde'])
+                    ? $dia['horaDesde']
+                    : '';
+
+                $horaHasta =
+                    isset($dia['horaHasta'])
+                    ? $dia['horaHasta']
+                    : '';
+
+                $linea = $nombreDia;
+
+                if (
+                    $horaDesde != '' ||
+                    $horaHasta != ''
+                ) {
+
+                    $linea .=
+                        ' ' .
+                        $horaDesde .
+                        ' - ' .
+                        $horaHasta;
                 }
 
+                if ($horarioTexto != '') {
+                    $horarioTexto .= "\n";
+                }
 
-            } else {
+                $horarioTexto .= $linea;
+            }
+        }
 
-                // ============================================
-                // ERROR DE CONEXIÓN
-                // ============================================
+        $formato->horario = $horarioTexto;
 
-                $this->estado =
-                    new Exception_Object(
-                        -2,
-                        'Error, no es posible abrir la conexión.'
+
+        // =====================================================
+        // 7. CRONOGRAMA
+        // =====================================================
+
+        $cronograma = array();
+
+        foreach ($horarios as $horario) {
+
+            $dias = array();
+
+            if (
+                isset($horario->dias_horarios) &&
+                $horario->dias_horarios != ''
+            ) {
+
+                $diasDecodificados =
+                    json_decode(
+                        $horario->dias_horarios,
+                        true
                     );
 
-                $this->estado->setLastID(-2);
+                if (is_array($diasDecodificados)) {
+
+                    $dias =
+                        $diasDecodificados;
+                }
             }
 
 
-            // ================================================
-            // CERRAR CONEXIÓN
-            // ================================================
+            // ---------------------------------------------
+            // DÍAS
+            // ---------------------------------------------
+
+            $diasTexto = '';
+
+
+            // ---------------------------------------------
+            // HORAS
+            // ---------------------------------------------
+
+            $horasTexto = '';
+
+
+            foreach ($dias as $dia) {
+
+                $nombreDia =
+                    isset($dia['dia'])
+                    ? $dia['dia']
+                    : '';
+
+                $horaDesde =
+                    isset($dia['horaDesde'])
+                    ? $dia['horaDesde']
+                    : '';
+
+                $horaHasta =
+                    isset($dia['horaHasta'])
+                    ? $dia['horaHasta']
+                    : '';
+
+
+                if ($diasTexto != '') {
+                    $diasTexto .= ', ';
+                }
+
+                $diasTexto .= $nombreDia;
+
+
+                $rangoHora =
+                    $horaDesde .
+                    ' - ' .
+                    $horaHasta;
+
+
+                if ($horasTexto != '') {
+                    $horasTexto .= "\n";
+                }
+
+                $horasTexto .= $rangoHora;
+            }
+
+
+            // ---------------------------------------------
+            // CALCULAR HORAS TOTALES
+            // ---------------------------------------------
+
+            $horasTotales = 0;
+
+            foreach ($dias as $dia) {
+
+                $horaDesde =
+                    isset($dia['horaDesde'])
+                    ? $dia['horaDesde']
+                    : '';
+
+                $horaHasta =
+                    isset($dia['horaHasta'])
+                    ? $dia['horaHasta']
+                    : '';
+
+                if (
+                    $horaDesde != '' &&
+                    $horaHasta != ''
+                ) {
+
+                    $inicio =
+                        strtotime($horaDesde);
+
+                    $fin =
+                        strtotime($horaHasta);
+
+                    if (
+                        $inicio !== false &&
+                        $fin !== false
+                    ) {
+
+                        $diferencia =
+                            ($fin - $inicio) / 3600;
+
+                        if ($diferencia > 0) {
+
+                            $horasTotales +=
+                                $diferencia;
+                        }
+                    }
+                }
+            }
+
+
+            // ---------------------------------------------
+            // CREAR OBJETO DEL CRONOGRAMA
+            // ---------------------------------------------
+
+            $itemCronograma =
+                new stdClass();
+
+
+            $itemCronograma->modulo =
+                isset($horario->modulo_nombre)
+                ? $horario->modulo_nombre
+                : '';
+
+
+            $itemCronograma->desde =
+                isset($horario->modulo_desde)
+                ? $horario->modulo_desde
+                : '';
+
+
+            $itemCronograma->hasta =
+                isset($horario->modulo_hasta)
+                ? $horario->modulo_hasta
+                : '';
+
+
+            $itemCronograma->actividad =
+                isset($horario->tipo_actividad)
+                ? $horario->tipo_actividad
+                : '';
+
+
+            $itemCronograma->dias =
+                $diasTexto;
+
+
+            $itemCronograma->horario =
+                $horasTexto;
+
+
+            $itemCronograma->horas_totales =
+                $horasTotales;
+
+
+            $cronograma[] =
+                $itemCronograma;
+        }
+
+
+        $formato->cronograma =
+            $cronograma;
+
+
+        // =====================================================
+        // 8. PRESUPUESTO
+        // =====================================================
+
+        $sqlPresupuesto = "
+            SELECT
+                presupuesto_id,
+                formato6_codigo,
+                partida,
+                descripcion,
+                valor,
+                total
+            FROM presupuesto_formato6
+            WHERE formato6_codigo = :formato6_codigo
+            ORDER BY presupuesto_id ASC
+        ";
+
+        $dbc->query($sqlPresupuesto);
+
+        $dbc->bind(
+            ":formato6_codigo",
+            $formato6Codigo
+        );
+
+        $presupuesto = $dbc->resultSet();
+
+        if (!$presupuesto) {
+            $presupuesto = array();
+        }
+
+        // IMPORTANTE:
+        // Antes se obtenía el presupuesto pero
+        // nunca se agregaba al objeto del formato.
+
+        $formato->presupuesto =
+            $presupuesto;
+
+
+        // =====================================================
+        // 9. AGREGAR RESULTADO
+        // =====================================================
+
+        $result[] = $formato;
+
+
+        // =====================================================
+        // RESPUESTA EXITOSA
+        // =====================================================
+
+        $this->estado =
+            new Exception_Object(
+                1,
+                'Datos del Formato 6 obtenidos correctamente.'
+            );
+
+        $this->estado->setLastID(
+            $formato6Codigo
+        );
+
+
+        // =====================================================
+        // CERRAR CONEXIÓN
+        // =====================================================
+
+        try {
+
+            $dbc->closeAll();
+
+        } catch (Exception $e) {
+
+        }
+
+
+    } catch (Exception $e) {
+
+        if (
+            isset($dbc) &&
+            $dbc != null
+        ) {
 
             try {
 
                 $dbc->closeAll();
 
-            } catch (Exception $e) {
+            } catch (Exception $error) {
 
             }
-
-
-        } catch (Exception $e) {
-
-            // ================================================
-            // ERROR GENERAL
-            // ================================================
-
-            $this->estado =
-                new Exception_Object(
-                    -3,
-                    'No es posible leer los datos requeridos.'
-                );
-
-            $this->estado->setLastID(-3);
         }
 
 
-        // ================================================
-        // RESPUESTA
-        // ================================================
+        $this->estado =
+            new Exception_Object(
+                -3,
+                'Error al obtener el reporte del Formato 6: '
+                . $e->getMessage()
+            );
 
-        $resultados = new stdClass();
-
-        $resultados->data = new stdClass();
-
-        $resultados->data->success =
-            $this->estado->getLastID() >= 1
-                ? true
-                : false;
-
-        $resultados->data->message =
-            $this->estado->getMessage();
-
-        $resultados->data->estado =
-            $this->estado->getCode();
-
-        $resultados->data->item =
-            $result;
-
-
-        // RETORNAR / MOSTRAR JSON
-        // ================================================
-
-        if ($this->isHTML == true) {
-
-            header('Content-type: application/json');
-
-            echo json_encode($resultados);
-
-        } else {
-
-            return $resultados;
-
-        }
+        $this->estado->setLastID(-3);
     }
+
+
+    // =====================================================
+    // RESPUESTA FINAL
+    // =====================================================
+
+    $resultados = new stdClass();
+
+    $resultados->data =
+        new stdClass();
+
+
+    $resultados->data->success =
+        $this->estado->getLastID() >= 1
+        ? true
+        : false;
+
+
+    $resultados->data->message =
+        $this->estado->getMessage();
+
+
+    $resultados->data->estado =
+        $this->estado->getCode();
+
+
+    $resultados->data->item =
+        $result;
+
+
+    if ($this->isHTML == true) {
+
+        header(
+            'Content-type: application/json; charset=utf-8'
+        );
+
+        echo json_encode(
+            $resultados
+        );
+
+    } else {
+
+        return $resultados;
+    }
+}
 
 
 public function getformato1CursoDefinido($d){
