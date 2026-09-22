@@ -126,31 +126,222 @@ trackByIndex(index: number, item: any): number {
   return index;
 }
 
+
+//Bloquear los dias
+diaBloqueado(
+  dia: string,
+  tipoActual: string,
+  moduloActual: any
+): boolean {
+
+  // Buscar el módulo que estamos editando
+  const moduloGuardado = this.modulosGuardados.find(
+    (m: any) => m.id === moduloActual.id
+  );
+
+  // Si todavía no se ha guardado ningún horario
+  // para este módulo, ningún día está bloqueado
+  if (!moduloGuardado) {
+    return false;
+  }
+
+  // Revisar todos los horarios que ya existen
+  // dentro de este módulo
+  for (const horario of moduloGuardado.horario || []) {
+
+    // Si es el mismo tipo de actividad,
+    // no bloqueamos el día.
+    //
+    // Esto permite tener:
+    // Clases en vivo -> Lunes
+    // Clases en vivo -> Miércoles
+    //
+    if (horario.tipo === tipoActual) {
+      continue;
+    }
+
+    // Revisar si el día ya está utilizado
+    // por otro tipo de actividad
+    const diaUsado = (horario.dias || []).some(
+      (diaGuardado: string) =>
+        diaGuardado.trim().toLowerCase() ===
+        dia.trim().toLowerCase()
+    );
+
+    // Si el otro tipo ya utiliza ese día,
+    // lo bloqueamos
+    if (diaUsado) {
+      return true;
+    }
+  }
+
+  // Si nadie más utiliza ese día,
+  // queda disponible
+  return false;
+}
+
 //Metodo para guardar el modulo 
 guardarModulo(modulo: any): void {
 
-  const moduloGuardado = {
-    nombre: modulo.nombre,
-    desde: modulo.desde,
-    hasta: modulo.hasta,
-    contenido:modulo.contenido,
-    horario: modulo.horario.map(
-      (horario: HorarioModulo) => ({
-        tipo: horario.tipo,
-        dias: [...horario.dias],
-        horaDesde: horario.horaDesde,
-        horaHasta: horario.horaHasta
-      })
-    )
+  // =====================================================
+  // TOMAR EL HORARIO ACTUAL
+  // =====================================================
+
+  const horarioActual = modulo.horario[0];
+
+  // =====================================================
+  // VALIDAR HORARIO
+  // =====================================================
+
+  if (
+    !horarioActual.tipo ||
+    !horarioActual.dias ||
+    horarioActual.dias.length === 0 ||
+    !horarioActual.horaDesde ||
+    !horarioActual.horaHasta
+  ) {
+
+    Swal.fire({
+      icon: 'warning',
+      title: 'Horario incompleto',
+      text:
+        'Seleccione el tipo de actividad, al menos un día y el horario.'
+    });
+
+    return;
+  }
+
+
+  // =====================================================
+  // BUSCAR SI EL MÓDULO YA EXISTE
+  // =====================================================
+
+  let moduloGuardado =
+    this.modulosGuardados.find(
+      (m: any) => m.id === modulo.id
+    );
+
+
+  // =====================================================
+  // SI NO EXISTE → CREARLO
+  // =====================================================
+
+  if (!moduloGuardado) {
+
+    moduloGuardado = {
+
+      id: modulo.id,
+
+      nombre: modulo.nombre,
+
+      desde: modulo.desde,
+
+      hasta: modulo.hasta,
+
+      contenidos: [
+        ...(modulo.contenidos || [])
+      ],
+
+      horario: []
+
+    };
+
+    this.modulosGuardados.push(
+      moduloGuardado
+    );
+  }
+
+
+  // =====================================================
+  // ACTUALIZAR DATOS DEL MÓDULO
+  // =====================================================
+
+  moduloGuardado.nombre =
+    modulo.nombre;
+
+  moduloGuardado.desde =
+    modulo.desde;
+
+  moduloGuardado.hasta =
+    modulo.hasta;
+
+  moduloGuardado.contenidos = [
+    ...(modulo.contenidos || [])
+  ];
+
+
+  // =====================================================
+  // CREAR NUEVO HORARIO
+  // =====================================================
+
+  const nuevoHorario = {
+
+    tipo:
+      horarioActual.tipo,
+
+    dias:
+      [...horarioActual.dias],
+
+    horaDesde:
+      horarioActual.horaDesde,
+
+    horaHasta:
+      horarioActual.horaHasta
+
   };
 
-  this.modulosGuardados.push(moduloGuardado);
 
-  console.log(
-    'Módulo guardado:',
-    moduloGuardado
+  // =====================================================
+  // AGREGAR HORARIO AL MÓDULO
+  // =====================================================
+
+  moduloGuardado.horario.push(
+    nuevoHorario
   );
 
+
+  // =====================================================
+  // LIMPIAR FORMULARIO DEL HORARIO
+  // =====================================================
+
+  horarioActual.tipo = '';
+
+  horarioActual.dias = [];
+
+  horarioActual.horaDesde = '';
+
+  horarioActual.horaHasta = '';
+
+
+  // =====================================================
+  // MOSTRAR MENSAJE
+  // =====================================================
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Horario agregado',
+    text:
+      'El horario se agregó correctamente.',
+    timer: 1200,
+    showConfirmButton: false
+  });
+
+
+  // =====================================================
+  // COMPROBACIÓN
+  // =====================================================
+
+  console.log(
+    '========== MÓDULOS GUARDADOS =========='
+  );
+
+  console.log(
+    this.modulosGuardados
+  );
+
+  console.log(
+    '========================================'
+  );
 }
 
 
@@ -375,38 +566,39 @@ agregarModulo(): void {
 
   const nuevoModulo = {
 
+    id: Date.now(),
+
     nombre: '',
 
     desde: '',
 
     hasta: '',
 
-    contenidos:[
-      ''
-    ],
+    contenidos: [''],
 
     horario: [
+
       {
+
         tipo: '',
+
         dias: [],
+
         horaDesde: '',
+
         horaHasta: ''
+
       }
-    ] as HorarioModulo[]
+
+    ]
 
   };
 
-  this.modulos.push(nuevoModulo);
-
-  console.log(
-    'Nuevo módulo agregado:',
+  this.modulos.push(
     nuevoModulo
   );
 
 }
-
-
-
 
 
 
@@ -660,6 +852,15 @@ cambiarDia(
 guardarFormato6(): void {
 
   // =====================================================
+  // PREPARAR MÓDULOS
+  // =====================================================
+
+  console.log('========== MÓDULOS ANTES DE GUARDAR ==========');
+  console.log('MODULOS:', this.modulos);
+  console.log('MODULOS GUARDADOS:', this.modulosGuardados);
+  console.log('==============================================');
+
+  // =====================================================
   // SI YA EXISTE → ACTUALIZAR
   // =====================================================
 
@@ -670,6 +871,7 @@ guardarFormato6(): void {
       fx: 'updateformato6',
 
       d: {
+
         formato6_codigo: this.formato6Codigo,
         formato1_codigo: this.formato1Codigo,
 
@@ -687,16 +889,23 @@ guardarFormato6(): void {
         area: this.formato6.area,
         cargaHoraria: this.formato6.cargaHoraria,
 
-        inscripcionMatriculaDesde:this.formato6.inscripcionMatriculaDesde,
+        inscripcionMatriculaDesde:
+          this.formato6.inscripcionMatriculaDesde,
 
-        inscripcionMatriculaHasta:this.formato6.inscripcionMatriculaHasta,
+        inscripcionMatriculaHasta:
+          this.formato6.inscripcionMatriculaHasta,
 
-        ejecucionDesde:this.formato6.ejecucionDesde,
+        ejecucionDesde:
+          this.formato6.ejecucionDesde,
 
-        ejecucionHasta:this.formato6.ejecucionHasta,
+        ejecucionHasta:
+          this.formato6.ejecucionHasta,
 
-        modulos:this.modulos,
+        // =============================================
+        // MÓDULOS Y HORARIOS
+        // =============================================
 
+        modulos: this.modulosGuardados,
 
         // =============================================
         // DATOS ADICIONALES
@@ -708,40 +917,53 @@ guardarFormato6(): void {
         inversion: this.formato6.inversion,
 
         // =============================================
-        // NUEVOS CAMPOS DE CONTENIDO
+        // CONTENIDO
         // =============================================
 
-        introduccion: this.formato6.introduccion,
-        justificacion: this.formato6.justificacion,
+        introduccion:
+          this.formato6.introduccion,
+
+        justificacion:
+          this.formato6.justificacion,
 
         objetivos: {
-          general: this.formato6.objetivos.general,
-          especificos: this.formato6.objetivos.especificos
+          general:
+            this.formato6.objetivos.general,
+
+          especificos:
+            this.formato6.objetivos.especificos
         },
 
-        metodologiaCurso: this.formato6.metodologiaCurso,
+        metodologiaCurso:
+          this.formato6.metodologiaCurso,
 
-        planificacionContenidos: this.modulos
-                .map(
-                  (modulo: any, index: number) =>
-                    `Módulo ${index + 1}: ${modulo.contenido || ''}`
-                )
-                .join('\n'),
+        planificacionContenidos:
+          this.modulosGuardados
+            .map(
+              (modulo: any, index: number) =>
+                `Módulo ${index + 1}: ${(modulo.contenidos || []).join(', ')}`
+            )
+            .join('\n'),
 
-        evaluacion: this.formato6.evaluacion,
-        acreditacionCalificacion:this.formato6.acreditacionCalificacion,
+        evaluacion:
+          this.formato6.evaluacion,
 
-        presupuesto:this.presupuesto
+        acreditacionCalificacion:
+          this.formato6.acreditacionCalificacion,
+
+        presupuesto:
+          this.presupuesto
       }
-
     };
 
-    this.formato6Existe = true;
-
+    console.log('========== ACTUALIZANDO ==========');
+    console.log('DATOS ENVIADOS:', objetoopciones);
+    console.log('MÓDULOS ENVIADOS:', objetoopciones.d.modulos);
     console.log(
-      'Actualizando Formato 6:',
-      objetoopciones
+      'PLANIFICACIÓN:',
+      objetoopciones.d.planificacionContenidos
     );
+    console.log('===================================');
 
     this.miServicio.updateformato6(
       objetoopciones
@@ -772,14 +994,10 @@ guardarFormato6(): void {
             icon: 'error',
             title: 'Error',
             text:
-              respuesta?.data?.message,
-              confirmButtonText:'Aceptar'
-              
-          }).then(()=>{
-            this.router.navigate([
-              
-            ]);
-          })
+              respuesta?.data?.message ||
+              'No se pudo actualizar el Formato 6.',
+            confirmButtonText: 'Aceptar'
+          });
 
         }
 
@@ -840,158 +1058,161 @@ guardarFormato6(): void {
 
     d: {
 
-      formato1_codigo: this.formato1Codigo,
+      formato1_codigo:
+        this.formato1Codigo,
 
       // =============================================
       // DATOS PRINCIPALES
       // =============================================
 
-      fechaElaboracion: this.formato6.fechaElaboracion,
-      requerimiento: this.formato6.requerimiento,
-      unidadResponsable: this.formato6.unidadResponsable,
-      instructores: this.formato6.instructores,
-      beneficiarios: this.formato6.beneficiarios,
-      paralelo: this.formato6.paralelo,
-      modalidad: this.formato6.modalidad,
-      area: this.formato6.area,
-      cargaHoraria: this.formato6.cargaHoraria,
+      fechaElaboracion:
+        this.formato6.fechaElaboracion,
 
-       inscripcionMatriculaDesde:
-    this.formato6.inscripcionMatriculaDesde,
+      requerimiento:
+        this.formato6.requerimiento,
 
-  inscripcionMatriculaHasta:
-    this.formato6.inscripcionMatriculaHasta,
+      unidadResponsable:
+        this.formato6.unidadResponsable,
 
-  ejecucionDesde:
-    this.formato6.ejecucionDesde,
+      instructores:
+        this.formato6.instructores,
 
-  ejecucionHasta:
-    this.formato6.ejecucionHasta,
+      beneficiarios:
+        this.formato6.beneficiarios,
 
-  modulos:
-    this.modulos,
+      paralelo:
+        this.formato6.paralelo,
+
+      modalidad:
+        this.formato6.modalidad,
+
+      area:
+        this.formato6.area,
+
+      cargaHoraria:
+        this.formato6.cargaHoraria,
+
+      inscripcionMatriculaDesde:
+        this.formato6.inscripcionMatriculaDesde,
+
+      inscripcionMatriculaHasta:
+        this.formato6.inscripcionMatriculaHasta,
+
+      ejecucionDesde:
+        this.formato6.ejecucionDesde,
+
+      ejecucionHasta:
+        this.formato6.ejecucionHasta,
+
+      // =============================================
+      // MÓDULOS Y HORARIOS
+      // =============================================
+
+      modulos:
+        this.modulosGuardados,
 
       // =============================================
       // DATOS ADICIONALES
       // =============================================
 
-      lugar: this.formato6.lugar,
-      prerrequisitos: this.formato6.prerrequisitos,
-      tipoCertificado: this.formato6.tipoCertificado,
-      inversion: this.formato6.inversion,
+      lugar:
+        this.formato6.lugar,
+
+      prerrequisitos:
+        this.formato6.prerrequisitos,
+
+      tipoCertificado:
+        this.formato6.tipoCertificado,
+
+      inversion:
+        this.formato6.inversion,
 
       // =============================================
-      // NUEVOS CAMPOS DE CONTENIDO
+      // CONTENIDO
       // =============================================
 
-      introduccion: this.formato6.introduccion,
-      justificacion: this.formato6.justificacion,
+      introduccion:
+        this.formato6.introduccion,
+
+      justificacion:
+        this.formato6.justificacion,
 
       objetivos: {
-        general: this.formato6.objetivos.general,
-        especificos: this.formato6.objetivos.especificos
+
+        general:
+          this.formato6.objetivos.general,
+
+        especificos:
+          this.formato6.objetivos.especificos
+
       },
 
-      metodologiaCurso: this.formato6.metodologiaCurso,
+      metodologiaCurso:
+        this.formato6.metodologiaCurso,
 
-      planificacionContenidos: this.modulos
-                  .map(
-                    (modulo: any, index: number) =>
-                      `Módulo ${index + 1}: ${modulo.contenido || ''}`
-                  )
-                  .join('\n'),
-      evaluacion: this.formato6.evaluacion,
+      planificacionContenidos:
+        this.modulosGuardados
+          .map(
+            (modulo: any, index: number) =>
+              `Módulo ${index + 1}: ${(modulo.contenidos || []).join(', ')}`
+          )
+          .join('\n'),
 
-      acreditacionCalificacion:this.formato6.acreditacionCalificacion,
+      evaluacion:
+        this.formato6.evaluacion,
 
-      presupuesto:this.presupuesto
+      acreditacionCalificacion:
+        this.formato6.acreditacionCalificacion,
+
+      presupuesto:
+        this.presupuesto
 
     }
 
-
-
   };
 
-  
+
+  // =====================================================
+  // CONSOLA
+  // =====================================================
 
   console.log(
-    'Guardando nuevo Formato 6:',
+    '========== GUARDANDO NUEVO FORMATO 6 =========='
+  );
+
+  console.log(
+    'OBJETO COMPLETO:',
     objetoopciones
   );
 
   console.log(
-  '========== COMPROBACIÓN =========='
-);
-
-console.log(
-  'INSCRIPCIÓN DESDE:',
-  objetoopciones.d.inscripcionMatriculaDesde
-);
-
-console.log(
-  'INSCRIPCIÓN HASTA:',
-  objetoopciones.d.inscripcionMatriculaHasta
-);
-
-console.log(
-  'EJECUCIÓN DESDE:',
-  objetoopciones.d.ejecucionDesde
-);
-
-console.log(
-  'EJECUCIÓN HASTA:',
-  objetoopciones.d.ejecucionHasta
-);
-
-console.log(
-  'MODULOS:',
-  objetoopciones.d.modulos
-);
-
-console.log(
-  'MODULOS GUARDADOS:',
-  this.modulosGuardados
-);
-
-console.log(
-  '==================================='
-);
-
-console.log('========== PLANIFICACIÓN ==========');
-
-console.log(
-  'MODULOS:',
-  this.modulos
-);
-
-console.log(
-  'MODULOS GUARDADOS:',
-  this.modulosGuardados
-);
-
-console.log(
-  'PLANIFICACIÓN ACTUAL:',
-  this.formato6.planificacionContenidos
-);
-
-console.log(
-  '====================================');
-
+    'MÓDULOS QUE SE ENVÍAN:',
+    objetoopciones.d.modulos
+  );
 
   console.log(
-  'PLANIFICACIÓN QUE SE ENVÍA:',
-  objetoopciones.d.planificacionContenidos
-);
+    'MÓDULOS GUARDADOS:',
+    this.modulosGuardados
+  );
 
-console.log(
-  'TIPO PLANIFICACION:',
-  typeof objetoopciones.d.planificacionContenidos
-);
+  console.log(
+    'PLANIFICACIÓN QUE SE ENVÍA:',
+    objetoopciones.d.planificacionContenidos
+  );
 
-console.log(
-  'VALOR PLANIFICACION:',
-  objetoopciones.d.planificacionContenidos
-);
+  console.log(
+    'TIPO PLANIFICACIÓN:',
+    typeof objetoopciones.d.planificacionContenidos
+  );
+
+  console.log(
+    '==============================================='
+  );
+
+
+  // =====================================================
+  // INSERTAR
+  // =====================================================
 
   this.miServicio.insertformato6(
     objetoopciones
@@ -1011,24 +1232,28 @@ console.log(
       ) {
 
         console.log(
-        'MODULOS PARA GUARDAR:',
-        this.modulos
-      );
+          '========== GUARDADO CORRECTAMENTE =========='
+        );
 
-      console.log(
-        'MODULOS GUARDADOS:',
-        this.modulosGuardados
-      );
+        console.log(
+          'MÓDULOS ENVIADOS:',
+          objetoopciones.d.modulos
+        );
+
+        console.log(
+          'MÓDULOS GUARDADOS:',
+          this.modulosGuardados
+        );
+
+        console.log(
+          '============================================'
+        );
 
         Swal.fire({
           icon: 'success',
           title: 'Guardado correctamente',
           text: respuesta.data.message
         });
-
-        
-
-        
 
       } else {
 
@@ -1063,9 +1288,6 @@ console.log(
   });
 
 }
-
-
-
 
   cargarDatosFormato1(codigo: number) {
 

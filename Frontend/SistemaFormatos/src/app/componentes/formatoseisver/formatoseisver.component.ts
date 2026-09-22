@@ -194,6 +194,13 @@ export class FormatoseisverComponent implements OnInit {
 
           const formatoCompleto = res.data.item[0];
 
+          console.log('========== DATOS PDF ==========');
+          console.log('FORMATO:', formatoCompleto);
+          console.log('MÓDULOS:', formatoCompleto.modulos);
+          console.log('CONTENIDOS:', formatoCompleto.contenidos);
+          console.log('HORARIOS DEBUG:', formatoCompleto.horarios_debug);
+          console.log('================================');
+
           // AQUÍ GENERAREMOS EL PDF
           this.generarPDFFormato6(formatoCompleto);
 
@@ -264,22 +271,24 @@ export class FormatoseisverComponent implements OnInit {
 // GENERAR PDF FORMATO 6
 // =====================================================
 
-async generarPDFFormato6(formato: any): Promise<void>{
+async generarPDFFormato6(formato: any): Promise<void> {
 
-  try{
+  try {
 
-  // =====================================================
-  // CONFIGURACIÓN GENERAL
-  // =====================================================
+    // =====================================================
+    // CONFIGURACIÓN GENERAL
+    // =====================================================
 
-  const encabezado =
-    await this.convertirImagenBase64(
-    'assets/img/encabezado.jpg');
+    const encabezado =
+      await this.convertirImagenBase64(
+        'assets/img/encabezado.jpg'
+      );
 
-  const pie =
+    const pie =
       await this.convertirImagenBase64(
         'assets/img/footer.jpeg'
       );
+
     console.log(
       'ENCABEZADO BASE64:',
       encabezado.substring(0, 80)
@@ -290,606 +299,1085 @@ async generarPDFFormato6(formato: any): Promise<void>{
       pie.substring(0, 80)
     );
 
-  // =====================================================
-  // FUNCIÓN PARA TÍTULOS DE SECCIÓN
-  // =====================================================
 
-  const tituloSeccion = (
-    texto: string
-  ) => {
+    // =====================================================
+    // FUNCIÓN PARA TÍTULOS DE SECCIÓN
+    // =====================================================
 
-    return {
-      text: texto,
-      bold: true,
-      fontSize: 12,
-      margin: [0, 8, 0, 8]
+    const tituloSeccion = (
+      texto: string
+    ) => {
+
+      return {
+        text: texto,
+        bold: true,
+        fontSize: 12,
+        margin: [0, 8, 0, 8]
+      };
+
     };
-  };
 
 
-  // =====================================================
-  // OBJETIVOS ESPECÍFICOS
-  // =====================================================
+    // =====================================================
+    // DATOS
+    // =====================================================
 
-  const objetivosEspecificos =
-    formato.objetivos_especificos || [];
-
-
-  // =====================================================
-  // CONTENIDOS
-  // =====================================================
-
-  const contenidos =
-    formato.contenidos || [];
+    const objetivosEspecificos =
+      Array.isArray(
+        formato?.objetivos_especificos
+      )
+        ? formato.objetivos_especificos
+        : [];
 
 
-  // =====================================================
-  // CRONOGRAMA
-  // =====================================================
-
-  const cronograma =
-    formato.cronograma || [];
-
-
-  // =====================================================
-  // PRESUPUESTO
-  // =====================================================
-
-  const presupuesto =
-    formato.presupuesto || [];
+    const contenidos =
+      Array.isArray(
+        formato?.contenidos
+      )
+        ? formato.contenidos
+        : [];
 
 
-  // =====================================================
-  // PLANIFICACIÓN DE CONTENIDOS
-  // =====================================================
+    const horariosDebug =
+      Array.isArray(
+        formato?.horarios_debug
+      )
+        ? formato.horarios_debug
+        : [];
 
-  const contenidosPorModulo: {
-    [key: string]: any[]
-  } = {};
+
+    const presupuesto =
+      Array.isArray(
+        formato?.presupuesto
+      )
+        ? formato.presupuesto
+        : [];
 
 
-  contenidos.forEach((item: any) => {
+    console.log(
+      'HORARIOS PARA PDF:',
+      horariosDebug
+    );
 
-    const moduloId =
-      item.modulo_id || 1;
+    console.log(
+      'CONTENIDOS PARA PDF:',
+      contenidos
+    );
 
-    if (!contenidosPorModulo[moduloId]) {
+    console.log(
+      'PRESUPUESTO PARA PDF:',
+      presupuesto
+    );
 
-      contenidosPorModulo[moduloId] =
-        [];
+
+    // =====================================================
+    // FUNCIONES AUXILIARES
+    // =====================================================
+
+    const formatearFecha = (
+      fecha: string
+    ): string => {
+
+      if (!fecha) {
+        return '';
+      }
+
+      const partes =
+        fecha.split('-');
+
+      if (partes.length !== 3) {
+        return fecha;
+      }
+
+      const anio =
+        Number(partes[0]);
+
+      const mes =
+        Number(partes[1]) - 1;
+
+      const dia =
+        Number(partes[2]);
+
+      const fechaObj =
+        new Date(
+          anio,
+          mes,
+          dia
+        );
+
+      const meses = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre'
+      ];
+
+      return `${dia} de ${meses[fechaObj.getMonth()]} de ${anio}`;
+
+    };
+
+
+    const obtenerNombreDia = (
+      fecha: Date
+    ): string => {
+
+      const dias = [
+        'Domingo',
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado'
+      ];
+
+      return dias[
+        fecha.getDay()
+      ];
+
+    };
+
+
+    const obtenerDiasHorarios = (
+      horario: any
+    ): any[] => {
+
+      if (!horario?.dias_horarios) {
+        return [];
+      }
+
+      try {
+
+        if (
+          Array.isArray(
+            horario.dias_horarios
+          )
+        ) {
+
+          return horario.dias_horarios;
+
+        }
+
+        const datos =
+          JSON.parse(
+            horario.dias_horarios
+          );
+
+        return Array.isArray(datos)
+          ? datos
+          : [];
+
+      } catch (error) {
+
+        console.error(
+          'ERROR AL LEER DIAS_HORARIOS:',
+          error
+        );
+
+        return [];
+
+      }
+
+    };
+
+
+    const calcularHoras = (
+      horaDesde: string,
+      horaHasta: string
+    ): number => {
+
+      if (
+        !horaDesde ||
+        !horaHasta
+      ) {
+        return 0;
+      }
+
+      const partesDesde =
+        horaDesde.split(':');
+
+      const partesHasta =
+        horaHasta.split(':');
+
+      const minutosDesde =
+        Number(partesDesde[0]) * 60 +
+        Number(partesDesde[1]);
+
+      const minutosHasta =
+        Number(partesHasta[0]) * 60 +
+        Number(partesHasta[1]);
+
+      let diferencia =
+        minutosHasta -
+        minutosDesde;
+
+      if (diferencia < 0) {
+        diferencia += 1440;
+      }
+
+      return diferencia / 60;
+
+    };
+
+
+    // =====================================================
+    // 1. PERÍODOS
+    // =====================================================
+
+    const inscripcionDesde =
+      formato.inscripcion_matricula_desde || '';
+
+
+    const inscripcionHasta =
+      formato.inscripcion_matricula_hasta || '';
+
+
+    let ejecucionDesde = '';
+    let ejecucionHasta = '';
+
+
+    if (
+      horariosDebug.length > 0
+    ) {
+
+      ejecucionDesde =
+        horariosDebug[0]?.ejecucion_desde || '';
+
+      ejecucionHasta =
+        horariosDebug[0]?.ejecucion_hasta || '';
+
     }
 
-    contenidosPorModulo[moduloId]
-      .push(item);
-  });
+
+    const textoPeriodos =
+      `Inscripción / matrícula: ` +
+      `${formatearFecha(inscripcionDesde)} ` +
+      `al ` +
+      `${formatearFecha(inscripcionHasta)}\n` +
+
+      `Ejecución: ` +
+      `${formatearFecha(ejecucionDesde)} ` +
+      `al ` +
+      `${formatearFecha(ejecucionHasta)}`;
 
 
-  // =====================================================
-  // TABLA DE PLANIFICACIÓN
-  // =====================================================
+    // =====================================================
+    // 2. HORARIO
+    // =====================================================
 
-  const tablaPlanificacion: any[] = [
+    let textoHorario = '';
 
-    [
-      {
-        text: 'Módulo',
-        bold: true,
-        alignment: 'center'
-      },
-      {
-        text: 'Contenidos',
-        bold: true,
-        alignment: 'center'
+
+    horariosDebug.forEach(
+      (horario: any) => {
+
+        const dias =
+          obtenerDiasHorarios(
+            horario
+          );
+
+
+        if (
+          !horario.tipo_actividad
+        ) {
+          return;
+        }
+
+
+        // Tipo de actividad
+
+        textoHorario +=
+          horario.tipo_actividad +
+          '\n';
+
+
+        // Días y horas
+
+        dias.forEach(
+          (diaHorario: any) => {
+
+            textoHorario +=
+              `${diaHorario.dia || ''}: ` +
+              `${diaHorario.horaDesde || ''} - ` +
+              `${diaHorario.horaHasta || ''}\n`;
+
+          }
+        );
+
+
+        textoHorario += '\n';
+
       }
-    ]
-  ];
+    );
 
 
-  Object.keys(
-    contenidosPorModulo
-  ).forEach((moduloId: string) => {
+    // =====================================================
+    // 3. OBTENER NOMBRES DE LOS MÓDULOS
+    // =====================================================
 
-    const lista =
-      contenidosPorModulo[moduloId];
-
-    const contenidosTexto =
-      lista
-        .map(
-          (item: any, index: number) =>
-            `${index + 1}. ${item.contenido}`
-        )
-        .join('\n');
-
-    tablaPlanificacion.push([
-
-      {
-        text:
-          `Módulo ${moduloId}`,
-        bold: true
-      },
-
-      {
-        text:
-          contenidosTexto
-      }
-
-    ]);
-  });
+    const nombresModulos: {
+      [key: string]: string
+    } = {};
 
 
-  // =====================================================
-  // TABLA DE CRONOGRAMA
-  // =====================================================
-
-  const tablaCronograma: any[] = [
-
-    [
-      {
-        text: 'Módulo',
-        bold: true,
-        alignment: 'center'
-      },
-
-      {
-        text: 'Actividad',
-        bold: true,
-        alignment: 'center'
-      },
-
-      {
-        text: 'Fechas',
-        bold: true,
-        alignment: 'center'
-      },
-
-      {
-        text: 'Horario',
-        bold: true,
-        alignment: 'center'
-      },
-
-      {
-        text: 'Horas',
-        bold: true,
-        alignment: 'center'
-      }
-    ]
-  ];
-
-
-  cronograma.forEach((item: any) => {
-
-    tablaCronograma.push([
-
-      item.modulo || '',
-
-      item.actividad || '',
-
+    horariosDebug.forEach(
       (
-        item.desde || ''
-      ) +
-      (
-        item.hasta
-          ? ' al ' + item.hasta
-          : ''
-      ),
+        horario: any,
+        index: number
+      ) => {
 
-      item.horario || '',
-
-      String(
-        item.horas_totales || 0
-      )
-
-    ]);
-  });
+        let moduloId =
+          horario.modulo_id;
 
 
-  // =====================================================
-  // TABLA DE PRESUPUESTO
-  // =====================================================
+        if (!moduloId) {
 
-  const tablaPresupuesto: any[] = [
+          const coincidencia =
+            String(
+              horario.modulo_nombre || ''
+            ).match(/\d+/);
 
-    [
-      {
-        text: 'Partida',
-        bold: true,
-        alignment: 'center'
-      },
 
-      {
-        text: 'Descripción',
-        bold: true,
-        alignment: 'center'
-      },
+          if (coincidencia) {
 
-      {
-        text: 'Valor',
-        bold: true,
-        alignment: 'center'
-      },
+            moduloId =
+              Number(
+                coincidencia[0]
+              );
 
-      {
-        text: 'Total',
-        bold: true,
-        alignment: 'center'
+          } else {
+
+            moduloId =
+              index + 1;
+
+          }
+
+        }
+
+
+        nombresModulos[
+          String(moduloId)
+        ] =
+          horario.modulo_nombre ||
+          `Módulo ${moduloId}`;
+
       }
-    ]
-  ];
+    );
 
 
-  presupuesto.forEach((item: any) => {
+    // También obtenemos módulos desde contenidos
 
-    tablaPresupuesto.push([
+    contenidos.forEach(
+      (item: any) => {
 
-      item.partida || '',
+        const moduloId =
+          item.modulo_id || 1;
 
-      item.descripcion || '',
 
-      String(
-        item.valor || 0
-      ),
-
-      String(
-        item.total || 0
-      )
-
-    ]);
-  });
-
-
-  // =====================================================
-  // DOCUMENTO PDF
-  // =====================================================
-
-  const documentDefinition: any = {
-
-    pageSize: 'A4',
-
-    pageMargins: [
-      40,
-      80,
-      40,
-      80
-    ],
-
-
-    // ===================================================
-    // ENCABEZADO
-    // ===================================================
-
-    header: {
-
-      image: encabezado,
-
-      width: 515,
-
-      alignment: 'center',
-
-      margin: [
-        0,
-        15,
-        0,
-        0
-      ]
-    },
-
-
-    // ===================================================
-    // PIE DE PÁGINA
-    // ===================================================
-
-    footer: {
-
-      image: pie,
-
-      width: 515,
-
-      alignment: 'center',
-
-      margin: [
-        0,
-        0,
-        0,
-        15
-      ]
-    },
-
-
-    // ===================================================
-    // CONTENIDO
-    // ===================================================
-
-    content: [
-
-
-      // =================================================
-      // PÁGINA 1
-      // DATOS INFORMATIVOS
-      // =================================================
-
-      {
-
-        text:
-          '1. DATOS INFORMATIVOS',
-
-        bold: true,
-
-        fontSize: 14,
-
-        alignment: 'center',
-
-        margin: [
-          0,
-          0,
-          0,
-          15
-        ]
-      },
-
-
-      {
-        table: {
-
-          widths: [
-            '35%',
-            '65%'
-          ],
-
-          body: [
-
-            [
-              {
-                text:
-                  'Fecha de elaboración',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_fecha_elaboracion
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Requerimiento',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_requerimiento
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Unidad responsable',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_unidad_responsable
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Instructores',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_instructores
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Beneficiarios',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_beneficiarios
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Paralelo',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_paralelo
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Modalidad',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_modalidad
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Área',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_area
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Carga horaria',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_carga_horaria
-                  || ''
-              }
-            ],
-
-            // =========================================
-            // PERÍODOS
-            // =========================================
-
-            [
-              {
-                text:
-                  'Períodos',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.periodos
-                  || ''
-              }
-            ],
-
-            // =========================================
-            // HORARIO
-            // =========================================
-
-            [
-              {
-                text:
-                  'Horario',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.horario
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Lugar',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_lugar
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Prerrequisitos',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_prerrequisitos
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Tipo de certificado',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_tipo_certificado
-                  || ''
-              }
-            ],
-
-            [
-              {
-                text:
-                  'Inversión',
-                bold: true
-              },
-
-              {
-                text:
-                  formato.formato6_inversion
-                  || ''
-              }
-            ]
-
+        if (
+          !nombresModulos[
+            String(moduloId)
           ]
+        ) {
+
+          nombresModulos[
+            String(moduloId)
+          ] =
+            `Módulo ${moduloId}`;
+
+        }
+
+      }
+    );
+
+
+    console.log(
+      'NOMBRES DE MÓDULOS:',
+      nombresModulos
+    );
+
+
+    // =====================================================
+    // 4. PLANIFICACIÓN DE CONTENIDOS
+    // =====================================================
+
+    const contenidosPorModulo: {
+      [key: string]: any[]
+    } = {};
+
+
+    contenidos.forEach(
+      (item: any) => {
+
+        const moduloId =
+          item.modulo_id || 1;
+
+
+        if (
+          !contenidosPorModulo[
+            String(moduloId)
+          ]
+        ) {
+
+          contenidosPorModulo[
+            String(moduloId)
+          ] = [];
+
+        }
+
+
+        contenidosPorModulo[
+          String(moduloId)
+        ].push(item);
+
+      }
+    );
+
+
+    const tablaPlanificacion: any[] = [
+
+      [
+
+        {
+          text:
+            'Módulo',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
         },
 
-        layout: 'lightHorizontalLines'
+
+        {
+          text:
+            'Contenidos',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        }
+
+      ]
+
+    ];
+
+
+    Object.keys(
+      contenidosPorModulo
+    ).forEach(
+      (
+        moduloId: string
+      ) => {
+
+        const lista =
+          contenidosPorModulo[
+            moduloId
+          ];
+
+
+        const nombreModulo =
+          nombresModulos[
+            moduloId
+          ] ||
+          `Módulo ${moduloId}`;
+
+
+        const contenidoTexto =
+          lista
+            .map(
+              (item: any) =>
+                `- ${item.contenido || ''}`
+            )
+            .join('\n');
+
+
+        tablaPlanificacion.push([
+
+          {
+            text:
+              nombreModulo,
+
+            bold:
+              true
+          },
+
+
+          {
+            text:
+              contenidoTexto
+          }
+
+        ]);
+
+      }
+    );
+
+
+    // =====================================================
+    // 5. CRONOGRAMA DEL EVENTO
+    // =====================================================
+
+    const cronogramaPorModulo: {
+      [key: string]: {
+        nombre: string;
+        horarios: string[];
+        fechas: string[];
+        horasTotales: number;
+      }
+    } = {};
+
+
+    // =====================================================
+    // RECORRER HORARIOS
+    // =====================================================
+
+    horariosDebug.forEach(
+      (horario: any) => {
+
+        const diasHorarios =
+          obtenerDiasHorarios(
+            horario
+          );
+
+
+        if (
+          !horario.modulo_desde ||
+          !horario.modulo_hasta
+        ) {
+
+          return;
+
+        }
+
+
+        // -------------------------------------------------
+        // OBTENER ID DEL MÓDULO
+        // -------------------------------------------------
+
+        let moduloId =
+          horario.modulo_id;
+
+
+        if (!moduloId) {
+
+          const coincidencia =
+            String(
+              horario.modulo_nombre || ''
+            ).match(/\d+/);
+
+
+          moduloId =
+            coincidencia
+              ? Number(
+                  coincidencia[0]
+                )
+              : 1;
+
+        }
+
+
+        const moduloClave =
+          String(moduloId);
+
+
+        // -------------------------------------------------
+        // CREAR MÓDULO
+        // -------------------------------------------------
+
+        if (
+          !cronogramaPorModulo[
+            moduloClave
+          ]
+        ) {
+
+          cronogramaPorModulo[
+            moduloClave
+          ] = {
+
+            nombre:
+              horario.modulo_nombre ||
+              nombresModulos[
+                moduloClave
+              ] ||
+              `Módulo ${moduloClave}`,
+
+            horarios: [],
+
+            fechas: [],
+
+            horasTotales: 0
+
+          };
+
+        }
+
+
+        // -------------------------------------------------
+        // HORARIO DEL MÓDULO
+        // -------------------------------------------------
+
+        let textoHorarioModulo =
+          horario.tipo_actividad ||
+          '';
+
+
+        diasHorarios.forEach(
+          (diaHorario: any) => {
+
+            textoHorarioModulo +=
+              `\n${diaHorario.dia || ''}: ` +
+              `${diaHorario.horaDesde || ''} - ` +
+              `${diaHorario.horaHasta || ''}`;
+
+          }
+        );
+
+
+        cronogramaPorModulo[
+          moduloClave
+        ].horarios.push(
+          textoHorarioModulo
+        );
+
+
+        // -------------------------------------------------
+        // RECORRER FECHAS
+        // -------------------------------------------------
+
+        const fechaInicio =
+          new Date(
+            horario.modulo_desde +
+            'T00:00:00'
+          );
+
+
+        const fechaFin =
+          new Date(
+            horario.modulo_hasta +
+            'T00:00:00'
+          );
+
+
+        let fechaActual =
+          new Date(
+            fechaInicio
+          );
+
+
+        while (
+          fechaActual <= fechaFin
+        ) {
+
+          const nombreDia =
+            obtenerNombreDia(
+              fechaActual
+            );
+
+
+          // Buscar si este día
+          // fue seleccionado
+
+          const configuracionDia =
+            diasHorarios.find(
+              (dia: any) =>
+                String(
+                  dia.dia || ''
+                )
+                  .trim()
+                  .toLowerCase() ===
+                nombreDia
+                  .trim()
+                  .toLowerCase()
+            );
+
+
+          if (
+            configuracionDia
+          ) {
+
+            // ---------------------------------------------
+            // FECHA COMPLETA
+            // ---------------------------------------------
+
+            const fechaISO =
+              fechaActual
+                .toISOString()
+                .substring(
+                  0,
+                  10
+                );
+
+
+            const fechaTexto =
+              `${nombreDia} ` +
+              `${formatearFecha(
+                fechaISO
+              )}`;
+
+
+            // Evitar duplicados
+
+            if (
+              !cronogramaPorModulo[
+                moduloClave
+              ].fechas.includes(
+                fechaTexto
+              )
+            ) {
+
+              cronogramaPorModulo[
+                moduloClave
+              ].fechas.push(
+                fechaTexto
+              );
+
+            }
+
+
+            // ---------------------------------------------
+            // HORAS
+            // ---------------------------------------------
+
+            const horas =
+              calcularHoras(
+                configuracionDia.horaDesde,
+                configuracionDia.horaHasta
+              );
+
+
+            cronogramaPorModulo[
+              moduloClave
+            ].horasTotales +=
+              horas;
+
+          }
+
+
+          fechaActual.setDate(
+            fechaActual.getDate() + 1
+          );
+
+        }
+
+      }
+    );
+
+
+    console.log(
+      'CRONOGRAMA POR MÓDULO:',
+      cronogramaPorModulo
+    );
+
+
+    // =====================================================
+    // TABLA DEL CRONOGRAMA
+    // =====================================================
+
+    const tablaCronograma: any[] = [
+
+      [
+
+        {
+          text:
+            'Horario',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        },
+
+
+        {
+          text:
+            'Fechas',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        },
+
+
+        {
+          text:
+            'Horas totales',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        }
+
+      ]
+
+    ];
+
+
+    // =====================================================
+    // UNA FILA POR CADA MÓDULO
+    // =====================================================
+
+    Object.keys(
+      cronogramaPorModulo
+    ).forEach(
+      (
+        moduloId: string
+      ) => {
+
+        const modulo =
+          cronogramaPorModulo[
+            moduloId
+          ];
+
+
+        // -----------------------------------------------
+        // HORARIO
+        // -----------------------------------------------
+
+        let textoHorarioModulo =
+          modulo.nombre;
+
+
+        textoHorarioModulo +=
+          '\n';
+
+
+        textoHorarioModulo +=
+          modulo.horarios.join(
+            '\n\n'
+          );
+
+
+        // -----------------------------------------------
+        // FECHAS
+        // -----------------------------------------------
+
+        const textoFechas =
+          modulo.fechas.join(
+            '\n'
+          );
+
+
+        // -----------------------------------------------
+        // HORAS TOTALES
+        // -----------------------------------------------
+
+        const textoHoras =
+          `${modulo.horasTotales} horas / ` +
+          `${formato.formato6_carga_horaria || 0} horas`;
+
+
+        tablaCronograma.push([
+
+          {
+            text:
+              textoHorarioModulo,
+
+            fontSize:
+              8
+          },
+
+
+          {
+            text:
+              textoFechas,
+
+            fontSize:
+              8
+          },
+
+
+          {
+            text:
+              textoHoras,
+
+            fontSize:
+              8,
+
+            alignment:
+              'center',
+
+            bold:
+              true
+          }
+
+        ]);
+
+      }
+    );
+
+
+    // =====================================================
+    // 6. TABLA DE PRESUPUESTO
+    // =====================================================
+
+    const tablaPresupuesto: any[] = [
+
+      [
+
+        {
+          text:
+            'Partida',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        },
+
+
+        {
+          text:
+            'Descripción',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        },
+
+
+        {
+          text:
+            'Valor',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        },
+
+
+        {
+          text:
+            'Total',
+
+          bold:
+            true,
+
+          alignment:
+            'center'
+        }
+
+      ]
+
+    ];
+
+
+    presupuesto.forEach(
+      (item: any) => {
+
+        tablaPresupuesto.push([
+
+          {
+            text:
+              item.partida || ''
+          },
+
+
+          {
+            text:
+              item.descripcion || ''
+          },
+
+
+          {
+            text:
+              String(
+                item.valor ?? 0
+              )
+          },
+
+
+          {
+            text:
+              String(
+                item.total ?? 0
+              )
+          }
+
+        ]);
+
+      }
+    );
+
+
+    // =====================================================
+    // 7. DOCUMENTO PDF
+    // =====================================================
+
+    const documentDefinition: any = {
+
+      pageSize:
+        'A4',
+
+
+      pageMargins: [
+        40,
+        80,
+        40,
+        80
+      ],
+
+
+      // ===================================================
+      // ENCABEZADO
+      // ===================================================
+
+      header: {
+
+        image:
+          encabezado,
+
+        width:
+          515,
+
+        alignment:
+          'center',
+
+        margin: [
+          0,
+          15,
+          0,
+          0
+        ]
 
       },
 
 
-      // =================================================
-      // PÁGINA 2
-      // INTRODUCCIÓN Y JUSTIFICACIÓN
-      // =================================================
+      // ===================================================
+      // PIE DE PÁGINA
+      // ===================================================
 
-      {
-        text: '',
-        pageBreak: 'before'
-      },
+      footer: {
 
+        image:
+          pie,
 
-      tituloSeccion(
-        '2. INTRODUCCIÓN'
-      ),
+        width:
+          515,
 
-
-      {
-        text:
-          formato.formato6_introduccion
-          || '',
-
-        alignment: 'justify',
-
-        fontSize: 10,
-
-        lineHeight: 1.3,
+        alignment:
+          'center',
 
         margin: [
           0,
@@ -897,312 +1385,798 @@ async generarPDFFormato6(formato: any): Promise<void>{
           0,
           15
         ]
+
       },
 
 
-      tituloSeccion(
-        '3. JUSTIFICACIÓN'
-      ),
+      // ===================================================
+      // CONTENIDO
+      // ===================================================
+
+      content: [
 
 
-      {
-        text:
-          formato.formato6_justificacion
-          || '',
+        // =================================================
+        // 1. DATOS INFORMATIVOS
+        // =================================================
 
-        alignment: 'justify',
+        {
 
-        fontSize: 10,
+          text:
+            '1. DATOS INFORMATIVOS',
 
-        lineHeight: 1.3
-      },
+          bold:
+            true,
 
+          fontSize:
+            14,
 
-      // =================================================
-      // PÁGINA 3
-      // OBJETIVOS + METODOLOGÍA + CONTENIDOS
-      // =================================================
+          alignment:
+            'center',
 
-      {
-        text: '',
-        pageBreak: 'before'
-      },
+          margin: [
+            0,
+            0,
+            0,
+            15
+          ]
 
-
-      tituloSeccion(
-        '4. OBJETIVOS'
-      ),
-
-
-      {
-        text:
-          'Objetivo general',
-
-        bold: true,
-
-        fontSize: 11,
-
-        margin: [
-          0,
-          0,
-          0,
-          5
-        ]
-      },
+        },
 
 
-      {
-        text:
-          formato.formato6_objetivo_general
-          || '',
+        {
 
-        alignment: 'justify',
+          table: {
 
-        fontSize: 10,
-
-        margin: [
-          0,
-          0,
-          0,
-          10
-        ]
-      },
+            widths: [
+              '35%',
+              '65%'
+            ],
 
 
-      {
-        text:
-          'Objetivos específicos',
+            body: [
 
-        bold: true,
+              [
 
-        fontSize: 11,
+                {
+                  text:
+                    'Fecha de elaboración',
 
-        margin: [
-          0,
-          0,
-          0,
-          5
-        ]
-      },
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_fecha_elaboracion
+                    || ''
+                }
+
+              ],
 
 
-      {
-        ol:
-          objetivosEspecificos
-            .map(
+              [
+
+                {
+                  text:
+                    'Requerimiento',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_requerimiento
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Unidad responsable',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_unidad_responsable
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Instructores',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_instructores
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Beneficiarios',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_beneficiarios
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Paralelo',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_paralelo
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Modalidad',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_modalidad
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Área',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_area
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Carga horaria',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_carga_horaria
+                    || ''
+                }
+
+              ],
+
+
+              // =========================================
+              // PERÍODOS
+              // =========================================
+
+              [
+
+                {
+                  text:
+                    'Períodos',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    textoPeriodos,
+
+                  fontSize:
+                    9,
+
+                  lineHeight:
+                    1.3
+
+                }
+
+              ],
+
+
+              // =========================================
+              // HORARIO
+              // =========================================
+
+              [
+
+                {
+                  text:
+                    'Horario',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    textoHorario || '',
+
+                  fontSize:
+                    9,
+
+                  lineHeight:
+                    1.3
+
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Lugar',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_lugar
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Prerrequisitos',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_prerrequisitos
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Tipo de certificado',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_tipo_certificado
+                    || ''
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Inversión',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    formato.formato6_inversion
+                    || ''
+                }
+
+              ]
+
+            ]
+
+          },
+
+          layout:
+            'lightHorizontalLines'
+
+        },
+
+
+        // =================================================
+        // 2. INTRODUCCIÓN
+        // =================================================
+
+        {
+
+          text: '',
+
+          pageBreak:
+            'before'
+
+        },
+
+
+        tituloSeccion(
+          '2. INTRODUCCIÓN'
+        ),
+
+
+        {
+
+          text:
+            formato.formato6_introduccion
+            || '',
+
+          alignment:
+            'justify',
+
+          fontSize:
+            10,
+
+          lineHeight:
+            1.3,
+
+          margin: [
+            0,
+            0,
+            0,
+            15
+          ]
+
+        },
+
+
+        // =================================================
+        // 3. JUSTIFICACIÓN
+        // =================================================
+
+        tituloSeccion(
+          '3. JUSTIFICACIÓN'
+        ),
+
+
+        {
+
+          text:
+            formato.formato6_justificacion
+            || '',
+
+          alignment:
+            'justify',
+
+          fontSize:
+            10,
+
+          lineHeight:
+            1.3
+
+        },
+
+
+        // =================================================
+        // 4. OBJETIVOS
+        // =================================================
+
+        {
+
+          text: '',
+
+          pageBreak:
+            'before'
+
+        },
+
+
+        tituloSeccion(
+          '4. OBJETIVOS'
+        ),
+
+
+        {
+
+          text:
+            'Objetivo general',
+
+          bold:
+            true,
+
+          fontSize:
+            11,
+
+          margin: [
+            0,
+            0,
+            0,
+            5
+          ]
+
+        },
+
+
+        {
+
+          text:
+            formato.formato6_objetivo_general
+            || '',
+
+          alignment:
+            'justify',
+
+          fontSize:
+            10,
+
+          margin: [
+            0,
+            0,
+            0,
+            10
+          ]
+
+        },
+
+
+        {
+
+          text:
+            'Objetivos específicos',
+
+          bold:
+            true,
+
+          fontSize:
+            11,
+
+          margin: [
+            0,
+            0,
+            0,
+            5
+          ]
+
+        },
+
+
+        {
+
+          ol:
+            objetivosEspecificos.map(
               (item: any) =>
                 item.objetivo || ''
             ),
 
-        fontSize: 10,
+          fontSize:
+            10,
 
-        margin: [
-          0,
-          0,
-          0,
-          15
-        ]
-      },
+          margin: [
+            0,
+            0,
+            0,
+            15
+          ]
 
-
-      tituloSeccion(
-        '5. METODOLOGÍA DEL CURSO'
-      ),
-
-
-      {
-        text:
-          formato.formato6_metodologia
-          || '',
-
-        alignment: 'justify',
-
-        fontSize: 10,
-
-        lineHeight: 1.3,
-
-        margin: [
-          0,
-          0,
-          0,
-          15
-        ]
-      },
-
-
-      tituloSeccion(
-        '6. PLANIFICACIÓN DE CONTENIDOS'
-      ),
-
-
-      {
-        table: {
-
-          headerRows: 1,
-
-          widths: [
-            '25%',
-            '75%'
-          ],
-
-          body:
-            tablaPlanificacion
         },
 
-        layout: 'lightHorizontalLines',
 
-        fontSize: 9
-      },
+        // =================================================
+        // 5. METODOLOGÍA
+        // =================================================
 
-
-      // =================================================
-      // PÁGINA 4
-      // EVALUACIÓN + ACREDITACIÓN + CRONOGRAMA
-      // =================================================
-
-      {
-        text: '',
-        pageBreak: 'before'
-      },
+        tituloSeccion(
+          '5. METODOLOGÍA DEL CURSO'
+        ),
 
 
-      tituloSeccion(
-        '7. EVALUACIÓN'
-      ),
+        {
 
+          text:
+            formato.formato6_metodologia
+            || '',
 
-      {
-        text:
-          formato.formato6_evaluacion
-          || '',
+          alignment:
+            'justify',
 
-        alignment: 'justify',
+          fontSize:
+            10,
 
-        fontSize: 10,
+          lineHeight:
+            1.3,
 
-        lineHeight: 1.3,
+          margin: [
+            0,
+            0,
+            0,
+            15
+          ]
 
-        margin: [
-          0,
-          0,
-          0,
-          15
-        ]
-      },
-
-
-      tituloSeccion(
-        '8. ACREDITACIÓN Y CALIFICACIÓN'
-      ),
-
-
-      {
-        text:
-          formato.formato6_acreditacion
-          || '',
-
-        alignment: 'justify',
-
-        fontSize: 10,
-
-        lineHeight: 1.3,
-
-        margin: [
-          0,
-          0,
-          0,
-          15
-        ]
-      },
-
-
-      tituloSeccion(
-        '9. CRONOGRAMA DEL EVENTO'
-      ),
-
-
-      {
-        table: {
-
-          headerRows: 1,
-
-          widths: [
-            '20%',
-            '18%',
-            '22%',
-            '25%',
-            '15%'
-          ],
-
-          body:
-            tablaCronograma
         },
 
-        layout: 'lightHorizontalLines',
 
-        fontSize: 8
-      },
+        // =================================================
+        // 6. PLANIFICACIÓN
+        // =================================================
 
-
-      // =================================================
-      // PÁGINA 5
-      // PRESUPUESTO
-      // =================================================
-
-      {
-        text: '',
-        pageBreak: 'before'
-      },
+        tituloSeccion(
+          '6. PLANIFICACIÓN DE CONTENIDOS'
+        ),
 
 
-      tituloSeccion(
-        '10. PRESUPUESTO'
-      ),
+        {
 
+          table: {
 
-      {
-        table: {
+            headerRows:
+              1,
 
-          headerRows: 1,
+            widths: [
+              '30%',
+              '70%'
+            ],
 
-          widths: [
-            '15%',
-            '45%',
-            '20%',
-            '20%'
-          ],
+            body:
+              tablaPlanificacion
 
-          body:
-            tablaPresupuesto
+          },
+
+          layout:
+            'lightHorizontalLines',
+
+          fontSize:
+            9
+
         },
 
-        layout: 'lightHorizontalLines',
 
-        fontSize: 9
-      }
+        // =================================================
+        // 7. EVALUACIÓN
+        // =================================================
 
-    ]
+        {
 
-  };
+          text: '',
+
+          pageBreak:
+            'before'
+
+        },
 
 
-  // =====================================================
-  // GENERAR PDF
-  // =====================================================
-  console.log(
-  'IMAGEN QUE RECIBE PDFMAKE:',
-  documentDefinition.header.image
-);
+        tituloSeccion(
+          '7. EVALUACIÓN'
+        ),
 
-console.log(
-  'PIE QUE RECIBE PDFMAKE:',
-  documentDefinition.footer.image
-);
-  pdfMake
-    .createPdf(documentDefinition)
-    .open();
 
-  }catch(error){
+        {
+
+          text:
+            formato.formato6_evaluacion
+            || '',
+
+          alignment:
+            'justify',
+
+          fontSize:
+            10,
+
+          lineHeight:
+            1.3,
+
+          margin: [
+            0,
+            0,
+            0,
+            15
+          ]
+
+        },
+
+
+        // =================================================
+        // 8. ACREDITACIÓN
+        // =================================================
+
+        tituloSeccion(
+          '8. ACREDITACIÓN Y CALIFICACIÓN'
+        ),
+
+
+        {
+
+          text:
+            formato.formato6_acreditacion
+            || '',
+
+          alignment:
+            'justify',
+
+          fontSize:
+            10,
+
+          lineHeight:
+            1.3,
+
+          margin: [
+            0,
+            0,
+            0,
+            15
+          ]
+
+        },
+
+
+        // =================================================
+        // 9. CRONOGRAMA DEL EVENTO
+        // =================================================
+
+        tituloSeccion(
+          '9. CRONOGRAMA DEL EVENTO'
+        ),
+
+
+        {
+
+          table: {
+
+            headerRows:
+              1,
+
+            widths: [
+              '45%',
+              '40%',
+              '15%'
+            ],
+
+            body:
+              tablaCronograma
+
+          },
+
+          layout:
+            'lightHorizontalLines',
+
+          fontSize:
+            8
+
+        },
+
+
+        // =================================================
+        // 10. PRESUPUESTO
+        // =================================================
+
+        {
+
+          text: '',
+
+          pageBreak:
+            'before'
+
+        },
+
+
+        tituloSeccion(
+          '10. PRESUPUESTO'
+        ),
+
+
+        {
+
+          table: {
+
+            headerRows:
+              1,
+
+            widths: [
+              '15%',
+              '45%',
+              '20%',
+              '20%'
+            ],
+
+            body:
+              tablaPresupuesto
+
+          },
+
+          layout:
+            'lightHorizontalLines',
+
+          fontSize:
+            9
+
+        }
+
+      ]
+
+    };
+
+
+    // =====================================================
+    // GENERAR PDF
+    // =====================================================
+
+    console.log(
+      'DOCUMENTO FINAL:',
+      documentDefinition
+    );
+
+
+    pdfMake
+      .createPdf(
+        documentDefinition
+      )
+      .open();
+
+
+  } catch (error) {
 
     console.error(
       'ERROR AL GENERAR PDF:',
@@ -1216,6 +2190,7 @@ console.log(
     );
 
   }
+
 }
 
 }

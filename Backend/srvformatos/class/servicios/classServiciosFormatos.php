@@ -2914,20 +2914,20 @@ public function getformato6Reporte($filtros)
         $objetivos = $dbc->resultSet();
         if (!$objetivos) {
     $objetivos = array();
-}
+    }
 
-foreach ($objetivos as &$objetivo) {
-    $objetivo = (object) $objetivo;
-}
+    foreach ($objetivos as &$objetivo) {
+        $objetivo = (object) $objetivo;
+    }
 
-unset($objetivo);
+    unset($objetivo);
 
-$formato->objetivos_especificos = $objetivos;
+    $formato->objetivos_especificos = $objetivos;
 
-        $formato->objetivos_especificos =
-            $objetivos
-            ? $objetivos
-            : array();
+            $formato->objetivos_especificos =
+                $objetivos
+                ? $objetivos
+                : array();
 
 
         // =====================================================
