@@ -1,0 +1,2 @@
+ALTER TABLE presupuesto_formato6
+  MODIFY COLUMN valor VARCHAR(500) NOT NULL DEFAULT '0';

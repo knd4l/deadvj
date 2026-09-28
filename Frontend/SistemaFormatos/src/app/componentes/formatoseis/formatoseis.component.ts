@@ -181,13 +181,10 @@ diaBloqueado(
 }
 
 //Metodo para guardar el modulo 
-guardarModulo(modulo: any): void {
-
-  // =====================================================
-  // TOMAR EL HORARIO ACTUAL
-  // =====================================================
-
-  const horarioActual = modulo.horario[0];
+guardarModulo(
+  modulo: any,
+  horarioActual: HorarioModulo
+): void {
 
   // =====================================================
   // VALIDAR HORARIO
@@ -299,18 +296,26 @@ guardarModulo(modulo: any): void {
     nuevoHorario
   );
 
+  this.actualizarCargaHoraria();
+
 
   // =====================================================
-  // LIMPIAR FORMULARIO DEL HORARIO
+  // PREPARAR OTRA FILA DE HORARIO
   // =====================================================
 
-  horarioActual.tipo = '';
+  const horarioIndex =
+    modulo.horario.indexOf(horarioActual);
 
-  horarioActual.dias = [];
+  if (horarioIndex !== -1) {
+    modulo.horario.splice(horarioIndex, 1);
+  }
 
-  horarioActual.horaDesde = '';
-
-  horarioActual.horaHasta = '';
+  modulo.horario.push({
+    tipo: '',
+    dias: [],
+    horaDesde: '',
+    horaHasta: ''
+  });
 
 
   // =====================================================
@@ -490,10 +495,8 @@ calcularTotalPresupuesto(indice: number): void {
     const valor = Number(fila.valor) || 0; 
     const horas = Number(this.formato6.cargaHoraria) || 0; 
     fila.total = valor * horas; 
-    } else { 
-      // Las demás filas solamente toman el valor ingresado 
-      fila.total = this.convertirNumero(fila.valor); 
-    } 
+  }
+
     this.calcularTotalGeneral(); 
 }
 
@@ -535,6 +538,37 @@ convertirNumero(valor: any): number {
       (suma: number, fila: any) => 
         suma + (Number(fila.total) || 0),0 ); 
 }
+
+  obtenerPresupuestoParaGuardar(): any[] {
+
+    return this.presupuesto.map(
+      (fila: any, indice: number) => {
+
+        if (indice !== 0) {
+          return { ...fila };
+        }
+
+        const numeroInstructores =
+          Number(fila.numeroInstructores) || 0;
+
+        const cargaHoraria =
+          Number(this.formato6.cargaHoraria) || 0;
+
+        const etiquetaInstructores =
+          numeroInstructores === 1
+            ? 'instructor'
+            : 'instructores';
+
+        return {
+          ...fila,
+          descripcion:
+            `${numeroInstructores} ${etiquetaInstructores} × ${cargaHoraria} horas`
+        };
+
+      }
+    );
+
+  }
 
 //Agregar inputs y elimnarlos 
 
@@ -605,7 +639,16 @@ agregarModulo(): void {
 //Elimina el modulo que ya no necesite
 eliminarModulo(index: number): void {
 
+  const moduloEliminado = this.modulos[index];
+
   this.modulos.splice(index, 1);
+
+  this.modulosGuardados =
+    this.modulosGuardados.filter(
+      (modulo: any) => modulo.id !== moduloEliminado?.id
+    );
+
+  this.actualizarCargaHoraria();
 
 }
 
@@ -756,35 +799,47 @@ obtenerTotalHorasHorario(
 
 obtenerTotalHorasModulo(modulo: any): number {
 
-  let total = 0;
-
   if (!modulo.horario) {
     return 0;
   }
 
-  modulo.horario.forEach(
-    (horario: HorarioModulo) => {
+  return modulo.horario.reduce(
+    (total: number, horario: HorarioModulo) =>
+      total + this.obtenerHorasProgramadasHorario(modulo, horario),
+    0
+  );
+}
 
-      // Calculamos cuánto dura una sesión
-      const horasPorDia =
-        this.calcularHorasHorario(
-          horario.horaDesde,
-          horario.horaHasta
-        );
+obtenerHorasProgramadasHorario(
+  modulo: any,
+  horario: HorarioModulo
+): number {
 
-      // Calculamos cuántos días seleccionó
-      const cantidadDias =
-        horario.dias
-          ? horario.dias.length
-          : 0;
+  const horasPorSesion =
+    this.calcularHorasHorario(
+      horario.horaDesde,
+      horario.horaHasta
+    );
 
-      // Multiplicamos las horas por la cantidad de días
-      total += horasPorDia * cantidadDias;
+  const cantidadSesiones = modulo.desde && modulo.hasta
+    ? this.obtenerFechasHorario(modulo, horario).length
+    : horario.dias?.length || 0;
 
-    }
+  return horasPorSesion * cantidadSesiones;
+}
+
+actualizarCargaHoraria(): void {
+
+  const total = this.modulosGuardados.reduce(
+    (suma: number, modulo: any) =>
+      suma + this.obtenerTotalHorasModulo(modulo),
+    0
   );
 
-  return total;
+  this.formato6.cargaHoraria = String(
+    Math.round((total + Number.EPSILON) * 100) / 100
+  );
+
 }
 
 
@@ -800,7 +855,7 @@ agregarHorarioModulo(modulo: any): void {
 
   modulo.horario.push({
 
-    tipo: 'Clases en vivo (sincrónico)',
+    tipo: '',
 
     dias: [],
 
@@ -1101,7 +1156,7 @@ guardarFormato6(): void {
         // =============================================
 
         presupuesto:
-          this.presupuesto
+          this.obtenerPresupuestoParaGuardar()
 
       }
 
@@ -1353,7 +1408,7 @@ guardarFormato6(): void {
       // =============================================
 
       presupuesto:
-        this.presupuesto
+        this.obtenerPresupuestoParaGuardar()
 
     }
 

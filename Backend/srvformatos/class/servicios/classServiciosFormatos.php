@@ -58,6 +58,34 @@ class classServiciosFormatos
       return $this->estado;
     }
 
+    private function normalizarFilaPresupuesto($fila)
+    {
+        $partida = isset($fila->partida)
+            ? $fila->partida
+            : '';
+
+        $descripcion = isset($fila->descripcion)
+            ? trim((string) $fila->descripcion)
+            : '';
+
+        $valor = isset($fila->valor)
+            ? (string) $fila->valor
+            : '';
+
+        $totalTexto = isset($fila->total)
+            ? str_replace(',', '.', trim((string) $fila->total))
+            : '0';
+
+        return array(
+            'partida' => $partida,
+            'descripcion' => $descripcion,
+            'valor' => $valor,
+            'total' => is_numeric($totalTexto)
+                ? (float) $totalTexto
+                : 0
+        );
+    }
+
 
 
     public function getInitDatabase()
@@ -2082,25 +2110,8 @@ public function insertformato6($datos)
 
                 foreach ($datos->presupuesto as $fila) {
 
-                    $partida =
-                        isset($fila->partida)
-                        ? $fila->partida
-                        : '';
-
-                    $descripcion =
-                        isset($fila->descripcion)
-                        ? $fila->descripcion
-                        : '';
-
-                    $valor =
-                        isset($fila->valor)
-                        ? $fila->valor
-                        : 0;
-
-                    $total =
-                        isset($fila->total)
-                        ? $fila->total
-                        : 0;
+                    $filaNormalizada =
+                        $this->normalizarFilaPresupuesto($fila);
 
 
                     $insertPresupuesto = "
@@ -2129,22 +2140,22 @@ public function insertformato6($datos)
 
                     $dbc->bind(
                         ":partida",
-                        $partida
+                        $filaNormalizada['partida']
                     );
 
                     $dbc->bind(
                         ":descripcion",
-                        $descripcion
+                        $filaNormalizada['descripcion']
                     );
 
                     $dbc->bind(
                         ":valor",
-                        $valor
+                        $filaNormalizada['valor']
                     );
 
                     $dbc->bind(
                         ":total",
-                        $total
+                        $filaNormalizada['total']
                     );
 
                     $dbc->execute();
@@ -2600,6 +2611,14 @@ public function getformato6PorFormato1($codigo){
             SELECT
                 formato6_codigo,
                 formato1_codigo,
+                (
+                    SELECT mc.modalidad_nombre
+                    FROM formato1 f1
+                    LEFT JOIN modalidad_capacitacion mc
+                        ON mc.modalidad_codigo = f1.formato1_modalidad
+                    WHERE f1.formato1_codigo = formato6.formato1_codigo
+                    LIMIT 1
+                ) AS formato1_modalidad_nombre,
                 formato6_fecha_elaboracion,
                 formato6_requerimiento,
                 formato6_unidad_responsable,
@@ -2844,6 +2863,20 @@ public function getformato6Reporte($filtros)
             SELECT
                 formato6_codigo,
                 formato1_codigo,
+                (
+                    SELECT f1.formato1_curso_definido
+                    FROM formato1 f1
+                    WHERE f1.formato1_codigo = formato6.formato1_codigo
+                    LIMIT 1
+                ) AS formato1_curso_definido,
+                (
+                    SELECT mc.modalidad_nombre
+                    FROM formato1 f1
+                    LEFT JOIN modalidad_capacitacion mc
+                        ON mc.modalidad_codigo = f1.formato1_modalidad
+                    WHERE f1.formato1_codigo = formato6.formato1_codigo
+                    LIMIT 1
+                ) AS formato1_modalidad_nombre,
                 formato6_fecha_elaboracion,
                 formato6_requerimiento,
                 formato6_unidad_responsable,
@@ -4052,25 +4085,8 @@ public function updateformato6($d)
 
                 foreach ($d->presupuesto as $fila) {
 
-                    $partida =
-                        isset($fila->partida)
-                        ? $fila->partida
-                        : '';
-
-                    $descripcion =
-                        isset($fila->descripcion)
-                        ? $fila->descripcion
-                        : '';
-
-                    $valor =
-                        isset($fila->valor)
-                        ? $fila->valor
-                        : 0;
-
-                    $total =
-                        isset($fila->total)
-                        ? $fila->total
-                        : 0;
+                    $filaNormalizada =
+                        $this->normalizarFilaPresupuesto($fila);
 
 
                     $insertPresupuesto = "
@@ -4099,22 +4115,22 @@ public function updateformato6($d)
 
                     $dbc->bind(
                         ":partida",
-                        $partida
+                        $filaNormalizada['partida']
                     );
 
                     $dbc->bind(
                         ":descripcion",
-                        $descripcion
+                        $filaNormalizada['descripcion']
                     );
 
                     $dbc->bind(
                         ":valor",
-                        $valor
+                        $filaNormalizada['valor']
                     );
 
                     $dbc->bind(
                         ":total",
-                        $total
+                        $filaNormalizada['total']
                     );
 
                     $dbc->execute();

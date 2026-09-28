@@ -556,17 +556,62 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
     }
 
+    const horarioModulo1 =
+      horariosDebug.find(
+        (horario: any) =>
+          String(horario.modulo_nombre || '').trim() !== ''
+      ) || {};
+
+    const nombreModulo1 =
+      horarioModulo1.modulo_nombre || 'Módulo 1';
+
+    const fechaDesdeModulo1 =
+      horarioModulo1.modulo_desde || '';
+
+    const fechaHastaModulo1 =
+      horarioModulo1.modulo_hasta || '';
+
 
     const textoPeriodos =
-      `Inscripción / matrícula: ` +
-      `${formatearFecha(inscripcionDesde)} ` +
-      `al ` +
-      `${formatearFecha(inscripcionHasta)}\n` +
+      [
+        'Inscripciones y matrícula:',
+        `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}`,
+        'Ejecución del curso:',
+        `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}`,
+        `${nombreModulo1}:`,
+        'Período del módulo:',
+        `${formatearFecha(fechaDesdeModulo1)} al ${formatearFecha(fechaHastaModulo1)}`
+      ].join('\n');
 
-      `Ejecución: ` +
-      `${formatearFecha(ejecucionDesde)} ` +
-      `al ` +
-      `${formatearFecha(ejecucionHasta)}`;
+    const modalidadFormato1 =
+      String(
+        formato?.formato1_modalidad_nombre ||
+        formato?.formato6_modalidad ||
+        ''
+      ).trim();
+
+    const esElearning =
+      /e[\s-]?learning/i.test(modalidadFormato1);
+
+    const lineaModalidad = modalidadFormato1
+      ? `Modalidad ${modalidadFormato1}`
+      : '';
+
+    const acreditacionOriginal =
+      String(formato?.formato6_acreditacion || '');
+
+    const acreditacionConModalidadBase = lineaModalidad
+      ? /modalidad[^\r\n]*/i.test(acreditacionOriginal)
+        ? acreditacionOriginal.replace(
+            /modalidad[^\r\n]*/i,
+            lineaModalidad
+          )
+        : `${acreditacionOriginal}${acreditacionOriginal ? '\n' : ''}${lineaModalidad}`
+      : acreditacionOriginal;
+
+      const acreditacionConModalidad = esElearning
+        ? `${acreditacionConModalidadBase.trimEnd()}\n(e-learning)`
+        : acreditacionConModalidadBase;
 
 
     // =====================================================
@@ -843,99 +888,47 @@ async generarPDFFormato6(formato: any): Promise<void> {
     };
 
 
-    const tablaPlanificacion: any[] = [
+    const planificacionContenidoPdf: any[] = [];
 
-      [
+    Object.keys(contenidosPorModulo)
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach((moduloId: string) => {
 
-        {
-          text:
-            'Módulo',
+        const lista = contenidosPorModulo[moduloId];
+        const nombreModulo =
+          nombresModulos[moduloId] || `Módulo ${moduloId}`;
+        const tituloModulo =
+          new RegExp(`^Módulo\\s+${moduloId}$`, 'i').test(nombreModulo)
+            ? nombreModulo
+            : `Módulo ${moduloId}: ${nombreModulo}`;
 
-          bold:
-            true,
+        const contenidoTexto = lista
+          .map((item: any) =>
+            typeof item === 'string'
+              ? item
+              : item?.contenido || ''
+          )
+          .map((contenido: string) => contenido.trim())
+          .filter(Boolean)
+          .join('\n');
 
-          alignment:
-            'center'
-        },
+        planificacionContenidoPdf.push({
+          text: tituloModulo,
+          bold: true,
+          fontSize: 11,
+          margin: [0, 8, 0, 3]
+        });
 
-
-        {
-          text:
-            'Contenidos',
-
-          bold:
-            true,
-
-          alignment:
-            'center'
+        if (contenidoTexto) {
+          planificacionContenidoPdf.push({
+            text: contenidoTexto,
+            fontSize: 10,
+            lineHeight: 1.3,
+            margin: [12, 0, 0, 8]
+          });
         }
 
-      ]
-
-    ];
-
-
-    Object.keys(
-      contenidosPorModulo
-    ).forEach(
-      (
-        moduloId: string
-      ) => {
-
-        const lista =
-          contenidosPorModulo[
-            moduloId
-          ];
-
-
-        const nombreModulo =
-          nombresModulos[
-            moduloId
-          ] ||
-          `Módulo ${moduloId}`;
-
-
-        const contenidoTexto =
-          lista
-            .map(
-              (item: any) => {
-                const contenido =
-                  typeof item === 'string'
-                    ? item
-                    : item?.contenido || '';
-
-                return contenido
-                  ? `- ${contenido}`
-                  : '';
-              }
-            )
-            .filter(Boolean)
-            .join('\n');
-
-
-        tablaPlanificacion.push([
-
-          {
-            text:
-              nombreModulo,
-
-            bold:
-              true
-          },
-
-
-          {
-            text:
-              contenidoTexto,
-
-            alignment:
-              'center'
-          }
-
-        ]);
-
-      }
-    );
+      });
 
 
     // =====================================================
@@ -1397,7 +1390,16 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
 
     presupuesto.forEach(
-      (item: any) => {
+      (item: any, index: number) => {
+
+        const descripcion =
+          item.descripcion ||
+          (index === 0 && formato?.formato6_carga_horaria
+            ? `Instructores × ${formato.formato6_carga_horaria} horas`
+            : '');
+
+        const valorParaReporte =
+          String(item.valor ?? '');
 
         tablaPresupuesto.push([
 
@@ -1408,15 +1410,13 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
 
           {
-            text: item.descripcion || '',
+            text: descripcion,
             alignment: 'center'
           },
 
 
           {
-            text: String(
-                item.valor ?? 0
-              ),
+            text: valorParaReporte,
             alignment: 'center'
           },
 
@@ -1432,6 +1432,31 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
       }
     );
+
+    const totalPresupuesto = presupuesto.reduce(
+      (acumulado: number, item: any) =>
+        acumulado +
+        (Number(
+          String(item?.total ?? 0).replace(',', '.')
+        ) || 0),
+      0
+    );
+
+    tablaPresupuesto.push([
+      {
+        text: 'TOTAL EGRESOS',
+        colSpan: 3,
+        bold: true,
+        alignment: 'right'
+      },
+      {},
+      {},
+      {
+        text: totalPresupuesto.toFixed(2),
+        bold: true,
+        alignment: 'center'
+      }
+    ]);
 
 
     // =====================================================
@@ -1525,11 +1550,11 @@ async generarPDFFormato6(formato: any): Promise<void> {
             14,
 
           alignment:
-            'center',
+            'left',
 
           margin: [
             0,
-            0,
+            15,
             0,
             15
           ]
@@ -1564,6 +1589,27 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     formato.formato6_fecha_elaboracion
                     || '',
                   alignment: 'center'
+                }
+
+              ],
+
+
+              [
+
+                {
+                  text:
+                    'Resolución',
+
+                  bold:
+                    true
+                },
+
+                {
+                  text:
+                    'Nro: RESOLUCIÓN: CAU-P-613-2024',
+
+                  alignment:
+                    'center'
                 }
 
               ],
@@ -1864,9 +1910,11 @@ async generarPDFFormato6(formato: any): Promise<void> {
                 },
 
                 {
-                  text:
-                    formato.formato6_inversion
-                    || '',
+                  text: formato.formato6_inversion !== null &&
+                    formato.formato6_inversion !== undefined &&
+                    formato.formato6_inversion !== ''
+                      ? `${formato.formato6_inversion} $`
+                      : '',
                   alignment: 'center'
                 }
 
@@ -2065,6 +2113,24 @@ async generarPDFFormato6(formato: any): Promise<void> {
           '5. METODOLOGÍA DEL CURSO'
         ),
 
+        {
+
+          text: [
+            {
+              text: 'Curso: ',
+              bold: true
+            },
+            {
+              text: formato.formato1_curso_definido || ''
+            }
+          ],
+
+          fontSize: 11,
+
+          margin: [0, 0, 0, 8]
+
+        },
+
 
         {
 
@@ -2102,26 +2168,8 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
         {
 
-          table: {
-
-            headerRows:
-              1,
-
-            widths: [
-              '30%',
-              '70%'
-            ],
-
-            body:
-              tablaPlanificacion
-
-          },
-
-          layout:
-            layoutTablaCuadriculada,
-
-          fontSize:
-            9
+          stack:
+            planificacionContenidoPdf
 
         },
 
@@ -2182,8 +2230,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
         {
 
           text:
-            formato.formato6_acreditacion
-            || '',
+            acreditacionConModalidad,
 
           alignment:
             'justify',

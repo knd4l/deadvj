@@ -320,6 +320,7 @@
                               class="form-control"
                               [(ngModel)]="formato6.cargaHoraria"
                               name="cargaHoraria"
+                              readonly
                               style="max-width: 150px;"
                             >
 
@@ -579,7 +580,7 @@
                 class="form-check-input"
                 [id]="'diaModulo' + i + '_' + j + '_' + dia"
                 [checked]="horario.dias.includes(dia)"
-                [disabled]="diaBloqueado(dia, modulo.horario[0].tipo, modulo)"
+                [disabled]="diaBloqueado(dia, horario.tipo, modulo)"
                 (change)="cambiarDia(horario, dia, $event)"
               >
 
@@ -638,10 +639,10 @@
             type="button"
             class="btn"
             style="background-color: #6c1313; color:white"
-            (click)="guardarModulo(modulo)"
+            (click)="guardarModulo(modulo, horario)"
           
           >
-            Agregar horario
+            Guardar horario
           </button>
 
 
@@ -662,6 +663,16 @@
       </div>
 
     </div>
+
+
+    <button
+      type="button"
+      class="btn mt-2"
+      style="background-color: #6c1313; color:white"
+      (click)="agregarHorarioModulo(modulo)"
+    >
+      + Agregar otro horario
+    </button>
 
 
     <!-- ========================================= -->
@@ -829,8 +840,17 @@
               class="text-center align-middle"
             >
 
-              <strong>
+              <div
+                *ngFor="let horario of modulo.horario"
+                class="mb-2"
+              >
+                {{ horario.tipo }}:
+                {{ obtenerHorasProgramadasHorario(modulo, horario) | number:'1.0-2' }}
+                horas
+              </div>
 
+              <strong>
+                Total del módulo:
                 {{
                   obtenerTotalHorasModulo(modulo)
                     | number:'1.0-2'
@@ -1503,25 +1523,9 @@
 
           <td>
 
-            <!-- PRIMERA FILA -->
-
             <input
-              *ngIf="i === 0"
-              type="number"
-              class="form-control text-end"
-              name="valor{{i}}"
-              [(ngModel)]="fila.valor"
-              min="0"
-              step="0.01"
-              (ngModelChange)="calcularTotalPresupuesto(i)">
-
-
-            <!-- FILAS NUEVAS -->
-
-            <input
-              *ngIf="i > 0"
               type="text"
-              class="form-control text-end"
+              class="form-control"
               name="valor{{i}}"
               [(ngModel)]="fila.valor"
               (ngModelChange)="calcularTotalPresupuesto(i)">
@@ -1533,10 +1537,16 @@
                TOTAL
                ========================================= -->
 
-          <td
-            class="text-end fw-bold">
+          <td>
 
-            {{ fila.total | number:'1.2-2' }}
+            <input
+              type="number"
+              class="form-control text-end"
+              [name]="'total' + i"
+              [(ngModel)]="fila.total"
+              min="0"
+              step="0.01"
+              (ngModelChange)="calcularTotalGeneral()">
 
           </td>
 
