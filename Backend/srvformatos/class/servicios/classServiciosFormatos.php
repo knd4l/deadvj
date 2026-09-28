@@ -2864,6 +2864,7 @@ public function getformato6Reporte($filtros)
                 formato6_justificacion,
                 formato6_objetivo_general,
                 formato6_metodologia,
+                formato6_planificacion_contenidos,
                 formato6_evaluacion,
                 formato6_acreditacion
             FROM formato6
@@ -2930,46 +2931,105 @@ public function getformato6Reporte($filtros)
                 : array();
 
 
-        // =====================================================
+       // =====================================================
         // 3. CONTENIDOS DE LA PLANIFICACIÓN
         // =====================================================
 
-        $sqlContenidos = "
-            SELECT
-                contenido_id,
-                modulo_id,
-                contenido
-            FROM planificacion_contenidos_formato6
-            WHERE formato6_codigo = :formato6_codigo
-            ORDER BY modulo_id ASC, contenido_id ASC
-        ";
+            $sqlContenidos = "
+                SELECT
+                    contenido_id,
+                    formato6_codigo,
+                    modulo_id,
+                    contenido
+                FROM planificacion_contenidos_formato6
+                WHERE formato6_codigo = :formato6_codigo
+                ORDER BY modulo_id ASC, contenido_id ASC
+            ";
 
-        $dbc->query($sqlContenidos);
+            $dbc->query($sqlContenidos);
 
-        $dbc->bind(
-            ":formato6_codigo",
-            $formato6Codigo
-        );
+            $dbc->bind(
+                ":formato6_codigo",
+                $formato6Codigo
+            );
 
-        $contenidos = $dbc->resultSet();
+            $contenidos = $dbc->resultSet();
 
-        if (!$contenidos) {
-            $contenidos = array();
-        }
+            if (!$contenidos) {
+                $contenidos = array();
+            }
 
-        foreach ($contenidos as &$contenido) {
-            $contenido = (object) $contenido;
-        }
 
-        unset($contenido);
+            // Convertir cada contenido a objeto
+            foreach ($contenidos as &$contenido) {
+                $contenido = (object) $contenido;
+            }
 
-        $formato->contenidos = $contenidos;
+            unset($contenido);
 
-        $formato->contenidos =
-            $contenidos
-            ? $contenidos
-            : array();
 
+            // Guardar contenidos
+            $formato->contenidos = $contenidos;
+
+
+            // =====================================================
+            // CREAR ESTRUCTURA DE MÓDULOS
+            // =====================================================
+
+            $modulos = array();
+
+            foreach ($contenidos as $contenido) {
+
+                $moduloId =
+                    isset($contenido->modulo_id)
+                    ? $contenido->modulo_id
+                    : 0;
+
+                if (!isset($modulos[$moduloId])) {
+
+                    $modulos[$moduloId] = new stdClass();
+
+                    $modulos[$moduloId]->id =
+                        $moduloId;
+
+                    $modulos[$moduloId]->nombre =
+                        'Módulo ' . $moduloId;
+
+                    $modulos[$moduloId]->contenidos =
+                        array();
+                }
+
+
+                $modulos[$moduloId]->contenidos[] =
+                    $contenido->contenido;
+            }
+
+
+            // Convertir índices asociativos
+            $modulos = array_values($modulos);
+
+
+            // Guardar módulos en el resultado
+            $formato->modulos = $modulos;
+
+
+            // =====================================================
+            // DEBUG
+            // =====================================================
+
+            error_log(
+                'FORMATO 6 ' .
+                $formato6Codigo .
+                ' - CONTENIDOS: ' .
+                count($contenidos)
+            );
+
+            error_log(
+                'FORMATO 6 ' .
+                $formato6Codigo .
+                ' - MODULOS: ' .
+                count($modulos)
+            );
 
         // =====================================================
         // 4. HORARIOS DE EJECUCIÓN
@@ -3821,7 +3881,7 @@ public function updateformato6($d)
 
 
             // =====================================================
-            // CONTENIDO
+            // CONTENIDO GENERAL
             // =====================================================
 
             $dbc->bind(
@@ -3869,10 +3929,97 @@ public function updateformato6($d)
 
 
             // =====================================================
-            // EJECUTAR UPDATE
+            // EJECUTAR UPDATE PRINCIPAL
             // =====================================================
 
             $dbc->execute();
+
+
+            // =====================================================
+            // ELIMINAR CONTENIDOS ANTERIORES
+            // =====================================================
+
+            $deleteContenidos = "
+                DELETE FROM planificacion_contenidos_formato6
+                WHERE formato6_codigo = :formato6_codigo
+            ";
+
+            $dbc->query($deleteContenidos);
+
+            $dbc->bind(
+                ":formato6_codigo",
+                $codigo
+            );
+
+            $dbc->execute();
+
+
+            // =====================================================
+            // GUARDAR CONTENIDOS ACTUALES
+            // =====================================================
+
+            if (
+                isset($d->modulos) &&
+                is_array($d->modulos)
+            ) {
+
+                foreach ($d->modulos as $index => $modulo) {
+
+                    // El ID del módulo será 1, 2, 3...
+                    $moduloId = $index + 1;
+
+                    // Verificar que existan contenidos
+                    if (
+                        !isset($modulo->contenidos) ||
+                        !is_array($modulo->contenidos)
+                    ) {
+                        continue;
+                    }
+
+                    foreach ($modulo->contenidos as $contenido) {
+
+                        // Ignorar contenidos vacíos
+                        if (
+                            $contenido === null ||
+                            trim((string)$contenido) === ''
+                        ) {
+                            continue;
+                        }
+
+                        $insertContenido = "
+                            INSERT INTO planificacion_contenidos_formato6 (
+                                formato6_codigo,
+                                modulo_id,
+                                contenido
+                            )
+                            VALUES (
+                                :formato6_codigo,
+                                :modulo_id,
+                                :contenido
+                            )
+                        ";
+
+                        $dbc->query($insertContenido);
+
+                        $dbc->bind(
+                            ":formato6_codigo",
+                            $codigo
+                        );
+
+                        $dbc->bind(
+                            ":modulo_id",
+                            $moduloId
+                        );
+
+                        $dbc->bind(
+                            ":contenido",
+                            trim((string)$contenido)
+                        );
+
+                        $dbc->execute();
+                    }
+                }
+            }
 
 
             // =====================================================
@@ -4116,7 +4263,6 @@ public function updateformato6($d)
 
                         $dbc->query($insertHorario);
 
-
                         $dbc->bind(
                             ":formato6_codigo",
                             $codigo
@@ -4162,7 +4308,6 @@ public function updateformato6($d)
                             )
                         );
 
-
                         $dbc->execute();
                     }
                 }
@@ -4183,7 +4328,7 @@ public function updateformato6($d)
             $this->estado =
                 new Exception_Object(
                     1,
-                    'Formato 6, presupuesto y horarios actualizados correctamente.'
+                    'Formato 6, contenidos, presupuesto y horarios actualizados correctamente.'
                 );
 
             $this->estado->setLastID(1);

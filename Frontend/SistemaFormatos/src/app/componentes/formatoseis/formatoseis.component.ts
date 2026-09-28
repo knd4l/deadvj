@@ -852,13 +852,103 @@ cambiarDia(
 guardarFormato6(): void {
 
   // =====================================================
-  // PREPARAR MÓDULOS
+  // SINCRONIZAR MÓDULOS EDITABLES PARA GUARDAR
   // =====================================================
 
-  console.log('========== MÓDULOS ANTES DE GUARDAR ==========');
-  console.log('MODULOS:', this.modulos);
-  console.log('MODULOS GUARDADOS:', this.modulosGuardados);
-  console.log('==============================================');
+  const modulosParaGuardar = [
+    ...this.modulosGuardados
+  ];
+
+  this.modulos.forEach(
+    (modulo: any) => {
+
+      const moduloGuardado =
+        modulosParaGuardar.find(
+          (item: any) => item.id === modulo.id
+        );
+
+      if (moduloGuardado) {
+
+        moduloGuardado.nombre = modulo.nombre;
+        moduloGuardado.desde = modulo.desde;
+        moduloGuardado.hasta = modulo.hasta;
+        moduloGuardado.contenidos = [
+          ...(modulo.contenidos || [])
+        ];
+
+      } else {
+
+        modulosParaGuardar.push({
+          ...modulo,
+          contenidos: [
+            ...(modulo.contenidos || [])
+          ],
+          horario: []
+        });
+
+      }
+
+    }
+  );
+
+
+  // =====================================================
+  // PREPARAR PLANIFICACIÓN DE CONTENIDOS
+  // =====================================================
+
+  const planificacionContenidos =
+    modulosParaGuardar
+      .map((modulo: any, index: number) => {
+
+        const nombreModulo =
+          modulo.nombre &&
+          modulo.nombre.trim() !== ''
+            ? modulo.nombre
+            : `Módulo ${index + 1}`;
+
+        const contenidos =
+          Array.isArray(modulo.contenidos)
+            ? modulo.contenidos
+                .filter(
+                  (contenido: any) =>
+                    contenido &&
+                    contenido.toString().trim() !== ''
+                )
+                .map(
+                  (contenido: any) =>
+                    `- ${contenido}`
+                )
+                .join('\n')
+            : '';
+
+        return `${nombreModulo}\n${contenidos}`;
+
+      })
+      .join('\n\n');
+
+
+  // =====================================================
+  // COMPROBAR DATOS
+  // =====================================================
+
+  console.log(
+    '========== PLANIFICACIÓN =========='
+  );
+
+  console.log(
+    'MÓDULOS GUARDADOS:',
+    this.modulosGuardados
+  );
+
+  console.log(
+    'PLANIFICACIÓN GENERADA:',
+    planificacionContenidos
+  );
+
+  console.log(
+    '===================================='
+  );
+
 
   // =====================================================
   // SI YA EXISTE → ACTUALIZAR
@@ -872,22 +962,48 @@ guardarFormato6(): void {
 
       d: {
 
-        formato6_codigo: this.formato6Codigo,
-        formato1_codigo: this.formato1Codigo,
+        formato6_codigo:
+          this.formato6Codigo,
+
+        formato1_codigo:
+          this.formato1Codigo,
+
 
         // =============================================
         // DATOS PRINCIPALES
         // =============================================
 
-        fechaElaboracion: this.formato6.fechaElaboracion,
-        requerimiento: this.formato6.requerimiento,
-        unidadResponsable: this.formato6.unidadResponsable,
-        instructores: this.formato6.instructores,
-        beneficiarios: this.formato6.beneficiarios,
-        paralelo: this.formato6.paralelo,
-        modalidad: this.formato6.modalidad,
-        area: this.formato6.area,
-        cargaHoraria: this.formato6.cargaHoraria,
+        fechaElaboracion:
+          this.formato6.fechaElaboracion,
+
+        requerimiento:
+          this.formato6.requerimiento,
+
+        unidadResponsable:
+          this.formato6.unidadResponsable,
+
+        instructores:
+          this.formato6.instructores,
+
+        beneficiarios:
+          this.formato6.beneficiarios,
+
+        paralelo:
+          this.formato6.paralelo,
+
+        modalidad:
+          this.formato6.modalidad,
+
+        area:
+          this.formato6.area,
+
+        cargaHoraria:
+          this.formato6.cargaHoraria,
+
+
+        // =============================================
+        // FECHAS
+        // =============================================
 
         inscripcionMatriculaDesde:
           this.formato6.inscripcionMatriculaDesde,
@@ -901,20 +1017,31 @@ guardarFormato6(): void {
         ejecucionHasta:
           this.formato6.ejecucionHasta,
 
+
         // =============================================
-        // MÓDULOS Y HORARIOS
+        // MÓDULOS
         // =============================================
 
-        modulos: this.modulosGuardados,
+        modulos:
+          modulosParaGuardar,
+
 
         // =============================================
         // DATOS ADICIONALES
         // =============================================
 
-        lugar: this.formato6.lugar,
-        prerrequisitos: this.formato6.prerrequisitos,
-        tipoCertificado: this.formato6.tipoCertificado,
-        inversion: this.formato6.inversion,
+        lugar:
+          this.formato6.lugar,
+
+        prerrequisitos:
+          this.formato6.prerrequisitos,
+
+        tipoCertificado:
+          this.formato6.tipoCertificado,
+
+        inversion:
+          this.formato6.inversion,
+
 
         // =============================================
         // CONTENIDO
@@ -926,24 +1053,41 @@ guardarFormato6(): void {
         justificacion:
           this.formato6.justificacion,
 
+
+        // =============================================
+        // OBJETIVOS
+        // =============================================
+
         objetivos: {
+
           general:
             this.formato6.objetivos.general,
 
           especificos:
             this.formato6.objetivos.especificos
+
         },
+
+
+        // =============================================
+        // METODOLOGÍA
+        // =============================================
 
         metodologiaCurso:
           this.formato6.metodologiaCurso,
 
+
+        // =============================================
+        // PLANIFICACIÓN DE CONTENIDOS
+        // =============================================
+
         planificacionContenidos:
-          this.modulosGuardados
-            .map(
-              (modulo: any, index: number) =>
-                `Módulo ${index + 1}: ${(modulo.contenidos || []).join(', ')}`
-            )
-            .join('\n'),
+          planificacionContenidos,
+
+
+        // =============================================
+        // EVALUACIÓN
+        // =============================================
 
         evaluacion:
           this.formato6.evaluacion,
@@ -951,19 +1095,32 @@ guardarFormato6(): void {
         acreditacionCalificacion:
           this.formato6.acreditacionCalificacion,
 
+
+        // =============================================
+        // PRESUPUESTO
+        // =============================================
+
         presupuesto:
           this.presupuesto
+
       }
+
     };
 
-    console.log('========== ACTUALIZANDO ==========');
-    console.log('DATOS ENVIADOS:', objetoopciones);
-    console.log('MÓDULOS ENVIADOS:', objetoopciones.d.modulos);
+
     console.log(
-      'PLANIFICACIÓN:',
-      objetoopciones.d.planificacionContenidos
+      '========== ACTUALIZANDO FORMATO 6 =========='
     );
-    console.log('===================================');
+
+    console.log(
+      'OBJETO ENVIADO:',
+      objetoopciones
+    );
+
+    console.log(
+      '============================================'
+    );
+
 
     this.miServicio.updateformato6(
       objetoopciones
@@ -985,7 +1142,8 @@ guardarFormato6(): void {
           Swal.fire({
             icon: 'success',
             title: 'Actualizado correctamente',
-            text: respuesta.data.message
+            text:
+              respuesta.data.message
           });
 
         } else {
@@ -996,7 +1154,8 @@ guardarFormato6(): void {
             text:
               respuesta?.data?.message ||
               'No se pudo actualizar el Formato 6.',
-            confirmButtonText: 'Aceptar'
+            confirmButtonText:
+              'Aceptar'
           });
 
         }
@@ -1061,6 +1220,7 @@ guardarFormato6(): void {
       formato1_codigo:
         this.formato1Codigo,
 
+
       // =============================================
       // DATOS PRINCIPALES
       // =============================================
@@ -1092,6 +1252,11 @@ guardarFormato6(): void {
       cargaHoraria:
         this.formato6.cargaHoraria,
 
+
+      // =============================================
+      // FECHAS
+      // =============================================
+
       inscripcionMatriculaDesde:
         this.formato6.inscripcionMatriculaDesde,
 
@@ -1104,12 +1269,14 @@ guardarFormato6(): void {
       ejecucionHasta:
         this.formato6.ejecucionHasta,
 
+
       // =============================================
-      // MÓDULOS Y HORARIOS
+      // MÓDULOS
       // =============================================
 
       modulos:
-        this.modulosGuardados,
+        modulosParaGuardar,
+
 
       // =============================================
       // DATOS ADICIONALES
@@ -1127,6 +1294,7 @@ guardarFormato6(): void {
       inversion:
         this.formato6.inversion,
 
+
       // =============================================
       // CONTENIDO
       // =============================================
@@ -1136,6 +1304,11 @@ guardarFormato6(): void {
 
       justificacion:
         this.formato6.justificacion,
+
+
+      // =============================================
+      // OBJETIVOS
+      // =============================================
 
       objetivos: {
 
@@ -1147,22 +1320,37 @@ guardarFormato6(): void {
 
       },
 
+
+      // =============================================
+      // METODOLOGÍA
+      // =============================================
+
       metodologiaCurso:
         this.formato6.metodologiaCurso,
 
+
+      // =============================================
+      // PLANIFICACIÓN DE CONTENIDOS
+      // =============================================
+
       planificacionContenidos:
-        this.modulosGuardados
-          .map(
-            (modulo: any, index: number) =>
-              `Módulo ${index + 1}: ${(modulo.contenidos || []).join(', ')}`
-          )
-          .join('\n'),
+        planificacionContenidos,
+
+
+      // =============================================
+      // EVALUACIÓN
+      // =============================================
 
       evaluacion:
         this.formato6.evaluacion,
 
       acreditacionCalificacion:
         this.formato6.acreditacionCalificacion,
+
+
+      // =============================================
+      // PRESUPUESTO
+      // =============================================
 
       presupuesto:
         this.presupuesto
@@ -1171,10 +1359,6 @@ guardarFormato6(): void {
 
   };
 
-
-  // =====================================================
-  // CONSOLA
-  // =====================================================
 
   console.log(
     '========== GUARDANDO NUEVO FORMATO 6 =========='
@@ -1191,22 +1375,12 @@ guardarFormato6(): void {
   );
 
   console.log(
-    'MÓDULOS GUARDADOS:',
-    this.modulosGuardados
-  );
-
-  console.log(
     'PLANIFICACIÓN QUE SE ENVÍA:',
     objetoopciones.d.planificacionContenidos
   );
 
   console.log(
-    'TIPO PLANIFICACIÓN:',
-    typeof objetoopciones.d.planificacionContenidos
-  );
-
-  console.log(
-    '==============================================='
+    '================================================'
   );
 
 
@@ -1231,28 +1405,11 @@ guardarFormato6(): void {
         respuesta.data.success
       ) {
 
-        console.log(
-          '========== GUARDADO CORRECTAMENTE =========='
-        );
-
-        console.log(
-          'MÓDULOS ENVIADOS:',
-          objetoopciones.d.modulos
-        );
-
-        console.log(
-          'MÓDULOS GUARDADOS:',
-          this.modulosGuardados
-        );
-
-        console.log(
-          '============================================'
-        );
-
         Swal.fire({
           icon: 'success',
           title: 'Guardado correctamente',
-          text: respuesta.data.message
+          text:
+            respuesta.data.message
         });
 
       } else {
