@@ -27,7 +27,8 @@ export class FormatotreceverComponent implements OnInit {
             ...formato,
             publicacionesPaginaWeb: this.leerPublicaciones(formato.formato13_pagina_web_adicionales),
             publicacionesRedSocial: this.leerPublicaciones(formato.formato13_red_social_adicionales),
-            publicacionesVideo: this.leerPublicaciones(formato.formato13_video_adicionales)
+            publicacionesVideo: this.leerPublicaciones(formato.formato13_video_adicionales),
+            mediosUtaAdicionales: this.leerPublicaciones(formato.formato13_medio_uta_adicionales)
           }));
         } else {
           this.formatos = [];

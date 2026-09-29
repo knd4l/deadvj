@@ -45,6 +45,9 @@
               <th>Explicación video</th>
               <th>URL video</th>
               <th>Publicaciones de video adicionales</th>
+              <th>Fecha Medio UTA</th>
+              <th>URL Medio UTA</th>
+              <th>Medios UTA adicionales</th>
             </tr>
           </thead>
           <tbody>
@@ -126,6 +129,19 @@
                   <a *ngIf="publicacion.urlRedSocial" [href]="publicacion.urlRedSocial" target="_blank" rel="noopener noreferrer">{{ publicacion.urlRedSocial }}</a>
                 </div>
                 <span *ngIf="!formato.publicacionesVideo.length">—</span>
+              </td>
+              <td>{{ formato.formato13_medio_uta_fecha_publicacion | date:'yyyy-MM-dd' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_medio_uta_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_medio_uta_url">—</span>
+              </td>
+              <td>
+                <div *ngFor="let medio of formato.mediosUtaAdicionales" class="border-bottom pb-2 mb-2">
+                  <div><strong>Fecha:</strong> {{ medio.fechaPublicacion || '—' }}</div>
+                  <a *ngIf="medio.url" [href]="medio.url" target="_blank" rel="noopener noreferrer">{{ medio.url }}</a>
+                  <span *ngIf="!medio.url">—</span>
+                </div>
+                <span *ngIf="!formato.mediosUtaAdicionales.length">—</span>
               </td>
             </tr>
           </tbody>

@@ -52,7 +52,7 @@
 
         <div class="publication-entry mt-4 publication-group publication-web">
           <div class="publication-heading">
-            <h6 class="mb-0">Publicación de página web 1</h6>
+            <h6 class="mb-0">PUBLICACIÓN DE PÁGINA WEB</h6>
           </div>
           <div class="publication-frame">
           <div class="row g-3 mb-3">
@@ -179,7 +179,7 @@
         <button class="btn btn-institucional mt-3 publication-group publication-web" type="button" (click)="agregarPaginaWeb()">Agregar otra publicación de página web</button>
 
         <div class="publication-entry mt-4 publication-group publication-videos">
-          <div class="publication-heading"><h6 class="mb-0">Publicación de videos 1</h6></div>
+          <div class="publication-heading"><h6 class="mb-0">PUBLICACIÓN DE VIDEOS</h6></div>
           <div class="publication-frame">
           <div class="row g-3 mb-3">
             <div class="col-md-6">
@@ -193,11 +193,7 @@
             </div>
           </div>
           <div class="row g-3">
-            <div class="col-md-4">
-              <span class="form-label fw-bold d-block">Televisión</span>
-              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="televisionSi" [checked]="formato13.television === 'SI'" (change)="seleccionarOpcionVideo('television', 'SI', $event)"><label class="form-check-label" for="televisionSi">Sí</label></div>
-              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="televisionNo" [checked]="formato13.television === 'NO'" (change)="seleccionarOpcionVideo('television', 'NO', $event)"><label class="form-check-label" for="televisionNo">No</label></div>
-            </div>
+            
             <div class="col-md-4">
               <span class="form-label fw-bold d-block">Video 45s</span>
               <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="video45sVivencial" [checked]="formato13.video45s === 'VIVENCIAL'" (change)="seleccionarTipoVideo45s('VIVENCIAL', $event)"><label class="form-check-label" for="video45sVivencial">Vivencial</label></div>
@@ -236,11 +232,7 @@
             </div>
           </div>
           <div class="row g-3">
-            <div class="col-md-4">
-              <span class="form-label fw-bold d-block">Televisión</span>
-              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.television === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'television', 'SI', $event)"><label class="form-check-label">Sí</label></div>
-              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.television === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'television', 'NO', $event)"><label class="form-check-label">No</label></div>
-            </div>
+            
             <div class="col-md-4">
               <span class="form-label fw-bold d-block">Video 45s</span>
               <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.video45s === 'VIVENCIAL'" (change)="seleccionarVideo45sAdicional(publicacion, 'VIVENCIAL', $event)"><label class="form-check-label">Vivencial</label></div>
@@ -260,7 +252,7 @@
         <button class="btn btn-institucional mt-3 publication-group publication-videos" type="button" (click)="agregarVideo()">Agregar otra publicación de videos</button>
 
         <div class="publication-entry mt-4 publication-group publication-social">
-          <div class="publication-heading"><h6 class="mb-0">Publicación de redes sociales 1</h6></div>
+          <div class="publication-heading"><h6 class="mb-0">PUBLICACIÓN DE REDES SOCIALES</h6></div>
           <div class="publication-frame">
           <div class="row g-3 mb-3">
             <div class="col-md-6"><label class="form-label fw-bold" for="fechaPublicacion">Fecha de publicación</label><input class="form-control" type="date" id="fechaPublicacion" name="fechaPublicacion" [(ngModel)]="formato13.fechaPublicacion" required></div>
@@ -367,6 +359,44 @@
           </div>
         </div>
         <button class="btn btn-institucional mt-3 publication-group publication-social" type="button" (click)="agregarRedSocial()">Agregar otra publicación de redes sociales</button>
+
+        <div class="publication-entry mt-4 publication-group publication-medium">
+          <div class="publication-heading">
+            <h6 class="mb-0">MEDIOS UTA</h6>
+          </div>
+          <div class="publication-frame">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold" for="medioUtaFechaPublicacion">Fecha de publicación</label>
+                <input class="form-control" type="date" id="medioUtaFechaPublicacion" name="medioUtaFechaPublicacion" [(ngModel)]="formato13.medioUtaFechaPublicacion">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold" for="medioUtaUrl">URL</label>
+                <input class="form-control" type="url" id="medioUtaUrl" name="medioUtaUrl" [(ngModel)]="formato13.medioUtaUrl" placeholder="https://">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngFor="let medio of mediosUtaAdicionales; let i = index" class="publication-entry mt-3 publication-group publication-medium">
+          <div class="publication-heading d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">MEDIO UTA {{ i + 2 }}</h6>
+            <button class="btn btn-institucional btn-sm" type="button" (click)="eliminarMedioUta(i)">Quitar</button>
+          </div>
+          <div class="publication-frame">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold" [for]="'medioUtaFechaAdicional' + i">Fecha de publicación</label>
+                <input class="form-control" type="date" [id]="'medioUtaFechaAdicional' + i" [name]="'medioUtaFechaAdicional' + i" [(ngModel)]="medio.fechaPublicacion">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold" [for]="'medioUtaUrlAdicional' + i">URL</label>
+                <input class="form-control" type="url" [id]="'medioUtaUrlAdicional' + i" [name]="'medioUtaUrlAdicional' + i" [(ngModel)]="medio.url" placeholder="https://">
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-institucional mt-3 publication-group publication-medium" type="button" (click)="agregarMedioUta()">Agregar otro Medio UTA</button>
 
         <div class="text-end form-actions">
           <button class="btn btn-institucional" type="submit" [disabled]="guardando">

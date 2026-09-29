@@ -24,12 +24,17 @@ form {
   order: 3;
 }
 
-.form-actions {
+.publication-medium {
   order: 4;
 }
 
+.form-actions {
+  order: 5;
+  margin-top: 24px;
+}
+
 .publication-group.btn {
-  align-self: flex-start;
+  align-self: flex-end;
 }
 
 .publication-heading {

@@ -4489,7 +4489,10 @@ public function insertFormato13($datos)
             formato13_video_url_red_social,
             formato13_pagina_web_adicionales,
             formato13_red_social_adicionales,
-            formato13_video_adicionales
+            formato13_video_adicionales,
+            formato13_medio_uta_fecha_publicacion,
+            formato13_medio_uta_url,
+            formato13_medio_uta_adicionales
         ) VALUES (
             :linea_grafica,
             :alianza_convenio,
@@ -4522,7 +4525,10 @@ public function insertFormato13($datos)
             :video_url_red_social,
             :pagina_web_adicionales,
             :red_social_adicionales,
-            :video_adicionales
+            :video_adicionales,
+            :medio_uta_fecha_publicacion,
+            :medio_uta_url,
+            :medio_uta_adicionales
         )");
         $dbc->bind(':linea_grafica', $datos->lineaGraficaInstitucional);
         $dbc->bind(':alianza_convenio', $datos->alianzaConvenio);
@@ -4556,6 +4562,9 @@ public function insertFormato13($datos)
         $dbc->bind(':pagina_web_adicionales', json_encode(isset($datos->publicacionesPaginaWeb) && is_array($datos->publicacionesPaginaWeb) ? $datos->publicacionesPaginaWeb : array(), JSON_UNESCAPED_UNICODE));
         $dbc->bind(':red_social_adicionales', json_encode(isset($datos->publicacionesRedSocial) && is_array($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array(), JSON_UNESCAPED_UNICODE));
         $dbc->bind(':video_adicionales', json_encode(isset($datos->publicacionesVideo) && is_array($datos->publicacionesVideo) ? $datos->publicacionesVideo : array(), JSON_UNESCAPED_UNICODE));
+        $dbc->bind(':medio_uta_fecha_publicacion', isset($datos->medioUtaFechaPublicacion) && $datos->medioUtaFechaPublicacion !== '' ? $datos->medioUtaFechaPublicacion : null);
+        $dbc->bind(':medio_uta_url', isset($datos->medioUtaUrl) && $datos->medioUtaUrl !== '' ? $datos->medioUtaUrl : null);
+        $dbc->bind(':medio_uta_adicionales', json_encode(isset($datos->mediosUtaAdicionales) && is_array($datos->mediosUtaAdicionales) ? $datos->mediosUtaAdicionales : array(), JSON_UNESCAPED_UNICODE));
         $dbc->execute();
 
         $codigo = $dbc->lastInsertId();

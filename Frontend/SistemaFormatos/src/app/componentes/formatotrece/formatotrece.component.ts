@@ -42,6 +42,11 @@ interface PublicacionVideoAdicional {
   urlRedSocial: string;
 }
 
+interface MedioUtaAdicional {
+  fechaPublicacion: string;
+  url: string;
+}
+
 @Component({
   selector: 'app-formatotrece',
   templateUrl: './formatotrece.component.html',
@@ -54,6 +59,8 @@ export class FormatotreceComponent {
     identificadores: '',
     aspectosConsiderar: '',
     otros: '',
+    medioUtaFechaPublicacion: '',
+    medioUtaUrl: '',
     paginaWebFechaPublicacion: '',
     paginaWebTipoPublicacion: '' as TipoPublicacion | '',
     paginaWebBanner: '' as RespuestaSiNo,
@@ -82,9 +89,18 @@ export class FormatotreceComponent {
   publicacionesPaginaWebAdicionales: PublicacionPaginaWebAdicional[] = [];
   publicacionesRedSocialAdicionales: PublicacionRedSocialAdicional[] = [];
   publicacionesVideoAdicionales: PublicacionVideoAdicional[] = [];
+  mediosUtaAdicionales: MedioUtaAdicional[] = [];
   guardando = false;
 
   constructor(private modulosService: ModulosService) {}
+
+  agregarMedioUta(): void {
+    this.mediosUtaAdicionales.push({ fechaPublicacion: '', url: '' });
+  }
+
+  eliminarMedioUta(indice: number): void {
+    this.mediosUtaAdicionales.splice(indice, 1);
+  }
 
   agregarPaginaWeb(): void {
     this.publicacionesPaginaWebAdicionales.push({
@@ -282,7 +298,8 @@ export class FormatotreceComponent {
       video2Min: this.formato13.video2Min || 'NO',
       publicacionesPaginaWeb,
       publicacionesRedSocial,
-      publicacionesVideo
+      publicacionesVideo,
+      mediosUtaAdicionales: this.mediosUtaAdicionales
     };
     this.modulosService.insertarFormato13({
       fx: 'insertformato13',
@@ -296,12 +313,15 @@ export class FormatotreceComponent {
           this.publicacionesPaginaWebAdicionales = [];
           this.publicacionesRedSocialAdicionales = [];
           this.publicacionesVideoAdicionales = [];
+          this.mediosUtaAdicionales = [];
           this.formato13 = {
             lineaGraficaInstitucional: '',
             alianzaConvenio: '',
             identificadores: '',
             aspectosConsiderar: '',
             otros: '',
+            medioUtaFechaPublicacion: '',
+            medioUtaUrl: '',
             paginaWebFechaPublicacion: '',
             paginaWebTipoPublicacion: '' as TipoPublicacion | '',
             paginaWebBanner: '',
