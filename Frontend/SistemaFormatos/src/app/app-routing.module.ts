@@ -14,6 +14,8 @@ import { CrearcontratoComponent } from './componentes/crearcontrato/crearcontrat
 import { VercontratoComponent } from './componentes/vercontrato/vercontrato.component';
 import { FormatoseisComponent } from './componentes/formatoseis/formatoseis.component';
 import { FormatoseisverComponent } from './componentes/formatoseisver/formatoseisver.component';
+import { FormatotreceComponent } from './componentes/formatotrece/formatotrece.component';
+import { FormatotreceverComponent } from './componentes/formatotrecever/formatotrecever.component';
 
 const routes: Routes = [
 {path:'',pathMatch:'full', redirectTo:'login'},
@@ -29,7 +31,9 @@ const routes: Routes = [
 {path:'vercontrato', component:VercontratoComponent,canActivate: [VigilanteGuard]},
 //Se agrega la ruta para el formatoseis
 {path:'formatoseis', component:FormatoseisComponent,canActivate: [VigilanteGuard]},
-{path: 'verformatoseis',component: FormatoseisverComponent,canActivate: [VigilanteGuard]}
+{path: 'verformatoseis',component: FormatoseisverComponent,canActivate: [VigilanteGuard]},
+{path: 'formatotrece', component: FormatotreceComponent, canActivate: [VigilanteGuard]},
+{path: 'verformatotrece', component: FormatotreceverComponent, canActivate: [VigilanteGuard]}
 ];
 
 

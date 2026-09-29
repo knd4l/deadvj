@@ -54,6 +54,15 @@ insertformato6(objetoopciones:any):Observable<any>{
 obtenerFormato6(objetoopciones:any):Observable<any>{
   return this.http.post<any>(this.URL,objetoopciones);
 }
+
+insertarFormato13(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
+obtenerFormatos13(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
 //Obtiene el formato 6 para generar el reporte PDF
 obtenerFormato6Reporte(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);

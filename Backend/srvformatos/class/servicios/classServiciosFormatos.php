@@ -4446,7 +4446,186 @@ public function updateformato6($d)
     }
 }
 
+public function insertFormato13($datos)
+{
+    $dbc = null;
+    $result = array();
 
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("INSERT INTO formato13 (
+            formato13_linea_grafica_institucional,
+            formato13_alianza_convenio,
+            formato13_identificadores,
+            formato13_aspectos_considerar,
+            formato13_otros,
+            formato13_pagina_web_banner,
+            formato13_pagina_web_miniatura,
+            formato13_pagina_web_zoom,
+            formato13_pagina_web_articulo,
+            formato13_pagina_web_url,
+            formato13_pagina_web_fecha_publicacion,
+            formato13_pagina_web_tipo_publicacion,
+            formato13_red_social_fecha_publicacion,
+            formato13_red_social_tipo_publicacion,
+            formato13_red_social_post,
+            formato13_red_social_post_url,
+            formato13_red_social_carrusel,
+            formato13_red_social_carrusel_url,
+            formato13_red_social_reel,
+            formato13_red_social_reel_url,
+            formato13_red_social_otro,
+            formato13_red_social_url,
+            formato13_television,
+            formato13_video_fecha_publicacion,
+            formato13_video_tipo_publicacion,
+            formato13_video_45s,
+            formato13_video_2_min,
+            formato13_video_2_min_explicacion,
+            formato13_video_url_red_social,
+            formato13_pagina_web_adicionales,
+            formato13_red_social_adicionales,
+            formato13_video_adicionales
+        ) VALUES (
+            :linea_grafica,
+            :alianza_convenio,
+            :identificadores,
+            :aspectos_considerar,
+            :otros,
+            :pagina_web_banner,
+            :pagina_web_miniatura,
+            :pagina_web_zoom,
+            :pagina_web_articulo,
+            :pagina_web_url,
+            :pagina_web_fecha_publicacion,
+            :pagina_web_tipo_publicacion,
+            :fecha_publicacion,
+            :tipo_publicacion,
+            :red_social_post,
+            :red_social_post_url,
+            :red_social_carrusel,
+            :red_social_carrusel_url,
+            :red_social_reel,
+            :red_social_reel_url,
+            :red_social_otro,
+            :red_social_url,
+            :television,
+            :video_fecha_publicacion,
+            :video_tipo_publicacion,
+            :video_45s,
+            :video_2_min,
+            :video_2_min_explicacion,
+            :video_url_red_social,
+            :pagina_web_adicionales,
+            :red_social_adicionales,
+            :video_adicionales
+        )");
+        $dbc->bind(':linea_grafica', $datos->lineaGraficaInstitucional);
+        $dbc->bind(':alianza_convenio', $datos->alianzaConvenio);
+        $dbc->bind(':identificadores', isset($datos->identificadores) ? $datos->identificadores : null);
+        $dbc->bind(':aspectos_considerar', $datos->aspectosConsiderar);
+        $dbc->bind(':otros', isset($datos->otros) ? $datos->otros : null);
+        $dbc->bind(':pagina_web_banner', isset($datos->paginaWebBanner) && $datos->paginaWebBanner === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':pagina_web_miniatura', isset($datos->paginaWebMiniatura) && $datos->paginaWebMiniatura === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':pagina_web_zoom', isset($datos->paginaWebZoom) && $datos->paginaWebZoom === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':pagina_web_articulo', isset($datos->paginaWebArticulo) && $datos->paginaWebArticulo === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':pagina_web_url', isset($datos->paginaWebUrl) && $datos->paginaWebUrl !== '' ? $datos->paginaWebUrl : null);
+        $dbc->bind(':pagina_web_fecha_publicacion', isset($datos->paginaWebFechaPublicacion) && $datos->paginaWebFechaPublicacion !== '' ? $datos->paginaWebFechaPublicacion : null);
+        $dbc->bind(':pagina_web_tipo_publicacion', isset($datos->paginaWebTipoPublicacion) && $datos->paginaWebTipoPublicacion !== '' ? $datos->paginaWebTipoPublicacion : null);
+        $dbc->bind(':fecha_publicacion', isset($datos->fechaPublicacion) && $datos->fechaPublicacion !== '' ? $datos->fechaPublicacion : null);
+        $dbc->bind(':tipo_publicacion', isset($datos->tipoPublicacion) && $datos->tipoPublicacion !== '' ? $datos->tipoPublicacion : null);
+        $dbc->bind(':red_social_post', isset($datos->redSocialPost) && $datos->redSocialPost === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':red_social_post_url', isset($datos->redSocialPostUrl) && $datos->redSocialPostUrl !== '' ? $datos->redSocialPostUrl : null);
+        $dbc->bind(':red_social_carrusel', isset($datos->redSocialCarrusel) && $datos->redSocialCarrusel === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':red_social_carrusel_url', isset($datos->redSocialCarruselUrl) && $datos->redSocialCarruselUrl !== '' ? $datos->redSocialCarruselUrl : null);
+        $dbc->bind(':red_social_reel', isset($datos->redSocialReel) && $datos->redSocialReel === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':red_social_reel_url', isset($datos->redSocialReelUrl) && $datos->redSocialReelUrl !== '' ? $datos->redSocialReelUrl : null);
+        $dbc->bind(':red_social_otro', isset($datos->otroRedSocial) && $datos->otroRedSocial !== '' ? $datos->otroRedSocial : null);
+        $dbc->bind(':red_social_url', isset($datos->urlRedSocial) && $datos->urlRedSocial !== '' ? $datos->urlRedSocial : null);
+        $dbc->bind(':television', isset($datos->television) && $datos->television === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':video_fecha_publicacion', isset($datos->videoFechaPublicacion) && $datos->videoFechaPublicacion !== '' ? $datos->videoFechaPublicacion : null);
+        $dbc->bind(':video_tipo_publicacion', isset($datos->videoTipoPublicacion) && $datos->videoTipoPublicacion !== '' ? $datos->videoTipoPublicacion : null);
+        $dbc->bind(':video_45s', isset($datos->video45s) && in_array($datos->video45s, array('VIVENCIAL', 'INFORMATIVO'), true) ? $datos->video45s : 'NO');
+        $dbc->bind(':video_2_min', isset($datos->video2Min) && $datos->video2Min === 'SI' ? 'SI' : 'NO');
+        $dbc->bind(':video_2_min_explicacion', isset($datos->video2MinExplicacion) && $datos->video2MinExplicacion !== '' ? $datos->video2MinExplicacion : null);
+        $dbc->bind(':video_url_red_social', isset($datos->videoUrlRedSocial) && $datos->videoUrlRedSocial !== '' ? $datos->videoUrlRedSocial : null);
+        $dbc->bind(':pagina_web_adicionales', json_encode(isset($datos->publicacionesPaginaWeb) && is_array($datos->publicacionesPaginaWeb) ? $datos->publicacionesPaginaWeb : array(), JSON_UNESCAPED_UNICODE));
+        $dbc->bind(':red_social_adicionales', json_encode(isset($datos->publicacionesRedSocial) && is_array($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array(), JSON_UNESCAPED_UNICODE));
+        $dbc->bind(':video_adicionales', json_encode(isset($datos->publicacionesVideo) && is_array($datos->publicacionesVideo) ? $datos->publicacionesVideo : array(), JSON_UNESCAPED_UNICODE));
+        $dbc->execute();
+
+        $codigo = $dbc->lastInsertId();
+        $result[] = array('formato13_codigo' => $codigo);
+        $this->estado = new Exception_Object(1, 'Formato 13 guardado correctamente.');
+        $this->estado->setLastID($codigo > 0 ? $codigo : -1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 13: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getFormato13()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query('SELECT * FROM formato13 ORDER BY formato13_codigo DESC');
+        $result = $dbc->resultset();
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 13: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
 
 }//fin
 

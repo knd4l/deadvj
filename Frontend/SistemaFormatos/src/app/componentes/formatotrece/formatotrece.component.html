@@ -1,0 +1,380 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional text-center">
+      <h4 class="mb-0"><b>FORMATO 13</b></h4>
+    </div>
+    <div class="card-body">
+      <form #formulario="ngForm" (ngSubmit)="guardarFormato13(formulario)" novalidate>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <tbody>
+              <tr>
+                <th scope="row">Línea gráfica institucional</th>
+                <td>
+                  <select class="form-select" name="lineaGraficaInstitucional" [(ngModel)]="formato13.lineaGraficaInstitucional" required>
+                    <option value="">Seleccionar</option>
+                    <option value="SI">Sí</option>
+                    <option value="NO">No</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Alianza/convenio</th>
+                <td>
+                  <select class="form-select" name="alianzaConvenio" [(ngModel)]="formato13.alianzaConvenio" required>
+                    <option value="">Seleccionar</option>
+                    <option value="SI">Sí</option>
+                    <option value="NO">No</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Identificadores</th>
+                <td><input class="form-control" type="text" name="identificadores" [(ngModel)]="formato13.identificadores"></td>
+              </tr>
+              <tr>
+                <th scope="row">Aspectos a considerar</th>
+                <td>
+                  <select class="form-select" name="aspectosConsiderar" [(ngModel)]="formato13.aspectosConsiderar" required>
+                    <option value="">Seleccionar</option>
+                    <option value="SI">Sí</option>
+                    <option value="NO">No</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Otros</th>
+                <td><textarea class="form-control" name="otros" [(ngModel)]="formato13.otros" rows="3"></textarea></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="publication-entry mt-4 publication-group publication-web">
+          <div class="publication-heading">
+            <h6 class="mb-0">Publicación de página web 1</h6>
+          </div>
+          <div class="publication-frame">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold" for="paginaWebFechaPublicacion">Fecha de publicación</label>
+              <input class="form-control" type="date" id="paginaWebFechaPublicacion" name="paginaWebFechaPublicacion" [(ngModel)]="formato13.paginaWebFechaPublicacion" required>
+            </div>
+            <div class="col-md-6">
+              <span class="form-label fw-bold d-block">Tipo de publicación</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="paginaWebPublicidad" [checked]="formato13.paginaWebTipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoPublicacionPaginaWeb('PUBLICIDAD', $event)">
+                <label class="form-check-label" for="paginaWebPublicidad">Publicidad</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="paginaWebInformativa" [checked]="formato13.paginaWebTipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoPublicacionPaginaWeb('INFORMATIVA', $event)">
+                <label class="form-check-label" for="paginaWebInformativa">Informativa</label>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Banner</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebBannerSi" [checked]="formato13.paginaWebBanner === 'SI'" (change)="seleccionarOpcionPaginaWeb('paginaWebBanner', 'SI', $event)"><label class="form-check-label" for="paginaWebBannerSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebBannerNo" [checked]="formato13.paginaWebBanner === 'NO'" (change)="seleccionarOpcionPaginaWeb('paginaWebBanner', 'NO', $event)"><label class="form-check-label" for="paginaWebBannerNo">No</label></div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Miniatura</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebMiniaturaSi" [checked]="formato13.paginaWebMiniatura === 'SI'" (change)="seleccionarOpcionPaginaWeb('paginaWebMiniatura', 'SI', $event)"><label class="form-check-label" for="paginaWebMiniaturaSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebMiniaturaNo" [checked]="formato13.paginaWebMiniatura === 'NO'" (change)="seleccionarOpcionPaginaWeb('paginaWebMiniatura', 'NO', $event)"><label class="form-check-label" for="paginaWebMiniaturaNo">No</label></div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Zoom</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebZoomSi" [checked]="formato13.paginaWebZoom === 'SI'" (change)="seleccionarOpcionPaginaWeb('paginaWebZoom', 'SI', $event)"><label class="form-check-label" for="paginaWebZoomSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebZoomNo" [checked]="formato13.paginaWebZoom === 'NO'" (change)="seleccionarOpcionPaginaWeb('paginaWebZoom', 'NO', $event)"><label class="form-check-label" for="paginaWebZoomNo">No</label></div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Artículo</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebArticuloSi" [checked]="formato13.paginaWebArticulo === 'SI'" (change)="seleccionarOpcionPaginaWeb('paginaWebArticulo', 'SI', $event)"><label class="form-check-label" for="paginaWebArticuloSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="paginaWebArticuloNo" [checked]="formato13.paginaWebArticulo === 'NO'" (change)="seleccionarOpcionPaginaWeb('paginaWebArticulo', 'NO', $event)"><label class="form-check-label" for="paginaWebArticuloNo">No</label></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold" for="paginaWebUrl">URL</label>
+              <input class="form-control" type="url" id="paginaWebUrl" name="paginaWebUrl" [(ngModel)]="formato13.paginaWebUrl" placeholder="https://">
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div *ngFor="let publicacion of publicacionesPaginaWebAdicionales; let i = index" class="publication-entry mt-3 publication-group publication-web">
+          <div class="publication-heading d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Publicación de página web {{ i + 2 }}</h6>
+            <button class="btn btn-institucional btn-sm" type="button" (click)="eliminarPublicacion('paginaWeb', i)">Quitar</button>
+          </div>
+          <div class="publication-frame">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Fecha de publicación</label>
+              <input class="form-control" type="date" [name]="'paginaWebFechaExtra' + i" [(ngModel)]="publicacion.fechaPublicacion" required>
+            </div>
+            <div class="col-md-6">
+              <span class="form-label fw-bold d-block">Tipo de publicación</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.tipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoAdicional(publicacion, 'PUBLICIDAD', $event)">
+                <label class="form-check-label">Publicidad</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.tipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoAdicional(publicacion, 'INFORMATIVA', $event)">
+                <label class="form-check-label">Informativa</label>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Banner</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.banner === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'banner', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.banner === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'banner', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Miniatura</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.miniatura === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'miniatura', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.miniatura === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'miniatura', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Zoom</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.zoom === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'zoom', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.zoom === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'zoom', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <span class="form-label fw-bold d-block">Artículo</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.articulo === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'articulo', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.articulo === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'articulo', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">URL</label>
+              <input class="form-control" type="url" [name]="'paginaWebUrlExtra' + i" [(ngModel)]="publicacion.url" placeholder="https://">
+            </div>
+          </div>
+          </div>
+        </div>
+        <button class="btn btn-institucional mt-3 publication-group publication-web" type="button" (click)="agregarPaginaWeb()">Agregar otra publicación de página web</button>
+
+        <div class="publication-entry mt-4 publication-group publication-videos">
+          <div class="publication-heading"><h6 class="mb-0">Publicación de videos 1</h6></div>
+          <div class="publication-frame">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold" for="videoFechaPublicacion">Fecha de publicación</label>
+              <input class="form-control" type="date" id="videoFechaPublicacion" name="videoFechaPublicacion" [(ngModel)]="formato13.videoFechaPublicacion" required>
+            </div>
+            <div class="col-md-6">
+              <span class="form-label fw-bold d-block">Tipo de publicación</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="videoPublicidad" [checked]="formato13.videoTipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoPublicacionVideo('PUBLICIDAD', $event)"><label class="form-check-label" for="videoPublicidad">Publicidad</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="videoInformativa" [checked]="formato13.videoTipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoPublicacionVideo('INFORMATIVA', $event)"><label class="form-check-label" for="videoInformativa">Informativa</label></div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Televisión</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="televisionSi" [checked]="formato13.television === 'SI'" (change)="seleccionarOpcionVideo('television', 'SI', $event)"><label class="form-check-label" for="televisionSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="televisionNo" [checked]="formato13.television === 'NO'" (change)="seleccionarOpcionVideo('television', 'NO', $event)"><label class="form-check-label" for="televisionNo">No</label></div>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Video 45s</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="video45sVivencial" [checked]="formato13.video45s === 'VIVENCIAL'" (change)="seleccionarTipoVideo45s('VIVENCIAL', $event)"><label class="form-check-label" for="video45sVivencial">Vivencial</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="video45sInformativo" [checked]="formato13.video45s === 'INFORMATIVO'" (change)="seleccionarTipoVideo45s('INFORMATIVO', $event)"><label class="form-check-label" for="video45sInformativo">Informativo</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="video45sNo" [checked]="formato13.video45s === 'NO'" (change)="seleccionarTipoVideo45s('NO', $event)"><label class="form-check-label" for="video45sNo">No</label></div>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Video 2 min</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="video2MinSi" [checked]="formato13.video2Min === 'SI'" (change)="seleccionarOpcionVideo('video2Min', 'SI', $event)"><label class="form-check-label" for="video2MinSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="video2MinNo" [checked]="formato13.video2Min === 'NO'" (change)="seleccionarOpcionVideo('video2Min', 'NO', $event)"><label class="form-check-label" for="video2MinNo">No</label></div>
+              <textarea *ngIf="formato13.video2Min === 'SI'" class="form-control mt-2" name="video2MinExplicacion" [(ngModel)]="formato13.video2MinExplicacion" rows="2" placeholder="Breve explicación del video" required></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold" for="videoUrlRedSocial">URL (red social)</label>
+              <input class="form-control" type="url" id="videoUrlRedSocial" name="videoUrlRedSocial" [(ngModel)]="formato13.videoUrlRedSocial" placeholder="https://">
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div *ngFor="let publicacion of publicacionesVideoAdicionales; let i = index" class="publication-entry mt-3 publication-group publication-videos">
+          <div class="publication-heading d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Publicación de videos {{ i + 2 }}</h6>
+            <button class="btn btn-institucional btn-sm" type="button" (click)="eliminarPublicacion('video', i)">Quitar</button>
+          </div>
+          <div class="publication-frame">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Fecha de publicación</label>
+              <input class="form-control" type="date" [name]="'videoFechaExtra' + i" [(ngModel)]="publicacion.fechaPublicacion" required>
+            </div>
+            <div class="col-md-6">
+              <span class="form-label fw-bold d-block">Tipo de publicación</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.tipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoAdicional(publicacion, 'PUBLICIDAD', $event)"><label class="form-check-label">Publicidad</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.tipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoAdicional(publicacion, 'INFORMATIVA', $event)"><label class="form-check-label">Informativa</label></div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Televisión</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.television === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'television', 'SI', $event)"><label class="form-check-label">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.television === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'television', 'NO', $event)"><label class="form-check-label">No</label></div>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Video 45s</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.video45s === 'VIVENCIAL'" (change)="seleccionarVideo45sAdicional(publicacion, 'VIVENCIAL', $event)"><label class="form-check-label">Vivencial</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.video45s === 'INFORMATIVO'" (change)="seleccionarVideo45sAdicional(publicacion, 'INFORMATIVO', $event)"><label class="form-check-label">Informativo</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.video45s === 'NO'" (change)="seleccionarVideo45sAdicional(publicacion, 'NO', $event)"><label class="form-check-label">No</label></div>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Video 2 min</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.video2Min === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'video2Min', 'SI', $event)"><label class="form-check-label">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" [checked]="publicacion.video2Min === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'video2Min', 'NO', $event)"><label class="form-check-label">No</label></div>
+              <textarea *ngIf="publicacion.video2Min === 'SI'" class="form-control mt-2" [name]="'video2MinExplicacionExtra' + i" [(ngModel)]="publicacion.video2MinExplicacion" rows="2" placeholder="Breve explicación del video" required></textarea>
+            </div>
+            <div class="col-12"><label class="form-label fw-bold">URL (red social)</label><input class="form-control" type="url" [name]="'videoUrlRedSocialExtra' + i" [(ngModel)]="publicacion.urlRedSocial" placeholder="https://"></div>
+          </div>
+          </div>
+        </div>
+        <button class="btn btn-institucional mt-3 publication-group publication-videos" type="button" (click)="agregarVideo()">Agregar otra publicación de videos</button>
+
+        <div class="publication-entry mt-4 publication-group publication-social">
+          <div class="publication-heading"><h6 class="mb-0">Publicación de redes sociales 1</h6></div>
+          <div class="publication-frame">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6"><label class="form-label fw-bold" for="fechaPublicacion">Fecha de publicación</label><input class="form-control" type="date" id="fechaPublicacion" name="fechaPublicacion" [(ngModel)]="formato13.fechaPublicacion" required></div>
+            <div class="col-md-6">
+              <span class="form-label fw-bold d-block">Tipo de publicación</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="tipoPublicidad" [checked]="formato13.tipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoPublicacion('PUBLICIDAD', $event)"><label class="form-check-label" for="tipoPublicidad">Publicidad</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="tipoInformativa" [checked]="formato13.tipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoPublicacion('INFORMATIVA', $event)"><label class="form-check-label" for="tipoInformativa">Informativa</label></div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Post</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="redSocialPostSi" [checked]="formato13.redSocialPost === 'SI'" (change)="seleccionarOpcionRedSocial('redSocialPost', 'SI', $event)"><label class="form-check-label" for="redSocialPostSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="redSocialPostNo" [checked]="formato13.redSocialPost === 'NO'" (change)="seleccionarOpcionRedSocial('redSocialPost', 'NO', $event)"><label class="form-check-label" for="redSocialPostNo">No</label></div>
+              <input *ngIf="formato13.redSocialPost === 'SI'" class="form-control mt-2" type="url" name="redSocialPostUrl" [(ngModel)]="formato13.redSocialPostUrl" placeholder="Link de Facebook" required>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Carrusel</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="redSocialCarruselSi" [checked]="formato13.redSocialCarrusel === 'SI'" (change)="seleccionarOpcionRedSocial('redSocialCarrusel', 'SI', $event)"><label class="form-check-label" for="redSocialCarruselSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="redSocialCarruselNo" [checked]="formato13.redSocialCarrusel === 'NO'" (change)="seleccionarOpcionRedSocial('redSocialCarrusel', 'NO', $event)"><label class="form-check-label" for="redSocialCarruselNo">No</label></div>
+              <input *ngIf="formato13.redSocialCarrusel === 'SI'" class="form-control mt-2" type="url" name="redSocialCarruselUrl" [(ngModel)]="formato13.redSocialCarruselUrl" placeholder="Enlace del carrusel" required>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Reel</span>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="redSocialReelSi" [checked]="formato13.redSocialReel === 'SI'" (change)="seleccionarOpcionRedSocial('redSocialReel', 'SI', $event)"><label class="form-check-label" for="redSocialReelSi">Sí</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="redSocialReelNo" [checked]="formato13.redSocialReel === 'NO'" (change)="seleccionarOpcionRedSocial('redSocialReel', 'NO', $event)"><label class="form-check-label" for="redSocialReelNo">No</label></div>
+              <input *ngIf="formato13.redSocialReel === 'SI'" class="form-control mt-2" type="url" name="redSocialReelUrl" [(ngModel)]="formato13.redSocialReelUrl" placeholder="Enlace del reel" required>
+            </div>
+            <div class="col-md-6"><label class="form-label fw-bold" for="otroRedSocial">Otro</label><input class="form-control" type="text" id="otroRedSocial" name="otroRedSocial" [(ngModel)]="formato13.otroRedSocial"></div>
+            <div class="col-md-6"><label class="form-label fw-bold" for="urlRedSocial">URL (red social)</label><input class="form-control" type="url" id="urlRedSocial" name="urlRedSocial" [(ngModel)]="formato13.urlRedSocial" placeholder="https://"></div>
+          </div>
+          </div>
+        </div>
+
+        <div *ngFor="let publicacion of publicacionesRedSocialAdicionales; let i = index" class="publication-entry mt-3 publication-group publication-social">
+          <div class="publication-heading d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Publicación de redes sociales {{ i + 2 }}</h6>
+            <button class="btn btn-institucional btn-sm" type="button" (click)="eliminarPublicacion('redSocial', i)">Quitar</button>
+          </div>
+          <div class="publication-frame">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Fecha de publicación</label>
+              <input class="form-control" type="date" [name]="'redSocialFechaExtra' + i" [(ngModel)]="publicacion.fechaPublicacion" required>
+            </div>
+            <div class="col-md-6">
+              <span class="form-label fw-bold d-block">Tipo de publicación</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.tipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoAdicional(publicacion, 'PUBLICIDAD', $event)">
+                <label class="form-check-label">Publicidad</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.tipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoAdicional(publicacion, 'INFORMATIVA', $event)">
+                <label class="form-check-label">Informativa</label>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Post</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.post === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'post', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.post === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'post', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+              <input *ngIf="publicacion.post === 'SI'" class="form-control mt-2" type="url" [name]="'redSocialPostUrlExtra' + i" [(ngModel)]="publicacion.postUrl" placeholder="Enlace de Post" required>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Carrusel</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.carrusel === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'carrusel', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.carrusel === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'carrusel', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+              <input *ngIf="publicacion.carrusel === 'SI'" class="form-control mt-2" type="url" [name]="'redSocialCarruselUrlExtra' + i" [(ngModel)]="publicacion.carruselUrl" placeholder="Enlace de carrusel" required>
+            </div>
+            <div class="col-md-4">
+              <span class="form-label fw-bold d-block">Reel</span>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.reel === 'SI'" (change)="seleccionarOpcionAdicional(publicacion, 'reel', 'SI', $event)">
+                <label class="form-check-label">Sí</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" [checked]="publicacion.reel === 'NO'" (change)="seleccionarOpcionAdicional(publicacion, 'reel', 'NO', $event)">
+                <label class="form-check-label">No</label>
+              </div>
+              <input *ngIf="publicacion.reel === 'SI'" class="form-control mt-2" type="url" [name]="'redSocialReelUrlExtra' + i" [(ngModel)]="publicacion.reelUrl" placeholder="Enlace de Reel" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Otro</label>
+              <input class="form-control" type="text" [name]="'redSocialOtroExtra' + i" [(ngModel)]="publicacion.otro">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">URL (red social)</label>
+              <input class="form-control" type="url" [name]="'redSocialUrlExtra' + i" [(ngModel)]="publicacion.urlRedSocial" placeholder="https://">
+            </div>
+          </div>
+          </div>
+        </div>
+        <button class="btn btn-institucional mt-3 publication-group publication-social" type="button" (click)="agregarRedSocial()">Agregar otra publicación de redes sociales</button>
+
+        <div class="text-end form-actions">
+          <button class="btn btn-institucional" type="submit" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : 'Guardar Formato 13' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</main>

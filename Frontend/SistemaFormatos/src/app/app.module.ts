@@ -38,6 +38,8 @@ import { CrearcontratoComponent } from './componentes/crearcontrato/crearcontrat
 import { VercontratoComponent } from './componentes/vercontrato/vercontrato.component';
 import { FormatoseisComponent } from './componentes/formatoseis/formatoseis.component';
 import { FormatoseisverComponent } from './componentes/formatoseisver/formatoseisver.component';
+import { FormatotreceComponent } from './componentes/formatotrece/formatotrece.component';
+import { FormatotreceverComponent } from './componentes/formatotrecever/formatotrecever.component';
 
 
 export const msalInstance = new PublicClientApplication({
@@ -71,7 +73,9 @@ UsuariosistemaComponent,
      CrearcontratoComponent,
      VercontratoComponent,
      FormatoseisComponent,
-     FormatoseisverComponent
+    FormatoseisverComponent,
+    FormatotreceComponent,
+    FormatotreceverComponent
 
   ],
   imports: [

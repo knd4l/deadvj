@@ -1548,7 +1548,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
           fontSize:
             14,
-
+            
           alignment:
             'left',
 

@@ -1,0 +1,136 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional text-center d-flex align-items-center justify-content-between">
+      <h4 class="mb-0"><b>FORMATOS 13</b></h4>
+      <button class="btn btn-institucional btn-sm" type="button" (click)="cargarFormatos()" [disabled]="cargando">Actualizar</button>
+    </div>
+    <div class="card-body">
+      <div *ngIf="cargando" class="py-4 text-center">Cargando registros...</div>
+      <div *ngIf="!cargando && formatos.length === 0" class="py-4 text-center text-muted">No hay registros guardados.</div>
+      <div *ngIf="!cargando && formatos.length > 0" class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Fecha</th>
+              <th>Línea gráfica institucional</th>
+              <th>Alianza/convenio</th>
+              <th>Identificadores</th>
+              <th>Aspectos a considerar</th>
+              <th>Otros</th>
+              <th>Banner</th>
+              <th>Miniatura</th>
+              <th>Zoom</th>
+              <th>Artículo</th>
+              <th>URL página web</th>
+              <th>Publicaciones web adicionales</th>
+              <th>Fecha publicación web</th>
+              <th>Tipo publicación web</th>
+              <th>Fecha publicación</th>
+              <th>Tipo publicación</th>
+              <th>Post</th>
+              <th>Link post</th>
+              <th>Carrusel</th>
+              <th>Link carrusel</th>
+              <th>Reel</th>
+              <th>Link reel</th>
+              <th>Otro</th>
+              <th>URL red social</th>
+              <th>Publicaciones sociales adicionales</th>
+              <th>Televisión</th>
+              <th>Fecha publicación video</th>
+              <th>Tipo publicación video</th>
+              <th>Video 45s</th>
+              <th>Video 2 min</th>
+              <th>Explicación video</th>
+              <th>URL video</th>
+              <th>Publicaciones de video adicionales</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let formato of formatos">
+              <td>{{ formato.formato13_codigo }}</td>
+              <td>{{ formato.formato13_fecha_creacion | date:'yyyy-MM-dd HH:mm' }}</td>
+              <td>{{ formato.formato13_linea_grafica_institucional === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_alianza_convenio === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_identificadores || '—' }}</td>
+              <td>{{ formato.formato13_aspectos_considerar === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_otros || '—' }}</td>
+              <td>{{ formato.formato13_pagina_web_banner === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_pagina_web_miniatura === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_pagina_web_zoom === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_pagina_web_articulo === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_pagina_web_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_pagina_web_url">—</span>
+              </td>
+              <td>
+                <div *ngFor="let publicacion of formato.publicacionesPaginaWeb" class="border-bottom pb-2 mb-2">
+                  <div><strong>Fecha:</strong> {{ publicacion.fechaPublicacion || '—' }}</div>
+                  <div><strong>Tipo:</strong> {{ publicacion.tipoPublicacion || '—' }}</div>
+                  <div><strong>Banner/Miniatura/Zoom/Artículo:</strong> {{ publicacion.banner }}, {{ publicacion.miniatura }}, {{ publicacion.zoom }}, {{ publicacion.articulo }}</div>
+                  <a *ngIf="publicacion.url" [href]="publicacion.url" target="_blank" rel="noopener noreferrer">{{ publicacion.url }}</a>
+                </div>
+                <span *ngIf="!formato.publicacionesPaginaWeb.length">—</span>
+              </td>
+              <td>{{ formato.formato13_pagina_web_fecha_publicacion | date:'yyyy-MM-dd' }}</td>
+              <td>{{ formato.formato13_pagina_web_tipo_publicacion || '—' }}</td>
+              <td>{{ formato.formato13_red_social_fecha_publicacion | date:'yyyy-MM-dd' }}</td>
+              <td>{{ formato.formato13_red_social_tipo_publicacion || '—' }}</td>
+              <td>{{ formato.formato13_red_social_post === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_red_social_post_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_red_social_post_url">—</span>
+              </td>
+              <td>{{ formato.formato13_red_social_carrusel === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_red_social_carrusel_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_red_social_carrusel_url">—</span>
+              </td>
+              <td>{{ formato.formato13_red_social_reel === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_red_social_reel_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_red_social_reel_url">—</span>
+              </td>
+              <td>{{ formato.formato13_red_social_otro || '—' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_red_social_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_red_social_url">—</span>
+              </td>
+              <td>
+                <div *ngFor="let publicacion of formato.publicacionesRedSocial" class="border-bottom pb-2 mb-2">
+                  <div><strong>Fecha:</strong> {{ publicacion.fechaPublicacion || '—' }}</div>
+                  <div><strong>Tipo:</strong> {{ publicacion.tipoPublicacion || '—' }}</div>
+                  <div><strong>Post:</strong> {{ publicacion.post }} <strong>Carrusel:</strong> {{ publicacion.carrusel }} <strong>Reel:</strong> {{ publicacion.reel }}</div>
+                  <div *ngIf="publicacion.otro"><strong>Otro:</strong> {{ publicacion.otro }}</div>
+                  <a *ngIf="publicacion.urlRedSocial" [href]="publicacion.urlRedSocial" target="_blank" rel="noopener noreferrer">{{ publicacion.urlRedSocial }}</a>
+                </div>
+                <span *ngIf="!formato.publicacionesRedSocial.length">—</span>
+              </td>
+              <td>{{ formato.formato13_television === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_video_fecha_publicacion | date:'yyyy-MM-dd' }}</td>
+              <td>{{ formato.formato13_video_tipo_publicacion || '—' }}</td>
+              <td>{{ formato.formato13_video_45s || 'NO' }}</td>
+              <td>{{ formato.formato13_video_2_min === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_video_2_min_explicacion || '—' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_video_url_red_social as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_video_url_red_social">—</span>
+              </td>
+              <td>
+                <div *ngFor="let publicacion of formato.publicacionesVideo" class="border-bottom pb-2 mb-2">
+                  <div><strong>Fecha:</strong> {{ publicacion.fechaPublicacion || '—' }}</div>
+                  <div><strong>Tipo:</strong> {{ publicacion.tipoPublicacion || '—' }}</div>
+                  <div><strong>Televisión:</strong> {{ publicacion.television }} <strong>Video 45s:</strong> {{ publicacion.video45s }} <strong>Video 2 min:</strong> {{ publicacion.video2Min }}</div>
+                  <div *ngIf="publicacion.video2MinExplicacion">{{ publicacion.video2MinExplicacion }}</div>
+                  <a *ngIf="publicacion.urlRedSocial" [href]="publicacion.urlRedSocial" target="_blank" rel="noopener noreferrer">{{ publicacion.urlRedSocial }}</a>
+                </div>
+                <span *ngIf="!formato.publicacionesVideo.length">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,15 @@
+table {
+  min-width: 2800px;
+}
+
+th {
+  white-space: nowrap;
+}
+
+.btn-institucional,
+.btn-institucional:hover,
+.btn-institucional:focus {
+  background-color: #6c1313;
+  border-color: #6c1313;
+  color: #fff;
+}
