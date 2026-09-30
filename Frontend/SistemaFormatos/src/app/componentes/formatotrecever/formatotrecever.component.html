@@ -11,7 +11,51 @@
         <table class="table table-bordered table-striped align-middle">
           <thead>
             <tr>
+              <th>Curso</th>
+              <th>Fecha de elaboración</th>
+              <th>Modalidad</th>
+              <th>Área</th>
+              <th>Línea gráfica institucional</th>
+              <th>Alianza/convenio</th>
+              <th>Identificadores</th>
+              <th>Aspectos a considerar</th>
+              <th>Otros</th>
+              <th>Tipo de medio</th>
+              <th>Publicaciones</th>
+              <th>Reporte</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let formato of formatos">
+              <td>{{ formato.formato1_curso_definido || '—' }}</td>
+              <td>{{ formato.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
+              <td>{{ formato.formato6_modalidad || '—' }}</td>
+              <td>{{ formato.formato6_area || '—' }}</td>
+              <td>{{ formato.formato13_linea_grafica_institucional === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_alianza_convenio === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_identificadores || '—' }}</td>
+              <td>{{ formato.formato13_aspectos_considerar === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_otros || '—' }}</td>
+              <td>{{ formato.tipo_medio || '—' }}</td>
+              <td>{{ formato.publicacionesReporte.length }}</td>
+              <td>
+                <button class="btn btn-institucional btn-sm" type="button" (click)="generarReporte(formato)">
+                  <i class="fa fa-file-pdf" aria-hidden="true"></i> Ver reporte
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-container *ngIf="false">
+        <table class="table table-bordered table-striped align-middle">
+          <thead>
+            <tr>
               <th>Código</th>
+              <th>Código página web</th>
+              <th>Código redes sociales</th>
+              <th>Código videos</th>
+              <th>Código Medio UTA</th>
               <th>Fecha</th>
               <th>Línea gráfica institucional</th>
               <th>Alianza/convenio</th>
@@ -36,6 +80,11 @@
               <th>Link reel</th>
               <th>Otro</th>
               <th>URL red social</th>
+              <th>Tipo de medio</th>
+              <th>Tipo de recurso</th>
+              <th>Medios UTA</th>
+              <th>Impreso</th>
+              <th>Copias impresas</th>
               <th>Publicaciones sociales adicionales</th>
               <th>Televisión</th>
               <th>Fecha publicación video</th>
@@ -53,6 +102,10 @@
           <tbody>
             <tr *ngFor="let formato of formatos">
               <td>{{ formato.formato13_codigo }}</td>
+              <td>{{ formato.formato13_pagina_web_codigo || '—' }}</td>
+              <td>{{ formato.formato13_red_social_codigo || '—' }}</td>
+              <td>{{ formato.formato13_video_codigo || '—' }}</td>
+              <td>{{ formato.formato13_medio_uta_codigo || '—' }}</td>
               <td>{{ formato.formato13_fecha_creacion | date:'yyyy-MM-dd HH:mm' }}</td>
               <td>{{ formato.formato13_linea_grafica_institucional === 'SI' ? 'Sí' : 'No' }}</td>
               <td>{{ formato.formato13_alianza_convenio === 'SI' ? 'Sí' : 'No' }}</td>
@@ -100,10 +153,23 @@
                 <a *ngIf="formato.formato13_red_social_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
                 <span *ngIf="!formato.formato13_red_social_url">—</span>
               </td>
+              <td>{{ formato.tiposMedio.join(', ') || '—' }}</td>
+              <td>{{ formato.tiposRecurso.join(', ') || '—' }}</td>
+              <td>
+                <a *ngIf="formato.formato13_red_social_medio_uta_url as url" [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                <span *ngIf="!formato.formato13_red_social_medio_uta_url">{{ formato.formato13_red_social_medio_uta === 'SI' ? 'Sí' : '—' }}</span>
+              </td>
+              <td>{{ formato.formato13_red_social_impreso === 'SI' ? 'Sí' : 'No' }}</td>
+              <td>{{ formato.formato13_red_social_copias_impresas || '—' }}</td>
               <td>
                 <div *ngFor="let publicacion of formato.publicacionesRedSocial" class="border-bottom pb-2 mb-2">
                   <div><strong>Fecha:</strong> {{ publicacion.fechaPublicacion || '—' }}</div>
                   <div><strong>Tipo:</strong> {{ publicacion.tipoPublicacion || '—' }}</div>
+                  <div><strong>Medio:</strong> {{ publicacion.tiposMedio.join(', ') || '—' }}</div>
+                  <div><strong>Recurso:</strong> {{ publicacion.tiposRecurso.join(', ') || '—' }}</div>
+                  <div><strong>Medios UTA:</strong> {{ publicacion.medioUta === 'SI' ? 'Sí' : 'No' }}</div>
+                  <a *ngIf="publicacion.medioUtaUrl" [href]="publicacion.medioUtaUrl" target="_blank" rel="noopener noreferrer">{{ publicacion.medioUtaUrl }}</a>
+                  <div><strong>Impreso:</strong> {{ publicacion.impreso === 'SI' ? 'Sí' : 'No' }} <strong>Copias:</strong> {{ publicacion.copiasImpresas || '—' }}</div>
                   <div><strong>Post:</strong> {{ publicacion.post }} <strong>Carrusel:</strong> {{ publicacion.carrusel }} <strong>Reel:</strong> {{ publicacion.reel }}</div>
                   <div *ngIf="publicacion.otro"><strong>Otro:</strong> {{ publicacion.otro }}</div>
                   <a *ngIf="publicacion.urlRedSocial" [href]="publicacion.urlRedSocial" target="_blank" rel="noopener noreferrer">{{ publicacion.urlRedSocial }}</a>
@@ -146,6 +212,7 @@
             </tr>
           </tbody>
         </table>
+        </ng-container>
       </div>
     </div>
   </div>

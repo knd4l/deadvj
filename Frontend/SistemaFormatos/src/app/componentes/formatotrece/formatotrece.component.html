@@ -5,6 +5,37 @@
     </div>
     <div class="card-body">
       <form #formulario="ngForm" (ngSubmit)="guardarFormato13(formulario)" novalidate>
+        <div class="mb-3">
+          <label class="form-label fw-bold" for="cursoFormato6">Curso del Formato 6</label>
+          <select class="form-select" id="cursoFormato6" name="cursoFormato6" [(ngModel)]="formato6SeleccionadoCodigo" required>
+            <option [ngValue]="null">Seleccionar curso</option>
+            <option *ngFor="let curso of cursosFormato6" [ngValue]="curso.formato6_codigo">
+              {{ curso.formato6_codigo }} - {{ curso.formato1_curso_definido || 'Curso sin nombre' }}
+            </option>
+          </select>
+        </div>
+
+        <div class="table-responsive mb-4" *ngIf="cursoSeleccionado">
+          <table class="table table-bordered align-middle mb-0">
+            <tbody>
+              <tr>
+                <th scope="row">Fecha de elaboración</th>
+                <td>{{ cursoSeleccionado.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
+                <th scope="row">Código del curso</th>
+                <td>{{ cursoSeleccionado.formato6_codigo }}</td>
+                <th scope="row">Modalidad</th>
+                <td>{{ cursoSeleccionado.formato6_modalidad || '—' }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Nombre del curso</th>
+                <td colspan="2">{{ cursoSeleccionado.formato1_curso_definido || '—' }}</td>
+                <th scope="row">Área</th>
+                <td colspan="2">{{ cursoSeleccionado.formato6_area || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="table-responsive">
           <table class="table table-bordered align-middle">
             <tbody>
@@ -50,6 +81,82 @@
           </table>
         </div>
 
+        <ng-template #camposPublicacion let-publicacion let-prefijo="prefijo">
+          <div class="mb-3">
+            <label class="form-label fw-bold" [for]="prefijo + 'TipoMedio'">Tipo de medio</label>
+            <select class="form-select" [id]="prefijo + 'TipoMedio'" [name]="prefijo + 'TipoMedio'" [(ngModel)]="publicacion.tipoMedio" required>
+              <option value="">Seleccionar</option>
+              <option *ngFor="let medio of tiposMedio" [value]="medio">{{ medio }}</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold" [for]="prefijo + 'FechaPublicacion'">Fecha</label>
+            <input class="form-control" type="date" [id]="prefijo + 'FechaPublicacion'" [name]="prefijo + 'FechaPublicacion'" [(ngModel)]="publicacion.fechaPublicacion" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold" [for]="prefijo + 'UrlRedSocial'">URL</label>
+            <input class="form-control" type="url" [id]="prefijo + 'UrlRedSocial'" [name]="prefijo + 'UrlRedSocial'" [(ngModel)]="publicacion.urlRedSocial" placeholder="https://">
+          </div>
+
+          <div class="mb-3">
+            <span class="form-label fw-bold d-block">Tipo de recurso</span>
+            <div class="form-check form-check-inline" *ngFor="let recurso of tiposRecurso; let i = index">
+              <input class="form-check-input" type="checkbox" [id]="prefijo + 'TipoRecurso' + i" [checked]="publicacion.tiposRecurso.includes(recurso)" (change)="alternarSeleccionPublicacion(publicacion, recurso, $event)">
+              <label class="form-check-label" [for]="prefijo + 'TipoRecurso' + i">{{ recurso }}</label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="form-label fw-bold d-block">Tipo de publicación</span>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" [id]="prefijo + 'Informativa'" [checked]="publicacion.tipoPublicacion === 'INFORMATIVA'" (change)="seleccionarTipoPublicacionItem(publicacion, 'INFORMATIVA', $event)">
+              <label class="form-check-label" [for]="prefijo + 'Informativa'">Informativo</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" [id]="prefijo + 'Publicidad'" [checked]="publicacion.tipoPublicacion === 'PUBLICIDAD'" (change)="seleccionarTipoPublicacionItem(publicacion, 'PUBLICIDAD', $event)">
+              <label class="form-check-label" [for]="prefijo + 'Publicidad'">Publicidad</label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [id]="prefijo + 'MedioUta'" [(ngModel)]="publicacion.medioUtaSeleccionado" [name]="prefijo + 'MedioUta'">
+              <label class="form-check-label fw-bold" [for]="prefijo + 'MedioUta'">Medios UTA</label>
+            </div>
+            <input *ngIf="publicacion.medioUtaSeleccionado" class="form-control mt-2" type="url" [id]="prefijo + 'MedioUtaUrl'" [name]="prefijo + 'MedioUtaUrl'" [(ngModel)]="publicacion.medioUtaUrl" placeholder="https://" required>
+          </div>
+
+          <div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [id]="prefijo + 'Impreso'" [(ngModel)]="publicacion.impresoSeleccionado" [name]="prefijo + 'Impreso'">
+              <label class="form-check-label fw-bold" [for]="prefijo + 'Impreso'">Impreso</label>
+            </div>
+            <input *ngIf="publicacion.impresoSeleccionado" class="form-control mt-2" type="number" [id]="prefijo + 'CopiasImpresas'" [name]="prefijo + 'CopiasImpresas'" [(ngModel)]="publicacion.copiasImpresas" min="1" step="1" placeholder="Número de copias" required>
+          </div>
+        </ng-template>
+
+        <div class="publication-entry mt-4 publication-group publication-social">
+          <div class="publication-heading"><h6 class="mb-0">PUBLICACIÓN</h6></div>
+          <div class="publication-frame">
+            <ng-container *ngTemplateOutlet="camposPublicacion; context: { $implicit: formato13, prefijo: 'principal' }"></ng-container>
+          </div>
+        </div>
+
+        <div *ngFor="let publicacion of publicacionesAdicionales; let i = index" class="publication-entry mt-3 publication-group publication-social">
+          <div class="publication-heading d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Publicación {{ i + 2 }}</h6>
+            <button class="btn btn-institucional btn-sm" type="button" (click)="eliminarPublicacionAdicional(i)">Quitar</button>
+          </div>
+          <div class="publication-frame">
+            <ng-container *ngTemplateOutlet="camposPublicacion; context: { $implicit: publicacion, prefijo: 'adicional' + i }"></ng-container>
+          </div>
+        </div>
+
+        <button class="btn btn-institucional mt-3 publication-group publication-social" type="button" (click)="agregarPublicacionAdicional()">Agregar otra publicación</button>
+
+        <ng-container *ngIf="false">
         <div class="publication-entry mt-4 publication-group publication-web">
           <div class="publication-heading">
             <h6 class="mb-0">PUBLICACIÓN DE PÁGINA WEB</h6>
@@ -397,6 +504,7 @@
           </div>
         </div>
         <button class="btn btn-institucional mt-3 publication-group publication-medium" type="button" (click)="agregarMedioUta()">Agregar otro Medio UTA</button>
+        </ng-container>
 
         <div class="text-end form-actions">
           <button class="btn btn-institucional" type="submit" [disabled]="guardando">

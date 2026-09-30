@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ModulosService } from '../../servicios/modulos.service';
 import Swal from 'sweetalert2';
 
@@ -8,6 +8,17 @@ type TipoPublicacion = 'PUBLICIDAD' | 'INFORMATIVA';
 type OpcionRedSocial = 'redSocialPost' | 'redSocialCarrusel' | 'redSocialReel';
 type OpcionVideoSiNo = 'television' | 'video2Min';
 type TipoVideo45s = 'VIVENCIAL' | 'INFORMATIVO' | 'NO' | '';
+interface PublicacionUnica {
+  tipoMedio: string;
+  fechaPublicacion: string;
+  urlRedSocial: string;
+  tiposRecurso: string[];
+  tipoPublicacion: TipoPublicacion | '';
+  medioUtaSeleccionado: boolean;
+  medioUtaUrl: string;
+  impresoSeleccionado: boolean;
+  copiasImpresas: number | null;
+}
 
 interface PublicacionPaginaWebAdicional {
   fechaPublicacion: string;
@@ -52,7 +63,7 @@ interface MedioUtaAdicional {
   templateUrl: './formatotrece.component.html',
   styleUrls: ['./formatotrece.component.css']
 })
-export class FormatotreceComponent {
+export class FormatotreceComponent implements OnInit {
   formato13 = {
     lineaGraficaInstitucional: '',
     alianzaConvenio: '',
@@ -61,6 +72,11 @@ export class FormatotreceComponent {
     otros: '',
     medioUtaFechaPublicacion: '',
     medioUtaUrl: '',
+    medioUtaSeleccionado: false,
+    impresoSeleccionado: false,
+    copiasImpresas: null as number | null,
+    tipoMedio: '',
+    tiposRecurso: [] as string[],
     paginaWebFechaPublicacion: '',
     paginaWebTipoPublicacion: '' as TipoPublicacion | '',
     paginaWebBanner: '' as RespuestaSiNo,
@@ -90,9 +106,38 @@ export class FormatotreceComponent {
   publicacionesRedSocialAdicionales: PublicacionRedSocialAdicional[] = [];
   publicacionesVideoAdicionales: PublicacionVideoAdicional[] = [];
   mediosUtaAdicionales: MedioUtaAdicional[] = [];
+  publicacionesAdicionales: PublicacionUnica[] = [];
   guardando = false;
+  cursosFormato6: any[] = [];
+  formato6SeleccionadoCodigo: number | null = null;
+  tiposMedio = ['Facebook', 'WhatsApp', 'X', 'LinkedIn'];
+  tiposRecurso = ['Video', 'Imagen', 'Texto', 'URL'];
 
   constructor(private modulosService: ModulosService) {}
+
+  ngOnInit(): void {
+    this.cargarCursosFormato6();
+  }
+
+  get cursoSeleccionado(): any {
+    return this.cursosFormato6.find(
+      (curso) => Number(curso.formato6_codigo) === Number(this.formato6SeleccionadoCodigo)
+    ) || null;
+  }
+
+  cargarCursosFormato6(): void {
+    this.modulosService.obtenerFormato6({ fx: 'getformato6', d: { incluirInactivos: true } }).subscribe({
+      next: (respuesta: any) => {
+        this.cursosFormato6 = respuesta?.data?.success && Array.isArray(respuesta.data.item)
+          ? respuesta.data.item
+          : [];
+      },
+      error: () => {
+        this.cursosFormato6 = [];
+        Swal.fire('Error', 'No se pudieron cargar los cursos del Formato 6.', 'error');
+      }
+    });
+  }
 
   agregarMedioUta(): void {
     this.mediosUtaAdicionales.push({ fechaPublicacion: '', url: '' });
@@ -155,6 +200,41 @@ export class FormatotreceComponent {
     if ((evento.target as HTMLInputElement).checked) {
       publicacion.tipoPublicacion = tipo;
     }
+  }
+
+  alternarSeleccionPublicacion(publicacion: PublicacionUnica, recurso: string, evento: Event): void {
+    if ((evento.target as HTMLInputElement).checked) {
+      if (!publicacion.tiposRecurso.includes(recurso)) {
+        publicacion.tiposRecurso.push(recurso);
+      }
+      return;
+    }
+
+    publicacion.tiposRecurso = publicacion.tiposRecurso.filter((item) => item !== recurso);
+  }
+
+  seleccionarTipoPublicacionItem(publicacion: PublicacionUnica, tipo: TipoPublicacion, evento: Event): void {
+    if ((evento.target as HTMLInputElement).checked) {
+      publicacion.tipoPublicacion = tipo;
+    }
+  }
+
+  agregarPublicacionAdicional(): void {
+    this.publicacionesAdicionales.push({
+      tipoMedio: '',
+      fechaPublicacion: '',
+      urlRedSocial: '',
+      tiposRecurso: [],
+      tipoPublicacion: '',
+      medioUtaSeleccionado: false,
+      medioUtaUrl: '',
+      impresoSeleccionado: false,
+      copiasImpresas: null
+    });
+  }
+
+  eliminarPublicacionAdicional(indice: number): void {
+    this.publicacionesAdicionales.splice(indice, 1);
   }
 
   seleccionarOpcionAdicional(publicacion: any, campo: string, respuesta: RespuestaSiNo, evento: Event): void {
@@ -247,36 +327,42 @@ export class FormatotreceComponent {
       formulario.control.markAllAsTouched();
       return;
     }
-    if (!this.formato13.tipoPublicacion) {
-      Swal.fire('Dato requerido', 'Selecciona el tipo de publicación.', 'warning');
+    if (!this.formato6SeleccionadoCodigo) {
+      Swal.fire('Dato requerido', 'Selecciona un curso del Formato 6.', 'warning');
       return;
     }
-    if (!this.formato13.paginaWebTipoPublicacion || !this.formato13.videoTipoPublicacion) {
-      Swal.fire('Dato requerido', 'Selecciona el tipo de publicación para Página web y Videos.', 'warning');
+    const publicaciones = [this.formato13, ...this.publicacionesAdicionales];
+    if (publicaciones.some((publicacion) => !publicacion.tipoMedio || !publicacion.tipoPublicacion || publicacion.tiposRecurso.length === 0)) {
+      Swal.fire('Dato requerido', 'Completa el tipo de medio, tipo de recurso y tipo de publicación en cada publicación.', 'warning');
       return;
     }
-    if (
-      this.publicacionesPaginaWebAdicionales.some((item) => !item.tipoPublicacion) ||
-      this.publicacionesRedSocialAdicionales.some((item) => !item.tipoPublicacion) ||
-      this.publicacionesVideoAdicionales.some((item) => !item.tipoPublicacion)
-    ) {
-      Swal.fire('Dato requerido', 'Selecciona el tipo de publicación en cada publicación adicional.', 'warning');
+    if (publicaciones.some((publicacion) => publicacion.medioUtaSeleccionado && !publicacion.medioUtaUrl)) {
+      Swal.fire('Dato requerido', 'Ingresa la URL de Medios UTA en cada publicación que lo seleccione.', 'warning');
+      return;
+    }
+    if (publicaciones.some((publicacion) => publicacion.impresoSeleccionado && (!publicacion.copiasImpresas || publicacion.copiasImpresas < 1))) {
+      Swal.fire('Dato requerido', 'Ingresa un número de copias impresas mayor que cero en cada publicación impresa.', 'warning');
       return;
     }
 
     this.guardando = true;
+    const publicacionesRedSocial = this.publicacionesAdicionales.map((publicacion) => ({
+      fechaPublicacion: publicacion.fechaPublicacion,
+      tipoPublicacion: publicacion.tipoPublicacion,
+      urlRedSocial: publicacion.urlRedSocial,
+      tiposMedio: JSON.stringify(publicacion.tipoMedio ? [publicacion.tipoMedio] : []),
+      tiposRecurso: JSON.stringify(publicacion.tiposRecurso),
+      medioUta: publicacion.medioUtaSeleccionado ? 'SI' : 'NO',
+      medioUtaUrl: publicacion.medioUtaSeleccionado ? publicacion.medioUtaUrl : '',
+      impreso: publicacion.impresoSeleccionado ? 'SI' : 'NO',
+      copiasImpresas: publicacion.impresoSeleccionado ? publicacion.copiasImpresas : null
+    }));
     const publicacionesPaginaWeb = this.publicacionesPaginaWebAdicionales.map((item) => ({
       ...item,
       banner: item.banner || 'NO',
       miniatura: item.miniatura || 'NO',
       zoom: item.zoom || 'NO',
       articulo: item.articulo || 'NO'
-    }));
-    const publicacionesRedSocial = this.publicacionesRedSocialAdicionales.map((item) => ({
-      ...item,
-      post: item.post || 'NO',
-      carrusel: item.carrusel || 'NO',
-      reel: item.reel || 'NO'
     }));
     const publicacionesVideo = this.publicacionesVideoAdicionales.map((item) => ({
       ...item,
@@ -286,6 +372,12 @@ export class FormatotreceComponent {
     }));
     const datos = {
       ...this.formato13,
+      formato6Codigo: this.formato6SeleccionadoCodigo,
+      tiposMedio: JSON.stringify(this.formato13.tipoMedio ? [this.formato13.tipoMedio] : []),
+      tiposRecurso: JSON.stringify(this.formato13.tiposRecurso),
+      medioUta: this.formato13.medioUtaSeleccionado ? 'SI' : 'NO',
+      impreso: this.formato13.impresoSeleccionado ? 'SI' : 'NO',
+      copiasImpresas: this.formato13.impresoSeleccionado ? this.formato13.copiasImpresas : null,
       paginaWebBanner: this.formato13.paginaWebBanner || 'NO',
       paginaWebMiniatura: this.formato13.paginaWebMiniatura || 'NO',
       paginaWebZoom: this.formato13.paginaWebZoom || 'NO',
@@ -310,10 +402,12 @@ export class FormatotreceComponent {
         if (respuesta?.data?.success) {
           Swal.fire('Guardado', 'El Formato 13 se guardó correctamente.', 'success');
           formulario.resetForm();
+          this.formato6SeleccionadoCodigo = null;
           this.publicacionesPaginaWebAdicionales = [];
           this.publicacionesRedSocialAdicionales = [];
           this.publicacionesVideoAdicionales = [];
           this.mediosUtaAdicionales = [];
+          this.publicacionesAdicionales = [];
           this.formato13 = {
             lineaGraficaInstitucional: '',
             alianzaConvenio: '',
@@ -322,6 +416,11 @@ export class FormatotreceComponent {
             otros: '',
             medioUtaFechaPublicacion: '',
             medioUtaUrl: '',
+            medioUtaSeleccionado: false,
+            impresoSeleccionado: false,
+            copiasImpresas: null,
+            tipoMedio: '',
+            tiposRecurso: [],
             paginaWebFechaPublicacion: '',
             paginaWebTipoPublicacion: '' as TipoPublicacion | '',
             paginaWebBanner: '',

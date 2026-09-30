@@ -2466,18 +2466,24 @@ public function insertformato6($datos)
 
 // OBTENER FORMATOS 6
 // =====================================================
-public function getformato6(){
+public function getformato6($filtros = null){
 
     try {
 
         $result = array();
 
+        $filtroEstado = isset($filtros->incluirInactivos) && $filtros->incluirInactivos
+            ? ''
+            : "WHERE formato6_estado = 'Activo'";
+
         $get_Dataa = "
-            SELECT *
+            SELECT formato6.*,
+                formato1.formato1_curso_definido
             FROM formato6
-            WHERE formato6_estado = 'Activo'
-            ORDER BY formato6_codigo DESC
-        ";
+            LEFT JOIN formato1
+                ON formato1.formato1_codigo = formato6.formato1_codigo
+            {$filtroEstado}
+            ORDER BY formato6_codigo DESC";
 
         $dbc = $this->getInitDatabase();
 
@@ -2496,6 +2502,18 @@ public function getformato6(){
 
                     $item->formato6_codigo =
                         $row['formato6_codigo'];
+
+                    $item->formato6_fecha_elaboracion =
+                        $row['formato6_fecha_elaboracion'];
+
+                    $item->formato6_modalidad =
+                        $row['formato6_modalidad'];
+
+                    $item->formato6_area =
+                        $row['formato6_area'];
+
+                    $item->formato1_curso_definido =
+                        $row['formato1_curso_definido'];
 
                     $item->formato1_codigo =
                         $row['formato1_codigo'];
@@ -4457,6 +4475,406 @@ public function insertFormato13($datos)
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
+        $dbc->beginTransaction();
+        $publicacionesAdicionales = $this->normalizarListaPublicacionesFormato13(
+            isset($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array()
+        );
+        $dbc->query("INSERT INTO formato13 (
+            formato13_linea_grafica_institucional,
+            formato13_alianza_convenio,
+            formato13_identificadores,
+            formato13_aspectos_considerar,
+            formato13_otros,
+            formato6_codigo,
+            tipo_medio
+        ) VALUES (
+            :linea_grafica,
+            :alianza_convenio,
+            :identificadores,
+            :aspectos_considerar,
+            :otros,
+            :formato6_codigo,
+            :tipo_medio
+        )");
+        $dbc->bind(':linea_grafica', $datos->lineaGraficaInstitucional);
+        $dbc->bind(':alianza_convenio', $datos->alianzaConvenio);
+        $dbc->bind(':identificadores', $this->valorFormato13($datos, 'identificadores'));
+        $dbc->bind(':aspectos_considerar', $datos->aspectosConsiderar);
+        $dbc->bind(':otros', $this->valorFormato13($datos, 'otros'));
+        $dbc->bind(':formato6_codigo', $this->valorFormato13($datos, 'formato6Codigo'));
+        $dbc->bind(':tipo_medio', $this->valorFormato13($datos, 'tipoMedio'));
+        $dbc->execute();
+
+        $formato13Codigo = (int) $dbc->lastInsertId();
+        if ($formato13Codigo <= 0) {
+            throw new Exception('No se pudo obtener el código del Formato 13.');
+        }
+        $publicacionPrincipal = array(
+            'tipoMedio' => $this->valorFormato13($datos, 'tipoMedio'),
+            'fechaPublicacion' => $this->valorFormato13($datos, 'fechaPublicacion'),
+            'urlRedSocial' => $this->valorFormato13($datos, 'urlRedSocial'),
+            'tiposRecurso' => $this->valorFormato13($datos, 'tiposRecurso'),
+            'tipoPublicacion' => $this->valorFormato13($datos, 'tipoPublicacion'),
+            'medioUta' => $this->valorFormato13($datos, 'medioUta', 'NO'),
+            'medioUtaUrl' => $this->valorFormato13($datos, 'medioUtaUrl'),
+            'impreso' => $this->valorFormato13($datos, 'impreso', 'NO'),
+            'copiasImpresas' => $this->valorFormato13($datos, 'copiasImpresas')
+        );
+        $this->insertarPublicacionesFormato13(
+            $dbc,
+            $formato13Codigo,
+            array_merge(array($publicacionPrincipal), $publicacionesAdicionales)
+        );
+
+        $dbc->endTransaction();
+        $result[] = array('formato13_codigo' => $formato13Codigo);
+        $this->estado = new Exception_Object(1, 'Formato 13 guardado correctamente.');
+        $this->estado->setLastID($formato13Codigo);
+    } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 13: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+private function insertarPublicacionesFormato13($dbc, $formato13Codigo, $publicaciones)
+{
+    foreach ($publicaciones as $indice => $publicacion) {
+        $tiposMedio = isset($publicacion['tiposMedio']) ? $publicacion['tiposMedio'] : array();
+        if (is_string($tiposMedio)) {
+            $tiposMedio = json_decode($tiposMedio, true);
+        }
+        $tipoMedio = isset($publicacion['tipoMedio'])
+            ? $publicacion['tipoMedio']
+            : (is_array($tiposMedio) && count($tiposMedio) > 0 ? $tiposMedio[0] : null);
+        $tipoRecurso = isset($publicacion['tiposRecurso']) ? $publicacion['tiposRecurso'] : null;
+        if (is_array($tipoRecurso)) {
+            $tipoRecurso = json_encode($tipoRecurso, JSON_UNESCAPED_UNICODE);
+        }
+
+        $tipoMedioCodigo = null;
+        if ($tipoMedio !== null && $tipoMedio !== '') {
+            $dbc->query("SELECT tipo_medio_codigo
+                FROM formato13_tipo_medio
+                WHERE tipo_medio_nombre = :tipo_medio_nombre");
+            $dbc->bind(':tipo_medio_nombre', $tipoMedio);
+            $medio = $dbc->single();
+            if (!$medio) {
+                throw new Exception('El tipo de medio seleccionado no está registrado.');
+            }
+            $tipoMedioCodigo = (int) $medio['tipo_medio_codigo'];
+        }
+
+        $dbc->query("INSERT INTO formato13_publicacion (
+            formato13_codigo,
+            orden_publicacion,
+            tipo_medio_codigo,
+            tipo_medio_nombre,
+            fecha_publicacion,
+            url_publicacion,
+            tipo_recurso,
+            tipo_publicacion,
+            medio_uta,
+            medio_uta_url,
+            impreso,
+            copias_impresas
+        ) VALUES (
+            :formato13_codigo,
+            :orden_publicacion,
+            :tipo_medio_codigo,
+            :tipo_medio_nombre,
+            :fecha_publicacion,
+            :url_publicacion,
+            :tipo_recurso,
+            :tipo_publicacion,
+            :medio_uta,
+            :medio_uta_url,
+            :impreso,
+            :copias_impresas
+        )");
+        $dbc->bind(':formato13_codigo', $formato13Codigo);
+        $dbc->bind(':orden_publicacion', $indice + 1);
+        $dbc->bind(':tipo_medio_codigo', $tipoMedioCodigo);
+        $dbc->bind(':tipo_medio_nombre', $tipoMedio);
+        $dbc->bind(':fecha_publicacion', isset($publicacion['fechaPublicacion']) ? $publicacion['fechaPublicacion'] : null);
+        $dbc->bind(':url_publicacion', isset($publicacion['urlRedSocial']) ? $publicacion['urlRedSocial'] : null);
+        $dbc->bind(':tipo_recurso', $tipoRecurso);
+        $dbc->bind(':tipo_publicacion', isset($publicacion['tipoPublicacion']) ? $publicacion['tipoPublicacion'] : null);
+        $dbc->bind(':medio_uta', isset($publicacion['medioUta']) ? $publicacion['medioUta'] : 'NO');
+        $dbc->bind(':medio_uta_url', isset($publicacion['medioUtaUrl']) ? $publicacion['medioUtaUrl'] : null);
+        $dbc->bind(':impreso', isset($publicacion['impreso']) ? $publicacion['impreso'] : 'NO');
+        $dbc->bind(':copias_impresas', isset($publicacion['copiasImpresas']) ? $publicacion['copiasImpresas'] : null);
+        $dbc->execute();
+    }
+}
+
+private function insertarPublicacionesCuadroFormato13($dbc, $tabla, $formato13Codigo, $principal, $adicionales, $columnas, $valoresPredeterminados = array())
+{
+    $idPrincipal = 0;
+    $publicaciones = array_merge(array($principal), $adicionales);
+
+    foreach ($publicaciones as $indice => $publicacion) {
+        $campos = array('formato13_codigo' => $formato13Codigo);
+        foreach ($columnas as $columna => $propiedad) {
+            $valor = isset($publicacion[$propiedad]) && $publicacion[$propiedad] !== ''
+                ? $publicacion[$propiedad]
+                : (isset($valoresPredeterminados[$columna]) ? $valoresPredeterminados[$columna] : null);
+            $campos[$columna] = $valor;
+        }
+
+        $codigo = $this->insertarCuadroFormato13($dbc, $tabla, $campos);
+        if ($indice === 0) {
+            $idPrincipal = $codigo;
+        }
+    }
+
+    if ($idPrincipal <= 0) {
+        throw new Exception('No se pudo guardar la publicación principal del cuadro ' . $tabla . '.');
+    }
+
+    return $idPrincipal;
+}
+
+private function obtenerPublicacionesCuadroFormato13($dbc, $tabla, $codigoCuadro, $columnas)
+{
+    $nombresColumnas = array_merge(array('formato13_codigo', $codigoCuadro), array_keys($columnas));
+    $dbc->query('SELECT ' . implode(', ', $nombresColumnas)
+        . ' FROM ' . $tabla
+        . ' WHERE formato13_codigo IS NOT NULL'
+        . ' ORDER BY formato13_codigo, ' . $codigoCuadro);
+    $filas = $dbc->resultset();
+    $publicaciones = array();
+
+    foreach ($filas as $fila) {
+        $formato13Codigo = $fila['formato13_codigo'];
+        if (!isset($publicaciones[$formato13Codigo])) {
+            $publicaciones[$formato13Codigo] = array();
+        }
+
+        $publicacion = array('_codigoCuadro' => $fila[$codigoCuadro]);
+        foreach ($columnas as $columna => $propiedad) {
+            $publicacion[$propiedad] = $fila[$columna];
+        }
+        $publicaciones[$formato13Codigo][] = $publicacion;
+    }
+
+    return $publicaciones;
+}
+
+private function filtrarPublicacionesAdicionalesFormato13($publicaciones, $codigoPrincipal)
+{
+    $adicionales = array();
+
+    foreach ($publicaciones as $publicacion) {
+        if ((string) $publicacion['_codigoCuadro'] === (string) $codigoPrincipal) {
+            continue;
+        }
+
+        unset($publicacion['_codigoCuadro']);
+        $adicionales[] = $publicacion;
+    }
+
+    return $adicionales;
+}
+
+private function insertFormato13Legacy($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->beginTransaction();
+
+        $publicacionesPaginaWeb = $this->normalizarListaPublicacionesFormato13(
+            isset($datos->publicacionesPaginaWeb) ? $datos->publicacionesPaginaWeb : array()
+        );
+        $publicacionesRedSocial = $this->normalizarListaPublicacionesFormato13(
+            isset($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array()
+        );
+        $publicacionesVideo = $this->normalizarListaPublicacionesFormato13(
+            isset($datos->publicacionesVideo) ? $datos->publicacionesVideo : array()
+        );
+        $mediosUta = $this->normalizarListaPublicacionesFormato13(
+            isset($datos->mediosUtaAdicionales) ? $datos->mediosUtaAdicionales : array()
+        );
+
+        $paginaWebCodigo = $this->insertarCuadroFormato13($dbc, 'formato13_pagina_web', array(
+            'fecha_publicacion' => $this->valorFormato13($datos, 'paginaWebFechaPublicacion'),
+            'tipo_publicacion' => $this->valorFormato13($datos, 'paginaWebTipoPublicacion'),
+            'banner' => $this->valorFormato13($datos, 'paginaWebBanner', 'NO'),
+            'miniatura' => $this->valorFormato13($datos, 'paginaWebMiniatura', 'NO'),
+            'zoom' => $this->valorFormato13($datos, 'paginaWebZoom', 'NO'),
+            'articulo' => $this->valorFormato13($datos, 'paginaWebArticulo', 'NO'),
+            'url' => $this->valorFormato13($datos, 'paginaWebUrl'),
+            'publicaciones_adicionales' => json_encode($publicacionesPaginaWeb, JSON_UNESCAPED_UNICODE)
+        ));
+
+        $redSocialCodigo = $this->insertarCuadroFormato13($dbc, 'formato13_red_social', array(
+            'fecha_publicacion' => $this->valorFormato13($datos, 'fechaPublicacion'),
+            'tipo_publicacion' => $this->valorFormato13($datos, 'tipoPublicacion'),
+            'post' => $this->valorFormato13($datos, 'redSocialPost', 'NO'),
+            'post_url' => $this->valorFormato13($datos, 'redSocialPostUrl'),
+            'carrusel' => $this->valorFormato13($datos, 'redSocialCarrusel', 'NO'),
+            'carrusel_url' => $this->valorFormato13($datos, 'redSocialCarruselUrl'),
+            'reel' => $this->valorFormato13($datos, 'redSocialReel', 'NO'),
+            'reel_url' => $this->valorFormato13($datos, 'redSocialReelUrl'),
+            'otro' => $this->valorFormato13($datos, 'otroRedSocial'),
+            'url_red_social' => $this->valorFormato13($datos, 'urlRedSocial'),
+            'publicaciones_adicionales' => json_encode($publicacionesRedSocial, JSON_UNESCAPED_UNICODE)
+        ));
+
+        $videoCodigo = $this->insertarCuadroFormato13($dbc, 'formato13_videos', array(
+            'fecha_publicacion' => $this->valorFormato13($datos, 'videoFechaPublicacion'),
+            'tipo_publicacion' => $this->valorFormato13($datos, 'videoTipoPublicacion'),
+            'television' => $this->valorFormato13($datos, 'television', 'NO'),
+            'video_45s' => $this->valorFormato13($datos, 'video45s', 'NO'),
+            'video_2_min' => $this->valorFormato13($datos, 'video2Min', 'NO'),
+            'video_2_min_explicacion' => $this->valorFormato13($datos, 'video2MinExplicacion'),
+            'url_red_social' => $this->valorFormato13($datos, 'videoUrlRedSocial'),
+            'publicaciones_adicionales' => json_encode($publicacionesVideo, JSON_UNESCAPED_UNICODE)
+        ));
+
+        $medioUtaCodigo = $this->insertarCuadroFormato13($dbc, 'formato13_medio_uta', array(
+            'fecha_publicacion' => $this->valorFormato13($datos, 'medioUtaFechaPublicacion'),
+            'url' => $this->valorFormato13($datos, 'medioUtaUrl'),
+            'publicaciones_adicionales' => json_encode($mediosUta, JSON_UNESCAPED_UNICODE)
+        ));
+
+        $dbc->query("INSERT INTO formato13 (
+            formato13_linea_grafica_institucional,
+            formato13_alianza_convenio,
+            formato13_identificadores,
+            formato13_aspectos_considerar,
+            formato13_otros,
+            formato13_pagina_web_codigo,
+            formato13_red_social_codigo,
+            formato13_video_codigo,
+            formato13_medio_uta_codigo
+        ) VALUES (
+            :linea_grafica,
+            :alianza_convenio,
+            :identificadores,
+            :aspectos_considerar,
+            :otros,
+            :pagina_web_codigo,
+            :red_social_codigo,
+            :video_codigo,
+            :medio_uta_codigo
+        )");
+        $dbc->bind(':linea_grafica', $datos->lineaGraficaInstitucional);
+        $dbc->bind(':alianza_convenio', $datos->alianzaConvenio);
+        $dbc->bind(':identificadores', $this->valorFormato13($datos, 'identificadores'));
+        $dbc->bind(':aspectos_considerar', $datos->aspectosConsiderar);
+        $dbc->bind(':otros', $this->valorFormato13($datos, 'otros'));
+        $dbc->bind(':pagina_web_codigo', $paginaWebCodigo);
+        $dbc->bind(':red_social_codigo', $redSocialCodigo);
+        $dbc->bind(':video_codigo', $videoCodigo);
+        $dbc->bind(':medio_uta_codigo', $medioUtaCodigo);
+        $dbc->execute();
+
+        $formato13Codigo = (int) $dbc->lastInsertId();
+        if ($formato13Codigo <= 0) {
+            throw new Exception('No se pudo obtener el código del Formato 13.');
+        }
+
+        $dbc->endTransaction();
+        $result[] = array('formato13_codigo' => $formato13Codigo);
+        $this->estado = new Exception_Object(1, 'Formato 13 guardado correctamente.');
+        $this->estado->setLastID($formato13Codigo);
+    } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 13: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+private function valorFormato13($datos, $propiedad, $predeterminado = null)
+{
+    if (!isset($datos->$propiedad) || $datos->$propiedad === '') {
+        return $predeterminado;
+    }
+
+    return $datos->$propiedad;
+}
+
+private function insertarCuadroFormato13($dbc, $tabla, $campos)
+{
+    $columnas = array_keys($campos);
+    $parametros = array();
+    foreach ($columnas as $columna) {
+        $parametros[] = ':' . $columna;
+    }
+
+    $consulta = 'INSERT INTO ' . $tabla . ' (' . implode(', ', $columnas) . ') VALUES ('
+        . implode(', ', $parametros) . ')';
+    $dbc->query($consulta);
+    foreach ($campos as $columna => $valor) {
+        $dbc->bind(':' . $columna, $valor);
+    }
+    $dbc->execute();
+
+    return (int) $dbc->lastInsertId();
+}
+
+private function insertFormato13Anterior($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+        $dbc->beginTransaction();
+
         $dbc->query("INSERT INTO formato13 (
             formato13_linea_grafica_institucional,
             formato13_alianza_convenio,
@@ -4559,19 +4977,118 @@ public function insertFormato13($datos)
         $dbc->bind(':video_2_min', isset($datos->video2Min) && $datos->video2Min === 'SI' ? 'SI' : 'NO');
         $dbc->bind(':video_2_min_explicacion', isset($datos->video2MinExplicacion) && $datos->video2MinExplicacion !== '' ? $datos->video2MinExplicacion : null);
         $dbc->bind(':video_url_red_social', isset($datos->videoUrlRedSocial) && $datos->videoUrlRedSocial !== '' ? $datos->videoUrlRedSocial : null);
-        $dbc->bind(':pagina_web_adicionales', json_encode(isset($datos->publicacionesPaginaWeb) && is_array($datos->publicacionesPaginaWeb) ? $datos->publicacionesPaginaWeb : array(), JSON_UNESCAPED_UNICODE));
-        $dbc->bind(':red_social_adicionales', json_encode(isset($datos->publicacionesRedSocial) && is_array($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array(), JSON_UNESCAPED_UNICODE));
-        $dbc->bind(':video_adicionales', json_encode(isset($datos->publicacionesVideo) && is_array($datos->publicacionesVideo) ? $datos->publicacionesVideo : array(), JSON_UNESCAPED_UNICODE));
+        $dbc->bind(':pagina_web_adicionales', null);
+        $dbc->bind(':red_social_adicionales', null);
+        $dbc->bind(':video_adicionales', null);
         $dbc->bind(':medio_uta_fecha_publicacion', isset($datos->medioUtaFechaPublicacion) && $datos->medioUtaFechaPublicacion !== '' ? $datos->medioUtaFechaPublicacion : null);
         $dbc->bind(':medio_uta_url', isset($datos->medioUtaUrl) && $datos->medioUtaUrl !== '' ? $datos->medioUtaUrl : null);
-        $dbc->bind(':medio_uta_adicionales', json_encode(isset($datos->mediosUtaAdicionales) && is_array($datos->mediosUtaAdicionales) ? $datos->mediosUtaAdicionales : array(), JSON_UNESCAPED_UNICODE));
+        $dbc->bind(':medio_uta_adicionales', null);
         $dbc->execute();
 
-        $codigo = $dbc->lastInsertId();
+        $codigo = (int) $dbc->lastInsertId();
+        if ($codigo <= 0) {
+            throw new Exception('No se pudo obtener el código del Formato 13.');
+        }
+
+        $publicacionesPaginaWeb = array_merge(
+            array(array(
+                'fechaPublicacion' => isset($datos->paginaWebFechaPublicacion) ? $datos->paginaWebFechaPublicacion : null,
+                'tipoPublicacion' => isset($datos->paginaWebTipoPublicacion) ? $datos->paginaWebTipoPublicacion : null,
+                'banner' => isset($datos->paginaWebBanner) ? $datos->paginaWebBanner : null,
+                'miniatura' => isset($datos->paginaWebMiniatura) ? $datos->paginaWebMiniatura : null,
+                'zoom' => isset($datos->paginaWebZoom) ? $datos->paginaWebZoom : null,
+                'articulo' => isset($datos->paginaWebArticulo) ? $datos->paginaWebArticulo : null,
+                'url' => isset($datos->paginaWebUrl) ? $datos->paginaWebUrl : null
+            )),
+            $this->normalizarListaPublicacionesFormato13(isset($datos->publicacionesPaginaWeb) ? $datos->publicacionesPaginaWeb : array())
+        );
+
+        $publicacionesRedSocial = array_merge(
+            array(array(
+                'fechaPublicacion' => isset($datos->fechaPublicacion) ? $datos->fechaPublicacion : null,
+                'tipoPublicacion' => isset($datos->tipoPublicacion) ? $datos->tipoPublicacion : null,
+                'post' => isset($datos->redSocialPost) ? $datos->redSocialPost : null,
+                'postUrl' => isset($datos->redSocialPostUrl) ? $datos->redSocialPostUrl : null,
+                'carrusel' => isset($datos->redSocialCarrusel) ? $datos->redSocialCarrusel : null,
+                'carruselUrl' => isset($datos->redSocialCarruselUrl) ? $datos->redSocialCarruselUrl : null,
+                'reel' => isset($datos->redSocialReel) ? $datos->redSocialReel : null,
+                'reelUrl' => isset($datos->redSocialReelUrl) ? $datos->redSocialReelUrl : null,
+                'otro' => isset($datos->otroRedSocial) ? $datos->otroRedSocial : null,
+                'urlRedSocial' => isset($datos->urlRedSocial) ? $datos->urlRedSocial : null
+            )),
+            $this->normalizarListaPublicacionesFormato13(isset($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array())
+        );
+
+        $publicacionesVideo = array_merge(
+            array(array(
+                'fechaPublicacion' => isset($datos->videoFechaPublicacion) ? $datos->videoFechaPublicacion : null,
+                'tipoPublicacion' => isset($datos->videoTipoPublicacion) ? $datos->videoTipoPublicacion : null,
+                'television' => isset($datos->television) ? $datos->television : null,
+                'video45s' => isset($datos->video45s) ? $datos->video45s : null,
+                'video2Min' => isset($datos->video2Min) ? $datos->video2Min : null,
+                'video2MinExplicacion' => isset($datos->video2MinExplicacion) ? $datos->video2MinExplicacion : null,
+                'urlRedSocial' => isset($datos->videoUrlRedSocial) ? $datos->videoUrlRedSocial : null
+            )),
+            $this->normalizarListaPublicacionesFormato13(isset($datos->publicacionesVideo) ? $datos->publicacionesVideo : array())
+        );
+
+        $publicacionesMedioUta = array_merge(
+            array(array(
+                'fechaPublicacion' => isset($datos->medioUtaFechaPublicacion) ? $datos->medioUtaFechaPublicacion : null,
+                'url' => isset($datos->medioUtaUrl) ? $datos->medioUtaUrl : null
+            )),
+            $this->normalizarListaPublicacionesFormato13(isset($datos->mediosUtaAdicionales) ? $datos->mediosUtaAdicionales : array())
+        );
+
+        $this->insertarPublicacionesRelacionadasFormato13($dbc, $codigo, 'formato13_publicacion_pagina_web', $publicacionesPaginaWeb, array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'tipo_publicacion' => 'tipoPublicacion',
+            'banner' => 'banner',
+            'miniatura' => 'miniatura',
+            'zoom' => 'zoom',
+            'articulo' => 'articulo',
+            'url' => 'url'
+        ));
+        $this->insertarPublicacionesRelacionadasFormato13($dbc, $codigo, 'formato13_publicacion_red_social', $publicacionesRedSocial, array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'tipo_publicacion' => 'tipoPublicacion',
+            'post' => 'post',
+            'post_url' => 'postUrl',
+            'carrusel' => 'carrusel',
+            'carrusel_url' => 'carruselUrl',
+            'reel' => 'reel',
+            'reel_url' => 'reelUrl',
+            'otro' => 'otro',
+            'url_red_social' => 'urlRedSocial',
+            'tipos_medio' => 'tiposMedio',
+            'tipos_recurso' => 'tiposRecurso',
+            'medio_uta' => 'medioUta',
+            'medio_uta_url' => 'medioUtaUrl',
+            'impreso' => 'impreso',
+            'copias_impresas' => 'copiasImpresas'
+        ));
+        $this->insertarPublicacionesRelacionadasFormato13($dbc, $codigo, 'formato13_publicacion_video', $publicacionesVideo, array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'tipo_publicacion' => 'tipoPublicacion',
+            'television' => 'television',
+            'video_45s' => 'video45s',
+            'video_2_min' => 'video2Min',
+            'video_2_min_explicacion' => 'video2MinExplicacion',
+            'url_red_social' => 'urlRedSocial'
+        ));
+        $this->insertarPublicacionesRelacionadasFormato13($dbc, $codigo, 'formato13_publicacion_medio_uta', $publicacionesMedioUta, array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'url' => 'url'
+        ));
+
+        $dbc->endTransaction();
         $result[] = array('formato13_codigo' => $codigo);
         $this->estado = new Exception_Object(1, 'Formato 13 guardado correctamente.');
-        $this->estado->setLastID($codigo > 0 ? $codigo : -1);
+        $this->estado->setLastID($codigo);
     } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
         $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 13: ' . $e->getMessage());
         $this->estado->setLastID(-1);
     }
@@ -4596,6 +5113,79 @@ public function insertFormato13($datos)
     }
 }
 
+private function normalizarListaPublicacionesFormato13($publicaciones)
+{
+    if (!is_array($publicaciones)) {
+        return array();
+    }
+
+    $normalizadas = array();
+    foreach ($publicaciones as $publicacion) {
+        if (is_object($publicacion)) {
+            $normalizadas[] = get_object_vars($publicacion);
+        } elseif (is_array($publicacion)) {
+            $normalizadas[] = $publicacion;
+        }
+    }
+
+    return $normalizadas;
+}
+
+private function insertarPublicacionesRelacionadasFormato13($dbc, $codigo, $tabla, $publicaciones, $columnas)
+{
+    if (count($publicaciones) === 0) {
+        return;
+    }
+
+    $nombresColumnas = array_keys($columnas);
+    $parametros = array(':formato13_codigo', ':orden_publicacion');
+    foreach ($nombresColumnas as $columna) {
+        $parametros[] = ':' . $columna;
+    }
+
+    $insert = 'INSERT INTO ' . $tabla . ' (formato13_codigo, orden_publicacion, '
+        . implode(', ', $nombresColumnas) . ') VALUES (' . implode(', ', $parametros) . ')';
+
+    foreach ($publicaciones as $indice => $publicacion) {
+        $dbc->query($insert);
+        $dbc->bind(':formato13_codigo', $codigo);
+        $dbc->bind(':orden_publicacion', $indice + 1);
+        foreach ($columnas as $columna => $propiedad) {
+            $valor = isset($publicacion[$propiedad]) && $publicacion[$propiedad] !== ''
+                ? $publicacion[$propiedad]
+                : null;
+            $dbc->bind(':' . $columna, $valor);
+        }
+        $dbc->execute();
+    }
+}
+
+private function obtenerPublicacionesRelacionadasFormato13($dbc, $tabla, $columnas)
+{
+    $dbc->query('SELECT * FROM ' . $tabla . ' ORDER BY formato13_codigo, orden_publicacion');
+    $filas = $dbc->resultset();
+    $publicaciones = array();
+
+    foreach ($filas as $fila) {
+        if ((int) $fila['orden_publicacion'] === 1) {
+            continue;
+        }
+
+        $codigo = $fila['formato13_codigo'];
+        if (!isset($publicaciones[$codigo])) {
+            $publicaciones[$codigo] = array();
+        }
+
+        $publicacion = array();
+        foreach ($columnas as $columna => $propiedad) {
+            $publicacion[$propiedad] = $fila[$columna];
+        }
+        $publicaciones[$codigo][] = $publicacion;
+    }
+
+    return $publicaciones;
+}
+
 public function getFormato13()
 {
     $dbc = null;
@@ -4607,8 +5197,303 @@ public function getFormato13()
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
-        $dbc->query('SELECT * FROM formato13 ORDER BY formato13_codigo DESC');
+        $dbc->query("SELECT formato13.*,
+            formato6.formato6_fecha_elaboracion,
+            formato6.formato6_modalidad,
+            formato6.formato6_area,
+            formato1.formato1_curso_definido
+            FROM formato13
+            LEFT JOIN formato6
+                ON formato6.formato6_codigo = formato13.formato6_codigo
+            LEFT JOIN formato1
+                ON formato1.formato1_codigo = formato6.formato1_codigo
+            ORDER BY formato13.formato13_codigo DESC");
         $result = $dbc->resultset();
+
+        $dbc->query("SELECT * FROM formato13_publicacion
+            ORDER BY formato13_codigo, orden_publicacion");
+        $filasPublicaciones = $dbc->resultset();
+        $publicacionesPorFormato = array();
+        foreach ($filasPublicaciones as $fila) {
+            $codigo = $fila['formato13_codigo'];
+            if (!isset($publicacionesPorFormato[$codigo])) {
+                $publicacionesPorFormato[$codigo] = array();
+            }
+            $publicacionesPorFormato[$codigo][] = $fila;
+        }
+
+        foreach ($result as &$formato) {
+            $codigo = $formato['formato13_codigo'];
+            $filas = isset($publicacionesPorFormato[$codigo]) ? $publicacionesPorFormato[$codigo] : array();
+            $principal = count($filas) > 0 ? array_shift($filas) : array();
+
+            $formato['formato13_red_social_fecha_publicacion'] = isset($principal['fecha_publicacion']) ? $principal['fecha_publicacion'] : null;
+            $formato['formato13_red_social_tipo_publicacion'] = isset($principal['tipo_publicacion']) ? $principal['tipo_publicacion'] : null;
+            $formato['formato13_red_social_url'] = isset($principal['url_publicacion']) ? $principal['url_publicacion'] : null;
+            $formato['formato13_red_social_tipos_recurso'] = isset($principal['tipo_recurso']) ? $principal['tipo_recurso'] : null;
+            $formato['formato13_red_social_medio_uta'] = isset($principal['medio_uta']) ? $principal['medio_uta'] : 'NO';
+            $formato['formato13_red_social_medio_uta_url'] = isset($principal['medio_uta_url']) ? $principal['medio_uta_url'] : null;
+            $formato['formato13_red_social_impreso'] = isset($principal['impreso']) ? $principal['impreso'] : 'NO';
+            $formato['formato13_red_social_copias_impresas'] = isset($principal['copias_impresas']) ? $principal['copias_impresas'] : null;
+            $formato['fecha_publicacion'] = $formato['formato13_red_social_fecha_publicacion'];
+            $formato['url_publicacion'] = $formato['formato13_red_social_url'];
+            $formato['tipo_recurso'] = $formato['formato13_red_social_tipos_recurso'];
+            $formato['tipo_publicacion'] = $formato['formato13_red_social_tipo_publicacion'];
+            $formato['medio_uta'] = $formato['formato13_red_social_medio_uta'];
+            $formato['medio_uta_url'] = $formato['formato13_red_social_medio_uta_url'];
+            $formato['impreso'] = $formato['formato13_red_social_impreso'];
+            $formato['copias_impresas'] = $formato['formato13_red_social_copias_impresas'];
+
+            $publicacionesAdicionales = array();
+            foreach ($filas as $filaAdicional) {
+                $publicacionesAdicionales[] = array(
+                    'tipoMedioCodigo' => $filaAdicional['tipo_medio_codigo'],
+                    'tipoMedio' => $filaAdicional['tipo_medio_nombre'],
+                    'tiposMedio' => json_encode($filaAdicional['tipo_medio_nombre'] ? array($filaAdicional['tipo_medio_nombre']) : array(), JSON_UNESCAPED_UNICODE),
+                    'fechaPublicacion' => $filaAdicional['fecha_publicacion'],
+                    'urlRedSocial' => $filaAdicional['url_publicacion'],
+                    'tiposRecurso' => $filaAdicional['tipo_recurso'],
+                    'tipoPublicacion' => $filaAdicional['tipo_publicacion'],
+                    'medioUta' => $filaAdicional['medio_uta'],
+                    'medioUtaUrl' => $filaAdicional['medio_uta_url'],
+                    'impreso' => $filaAdicional['impreso'],
+                    'copiasImpresas' => $filaAdicional['copias_impresas']
+                );
+            }
+
+            $publicacionesLegacy = isset($principal['publicaciones_legacy'])
+                ? json_decode($principal['publicaciones_legacy'], true)
+                : array();
+            if (is_array($publicacionesLegacy)) {
+                $publicacionesAdicionales = array_merge($publicacionesAdicionales, $publicacionesLegacy);
+            }
+
+            $formato['publicacionesRedSocialRelacionadas'] = $publicacionesAdicionales;
+            $formato['publicacionesPaginaWebRelacionadas'] = array();
+            $formato['publicacionesVideoRelacionadas'] = array();
+            $formato['mediosUtaRelacionados'] = array();
+        }
+        unset($formato);
+
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 13: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+private function getFormato13Legacy()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT formato13.*,
+            pagina_web.fecha_publicacion AS _pagina_web_fecha,
+            pagina_web.tipo_publicacion AS _pagina_web_tipo,
+            pagina_web.banner AS _pagina_web_banner,
+            pagina_web.miniatura AS _pagina_web_miniatura,
+            pagina_web.zoom AS _pagina_web_zoom,
+            pagina_web.articulo AS _pagina_web_articulo,
+            pagina_web.url AS _pagina_web_url,
+            pagina_web.publicaciones_adicionales AS _pagina_web_adicionales,
+            red_social.fecha_publicacion AS _red_social_fecha,
+            red_social.tipo_publicacion AS _red_social_tipo,
+            red_social.post AS _red_social_post,
+            red_social.post_url AS _red_social_post_url,
+            red_social.carrusel AS _red_social_carrusel,
+            red_social.carrusel_url AS _red_social_carrusel_url,
+            red_social.reel AS _red_social_reel,
+            red_social.reel_url AS _red_social_reel_url,
+            red_social.otro AS _red_social_otro,
+            red_social.url_red_social AS _red_social_url,
+            red_social.tipos_medio AS _red_social_tipos_medio,
+            red_social.tipos_recurso AS _red_social_tipos_recurso,
+            red_social.medio_uta AS _red_social_medio_uta,
+            red_social.medio_uta_url AS _red_social_medio_uta_url,
+            red_social.impreso AS _red_social_impreso,
+            red_social.copias_impresas AS _red_social_copias_impresas,
+            red_social.publicaciones_adicionales AS _red_social_adicionales,
+            videos.fecha_publicacion AS _video_fecha,
+            videos.tipo_publicacion AS _video_tipo,
+            videos.television AS _video_television,
+            videos.video_45s AS _video_45s,
+            videos.video_2_min AS _video_2_min,
+            videos.video_2_min_explicacion AS _video_2_min_explicacion,
+            videos.url_red_social AS _video_url,
+            videos.publicaciones_adicionales AS _video_adicionales,
+            medio_uta.fecha_publicacion AS _medio_uta_fecha,
+            medio_uta.url AS _medio_uta_url,
+            medio_uta.publicaciones_adicionales AS _medio_uta_adicionales
+            FROM formato13
+            LEFT JOIN formato13_pagina_web AS pagina_web
+                ON pagina_web.pagina_web_codigo = formato13.formato13_pagina_web_codigo
+            LEFT JOIN formato13_red_social AS red_social
+                ON red_social.red_social_codigo = formato13.formato13_red_social_codigo
+            LEFT JOIN formato13_videos AS videos
+                ON videos.video_codigo = formato13.formato13_video_codigo
+            LEFT JOIN formato13_medio_uta AS medio_uta
+                ON medio_uta.medio_uta_codigo = formato13.formato13_medio_uta_codigo
+            ORDER BY formato13.formato13_codigo DESC");
+        $result = $dbc->resultset();
+
+        $webPorFormato = $this->obtenerPublicacionesCuadroFormato13($dbc, 'formato13_pagina_web', 'pagina_web_codigo', array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'tipo_publicacion' => 'tipoPublicacion',
+            'banner' => 'banner',
+            'miniatura' => 'miniatura',
+            'zoom' => 'zoom',
+            'articulo' => 'articulo',
+            'url' => 'url'
+        ));
+        $redesPorFormato = $this->obtenerPublicacionesCuadroFormato13($dbc, 'formato13_red_social', 'red_social_codigo', array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'tipo_publicacion' => 'tipoPublicacion',
+            'post' => 'post',
+            'post_url' => 'postUrl',
+            'carrusel' => 'carrusel',
+            'carrusel_url' => 'carruselUrl',
+            'reel' => 'reel',
+            'reel_url' => 'reelUrl',
+            'otro' => 'otro',
+            'url_red_social' => 'urlRedSocial'
+        ));
+        $videosPorFormato = $this->obtenerPublicacionesCuadroFormato13($dbc, 'formato13_videos', 'video_codigo', array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'tipo_publicacion' => 'tipoPublicacion',
+            'television' => 'television',
+            'video_45s' => 'video45s',
+            'video_2_min' => 'video2Min',
+            'video_2_min_explicacion' => 'video2MinExplicacion',
+            'url_red_social' => 'urlRedSocial'
+        ));
+        $mediosUtaPorFormato = $this->obtenerPublicacionesCuadroFormato13($dbc, 'formato13_medio_uta', 'medio_uta_codigo', array(
+            'fecha_publicacion' => 'fechaPublicacion',
+            'url' => 'url'
+        ));
+
+        foreach ($result as &$formato) {
+            $codigo = $formato['formato13_codigo'];
+            $camposCuadro = array(
+                '_pagina_web_fecha' => 'formato13_pagina_web_fecha_publicacion',
+                '_pagina_web_tipo' => 'formato13_pagina_web_tipo_publicacion',
+                '_pagina_web_banner' => 'formato13_pagina_web_banner',
+                '_pagina_web_miniatura' => 'formato13_pagina_web_miniatura',
+                '_pagina_web_zoom' => 'formato13_pagina_web_zoom',
+                '_pagina_web_articulo' => 'formato13_pagina_web_articulo',
+                '_pagina_web_url' => 'formato13_pagina_web_url',
+                '_red_social_fecha' => 'formato13_red_social_fecha_publicacion',
+                '_red_social_tipo' => 'formato13_red_social_tipo_publicacion',
+                '_red_social_post' => 'formato13_red_social_post',
+                '_red_social_post_url' => 'formato13_red_social_post_url',
+                '_red_social_carrusel' => 'formato13_red_social_carrusel',
+                '_red_social_carrusel_url' => 'formato13_red_social_carrusel_url',
+                '_red_social_reel' => 'formato13_red_social_reel',
+                '_red_social_reel_url' => 'formato13_red_social_reel_url',
+                '_red_social_otro' => 'formato13_red_social_otro',
+                '_red_social_url' => 'formato13_red_social_url',
+                '_red_social_tipos_medio' => 'formato13_red_social_tipos_medio',
+                '_red_social_tipos_recurso' => 'formato13_red_social_tipos_recurso',
+                '_red_social_medio_uta' => 'formato13_red_social_medio_uta',
+                '_red_social_medio_uta_url' => 'formato13_red_social_medio_uta_url',
+                '_red_social_impreso' => 'formato13_red_social_impreso',
+                '_red_social_copias_impresas' => 'formato13_red_social_copias_impresas',
+                '_video_fecha' => 'formato13_video_fecha_publicacion',
+                '_video_tipo' => 'formato13_video_tipo_publicacion',
+                '_video_television' => 'formato13_television',
+                '_video_45s' => 'formato13_video_45s',
+                '_video_2_min' => 'formato13_video_2_min',
+                '_video_2_min_explicacion' => 'formato13_video_2_min_explicacion',
+                '_video_url' => 'formato13_video_url_red_social',
+                '_medio_uta_fecha' => 'formato13_medio_uta_fecha_publicacion',
+                '_medio_uta_url' => 'formato13_medio_uta_url'
+            );
+            foreach ($camposCuadro as $alias => $campo) {
+                if (isset($formato[$alias])) {
+                    $formato[$campo] = $formato[$alias];
+                }
+            }
+
+            $adicionalesWeb = isset($formato['_pagina_web_adicionales'])
+                ? json_decode($formato['_pagina_web_adicionales'], true)
+                : null;
+            $adicionalesSociales = isset($formato['_red_social_adicionales'])
+                ? json_decode($formato['_red_social_adicionales'], true)
+                : null;
+            $adicionalesVideos = isset($formato['_video_adicionales'])
+                ? json_decode($formato['_video_adicionales'], true)
+                : null;
+            $adicionalesMediosUta = isset($formato['_medio_uta_adicionales'])
+                ? json_decode($formato['_medio_uta_adicionales'], true)
+                : null;
+
+            $formato['publicacionesPaginaWebRelacionadas'] = $this->filtrarPublicacionesAdicionalesFormato13(
+                isset($webPorFormato[$codigo]) ? $webPorFormato[$codigo] : array(),
+                $formato['formato13_pagina_web_codigo']
+            );
+            if (count($formato['publicacionesPaginaWebRelacionadas']) === 0 && is_array($adicionalesWeb)) {
+                $formato['publicacionesPaginaWebRelacionadas'] = $adicionalesWeb;
+            } elseif (count($formato['publicacionesPaginaWebRelacionadas']) === 0) {
+                $formato['publicacionesPaginaWebRelacionadas'] = json_decode(isset($formato['formato13_pagina_web_adicionales']) ? $formato['formato13_pagina_web_adicionales'] : '[]', true);
+            }
+
+            $formato['publicacionesRedSocialRelacionadas'] = $this->filtrarPublicacionesAdicionalesFormato13(
+                isset($redesPorFormato[$codigo]) ? $redesPorFormato[$codigo] : array(),
+                $formato['formato13_red_social_codigo']
+            );
+            if (count($formato['publicacionesRedSocialRelacionadas']) === 0 && is_array($adicionalesSociales)) {
+                $formato['publicacionesRedSocialRelacionadas'] = $adicionalesSociales;
+            } elseif (count($formato['publicacionesRedSocialRelacionadas']) === 0) {
+                $formato['publicacionesRedSocialRelacionadas'] = json_decode(isset($formato['formato13_red_social_adicionales']) ? $formato['formato13_red_social_adicionales'] : '[]', true);
+            }
+
+            $formato['publicacionesVideoRelacionadas'] = $this->filtrarPublicacionesAdicionalesFormato13(
+                isset($videosPorFormato[$codigo]) ? $videosPorFormato[$codigo] : array(),
+                $formato['formato13_video_codigo']
+            );
+            if (count($formato['publicacionesVideoRelacionadas']) === 0 && is_array($adicionalesVideos)) {
+                $formato['publicacionesVideoRelacionadas'] = $adicionalesVideos;
+            } elseif (count($formato['publicacionesVideoRelacionadas']) === 0) {
+                $formato['publicacionesVideoRelacionadas'] = json_decode(isset($formato['formato13_video_adicionales']) ? $formato['formato13_video_adicionales'] : '[]', true);
+            }
+
+            $formato['mediosUtaRelacionados'] = $this->filtrarPublicacionesAdicionalesFormato13(
+                isset($mediosUtaPorFormato[$codigo]) ? $mediosUtaPorFormato[$codigo] : array(),
+                $formato['formato13_medio_uta_codigo']
+            );
+            if (count($formato['mediosUtaRelacionados']) === 0 && is_array($adicionalesMediosUta)) {
+                $formato['mediosUtaRelacionados'] = $adicionalesMediosUta;
+            } elseif (count($formato['mediosUtaRelacionados']) === 0) {
+                $formato['mediosUtaRelacionados'] = json_decode(isset($formato['formato13_medio_uta_adicionales']) ? $formato['formato13_medio_uta_adicionales'] : '[]', true);
+            }
+        }
+        unset($formato);
+
         $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
         $this->estado->setLastID(1);
     } catch (Exception $e) {

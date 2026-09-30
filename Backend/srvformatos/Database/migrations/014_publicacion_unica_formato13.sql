@@ -1,0 +1,4 @@
+ALTER TABLE formato13
+  ADD COLUMN IF NOT EXISTS tipo_medio VARCHAR(25) NULL,
+
+
