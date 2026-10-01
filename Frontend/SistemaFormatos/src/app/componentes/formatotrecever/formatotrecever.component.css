@@ -2,6 +2,15 @@ table {
   min-width: 2800px;
 }
 
+.card-header.bg-institucional {
+  background-color: #6c1313 !important;
+  color: #fff;
+}
+
+.page-title {
+  font-size: 1.1rem;
+}
+
 th {
   white-space: nowrap;
 }

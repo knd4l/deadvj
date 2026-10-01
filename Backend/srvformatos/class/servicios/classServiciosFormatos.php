@@ -1753,6 +1753,21 @@ public function insertformato6($datos)
 
         } else {
 
+            $dbc->query("SELECT formato6_codigo
+                FROM formato6
+                WHERE formato1_codigo = :formato1_codigo
+                  AND formato6_estado = 'Activo'
+                ORDER BY formato6_codigo DESC
+                LIMIT 1");
+            $dbc->bind(':formato1_codigo', $datos->formato1_codigo);
+            $formato6Existente = $dbc->single();
+
+            if ($formato6Existente) {
+                $datos->formato6_codigo = (int) $formato6Existente['formato6_codigo'];
+                $dbc->closeAll();
+                return $this->updateformato6($datos);
+            }
+
             // =====================================================
             // INICIAR TRANSACCIÓN
             // =====================================================
@@ -2646,8 +2661,6 @@ public function getformato6PorFormato1($codigo){
                 formato6_modalidad,
                 formato6_area,
                 formato6_carga_horaria,
-                formato6_periodos,
-                formato6_horario,
                 formato6_lugar,
                 formato6_prerrequisitos,
                 formato6_tipo_certificado,
@@ -2676,15 +2689,13 @@ public function getformato6PorFormato1($codigo){
                 $codigo
             );
 
-            $dbc->execute();
-
-            $tabla = $dbc->getTabla();
+            $tabla = $dbc->resultset();
 
             // =====================================================
             // VERIFICAR SI EXISTE FORMATO 6
             // =====================================================
 
-            if ($dbc->rowCount() > 0) {
+            if (count($tabla) > 0) {
 
                 foreach ($tabla as $row) {
 
@@ -2722,12 +2733,6 @@ public function getformato6PorFormato1($codigo){
 
                     $item->formato6_carga_horaria =
                         $row['formato6_carga_horaria'];
-
-                    $item->formato6_periodos =
-                        $row['formato6_periodos'];
-
-                    $item->formato6_horario =
-                        $row['formato6_horario'];
 
                     $item->formato6_lugar =
                         $row['formato6_lugar'];

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 
+
 @Component({
   selector: 'app-formatotrecever',
   templateUrl: './formatotrecever.component.html',
@@ -18,7 +19,7 @@ export class FormatotreceverComponent implements OnInit {
   ngOnInit(): void {
     this.cargarFormatos();
   }
-
+      
   cargarFormatos(): void {
     this.cargando = true;
     this.modulosService.obtenerFormatos13({ fx: 'getformato13', d: {} }).subscribe({
@@ -146,7 +147,7 @@ export class FormatotreceverComponent implements OnInit {
             [
               { text: [{ text: 'Nro. de publicación: ', bold: true }, { text: String(indice + 1) }] },
               { text: [{ text: 'Fecha de publicación: ', bold: true }, { text: formatearFecha(publicacion.fechaPublicacion) }] },
-              { text: [{ text: 'Tipo de publicación: ', bold: true }, { text: mostrar(publicacion.tipoPublicacion) }] }
+              { text: [{ text: 'de publicación: ', bold: true }, { text: mostrar(publicacion.tipoPublicacion) }] }
             ],
             [
               { text: 'Medio', style: 'tableHeader' },
@@ -177,7 +178,7 @@ export class FormatotreceverComponent implements OnInit {
 
       const documento = {
         pageSize: 'A4',
-        pageMargins: [40, 90, 40, 78],
+        pageMargins: [40, 132, 40, 78],
         header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
         footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
         content: [
@@ -226,7 +227,7 @@ export class FormatotreceverComponent implements OnInit {
           ...(tablasPublicaciones.length ? tablasPublicaciones : [{ text: 'No hay publicaciones registradas.', italics: true }])
         ],
         styles: {
-          title: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 0, 0, 14] },
+          title: { fontSize: 12, bold: true, alignment: 'center', margin: [0, 8, 0, 14] },
           sectionTitle: { fontSize: 12, bold: true, margin: [0, 4, 0, 8] },
           tableHeader: { bold: true }
         },
