@@ -10,7 +10,7 @@
           <select class="form-select" id="cursoFormato6" name="cursoFormato6" [(ngModel)]="formato6SeleccionadoCodigo" required>
             <option [ngValue]="null">Seleccionar curso</option>
             <option *ngFor="let curso of cursosFormato6" [ngValue]="curso.formato6_codigo">
-              {{ curso.formato6_codigo }} - {{ curso.formato1_curso_definido || 'Curso sin nombre' }}
+              {{ curso.formato1_codigo_curso || 'Sin código' }} - {{ curso.formato1_curso_definido || 'Curso sin nombre' }}
             </option>
           </select>
         </div>
@@ -22,7 +22,7 @@
                 <th scope="row">Fecha de elaboración</th>
                 <td>{{ cursoSeleccionado.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
                 <th scope="row">Código del curso</th>
-                <td>{{ cursoSeleccionado.formato6_codigo }}</td>
+                <td>{{ cursoSeleccionado.formato1_codigo_curso || '—' }}</td>
                 <th scope="row">Modalidad</th>
                 <td>{{ cursoSeleccionado.formato6_modalidad || '—' }}</td>
               </tr>

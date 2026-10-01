@@ -2491,7 +2491,8 @@ public function getformato6($filtros = null){
 
         $get_Dataa = "
             SELECT formato6.*,
-                formato1.formato1_curso_definido
+                formato1.formato1_curso_definido,
+                formato1.formato1_codigo_curso
             FROM formato6
             LEFT JOIN formato1
                 ON formato1.formato1_codigo = formato6.formato1_codigo
@@ -2527,6 +2528,9 @@ public function getformato6($filtros = null){
 
                     $item->formato1_curso_definido =
                         $row['formato1_curso_definido'];
+
+                    $item->formato1_codigo_curso =
+                        $row['formato1_codigo_curso'];
 
                     $item->formato1_codigo =
                         $row['formato1_codigo'];
@@ -4475,6 +4479,19 @@ public function insertFormato13($datos)
         }
 
         $dbc->beginTransaction();
+        $formato6Codigo = $this->valorFormato13($datos, 'formato6Codigo');
+        $dbc->query("SELECT f1.formato1_codigo_curso
+            FROM formato6 f6
+            LEFT JOIN formato1 f1
+                ON f1.formato1_codigo = f6.formato1_codigo
+            WHERE f6.formato6_codigo = :formato6_codigo
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $cursoRelacionado = $dbc->single();
+        $codigoCurso = $cursoRelacionado
+            ? $cursoRelacionado['formato1_codigo_curso']
+            : null;
+
         $publicacionesAdicionales = $this->normalizarListaPublicacionesFormato13(
             isset($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array()
         );
@@ -4485,6 +4502,7 @@ public function insertFormato13($datos)
             formato13_aspectos_considerar,
             formato13_otros,
             formato6_codigo,
+            formato1_codigo_curso,
             tipo_medio
         ) VALUES (
             :linea_grafica,
@@ -4493,6 +4511,7 @@ public function insertFormato13($datos)
             :aspectos_considerar,
             :otros,
             :formato6_codigo,
+            :formato1_codigo_curso,
             :tipo_medio
         )");
         $dbc->bind(':linea_grafica', $datos->lineaGraficaInstitucional);
@@ -4500,7 +4519,8 @@ public function insertFormato13($datos)
         $dbc->bind(':identificadores', $this->valorFormato13($datos, 'identificadores'));
         $dbc->bind(':aspectos_considerar', $datos->aspectosConsiderar);
         $dbc->bind(':otros', $this->valorFormato13($datos, 'otros'));
-        $dbc->bind(':formato6_codigo', $this->valorFormato13($datos, 'formato6Codigo'));
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':formato1_codigo_curso', $codigoCurso);
         $dbc->bind(':tipo_medio', $this->valorFormato13($datos, 'tipoMedio'));
         $dbc->execute();
 
@@ -5200,8 +5220,7 @@ public function getFormato13()
             formato6.formato6_fecha_elaboracion,
             formato6.formato6_modalidad,
             formato6.formato6_area,
-            formato1.formato1_curso_definido,
-            formato1.formato1_codigo_curso
+            formato1.formato1_curso_definido
             FROM formato13
             LEFT JOIN formato6
                 ON formato6.formato6_codigo = formato13.formato6_codigo
