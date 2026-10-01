@@ -11,6 +11,7 @@
         <table class="table table-bordered table-striped align-middle">
           <thead>
             <tr>
+              <th>Código del curso</th>
               <th>Curso</th>
               <th>Fecha de elaboración</th>
               <th>Modalidad</th>
@@ -27,6 +28,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let formato of formatos">
+              <td>{{ formato.formato1_codigo_curso || '—' }}</td>
               <td>{{ formato.formato1_curso_definido || '—' }}</td>
               <td>{{ formato.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
               <td>{{ formato.formato6_modalidad || '—' }}</td>

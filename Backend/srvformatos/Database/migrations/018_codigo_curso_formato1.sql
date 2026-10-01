@@ -1,0 +1,2 @@
+ALTER TABLE formato1
+  ADD COLUMN IF NOT EXISTS formato1_codigo_curso VARCHAR(50) NULL;

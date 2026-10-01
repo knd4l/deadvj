@@ -86,9 +86,9 @@
                       <td>
                         <select class="form-control" formControlName="modalidad">
                           <option value="">Seleccionar</option>
-                          <option *ngFor="let m of modalidadcapacitacion"
-                                  [value]="m.modalidad_codigo">
-                            {{ m.modalidad_nombre }}
+                            <option *ngFor="let m of modalidadcapacitacion"
+                                [value]="m">
+                              {{ m }}
                           </option>
                         </select>
                       </td>

@@ -915,7 +915,7 @@ public function insertConsecuenciaFormato1($filtros) {
         f1.formato1_mes_ejecucion,
         f1.formato1_numero_personas,
         f1.formato1_modalidad,
-        mc.modalidad_nombre,
+        f1.formato1_modalidad AS modalidad_nombre,
         f1.formato1_carga_horaria,
         f1.formato1_instructores_tentativos,
         f1.formato1_fecha_ejecucion_desde,
@@ -935,9 +935,6 @@ public function insertConsecuenciaFormato1($filtros) {
         GROUP_CONCAT(DISTINCT cf.consecuencia_descripcion SEPARATOR ', ') AS consecuencias
 
     FROM formato1 f1
-
-    LEFT JOIN modalidad_capacitacion mc
-        ON f1.formato1_modalidad = mc.modalidad_codigo
 
     LEFT JOIN tipo_capacitacion tc
         ON f1.formato1_tipo_capacitacion = tc.tipo_capac_codigo
@@ -975,7 +972,6 @@ public function insertConsecuenciaFormato1($filtros) {
         f1.formato1_mes_ejecucion,
         f1.formato1_numero_personas,
         f1.formato1_modalidad,
-        mc.modalidad_nombre,
         f1.formato1_carga_horaria,
         f1.formato1_instructores_tentativos,
         f1.formato1_fecha_ejecucion_desde,
@@ -1171,7 +1167,7 @@ $codigo=$codigo->formato1_codigo;
 
             tc.tipo_capac_nombre,
 
-            mc.modalidad_nombre,
+            f1.formato1_modalidad AS modalidad_nombre,
 
             f1.formato1_carga_horaria,
 
@@ -1183,9 +1179,6 @@ $codigo=$codigo->formato1_codigo;
             ) AS instructores_tentativos
 
         FROM formato1 f1
-
-        LEFT JOIN modalidad_capacitacion mc
-            ON f1.formato1_modalidad = mc.modalidad_codigo
 
         LEFT JOIN tipo_capacitacion tc
             ON f1.formato1_tipo_capacitacion = tc.tipo_capac_codigo
@@ -1204,7 +1197,7 @@ $codigo=$codigo->formato1_codigo;
             f1.formato1_fecha_ejecucion_desde,
             f1.formato1_fecha_ejecucion_hasta,
             tc.tipo_capac_nombre,
-            mc.modalidad_nombre,
+            f1.formato1_modalidad,
             f1.formato1_carga_horaria,
             f1.formato1_inversion
         ";
@@ -1377,7 +1370,7 @@ public function getformato1Reporte($filtros)
                 f1.formato1_mes_ejecucion,
                 f1.formato1_numero_personas,
                 f1.formato1_modalidad,
-                mc.modalidad_nombre,
+                f1.formato1_modalidad AS modalidad_nombre,
                 f1.formato1_carga_horaria,
                 f1.formato1_instructores_tentativos,
                 f1.formato1_fecha_ejecucion,
@@ -1393,8 +1386,6 @@ public function getformato1Reporte($filtros)
                 GROUP_CONCAT(it.instructorest_nombre SEPARATOR ', ') AS instructores_tentativos,
                 GROUP_CONCAT(cf.consecuencia_descripcion SEPARATOR ', ') AS consecuencias
             FROM formato1 f1
-            LEFT JOIN modalidad_capacitacion mc
-                ON f1.formato1_modalidad = mc.modalidad_codigo
             LEFT JOIN tipo_capacitacion tc
                 ON f1.formato1_tipo_capacitacion = tc.tipo_capac_codigo
             LEFT JOIN tematicas_tentativasf1 tt
@@ -1424,7 +1415,6 @@ public function getformato1Reporte($filtros)
                 f1.formato1_mes_ejecucion,
                 f1.formato1_numero_personas,
                 f1.formato1_modalidad,
-                mc.modalidad_nombre,
                 f1.formato1_carga_horaria,
                 f1.formato1_instructores_tentativos,
                 f1.formato1_fecha_ejecucion,
@@ -1602,6 +1592,7 @@ public function insertCursoDefinido($filtros) {
         $get_Dataa = "UPDATE formato1
                       SET
                           formato1_curso_definido = :formato1_curso_definido,
+                          formato1_codigo_curso = :formato1_codigo_curso,
                           formato1_curso_definido_fecha = NOW()
                       WHERE formato1_codigo = :formato1_codigo";
 
@@ -1623,6 +1614,13 @@ public function insertCursoDefinido($filtros) {
             $dbc->bind(
                 ":formato1_curso_definido",
                 $filtros->tematica
+            );
+
+            $dbc->bind(
+                ":formato1_codigo_curso",
+                isset($filtros->codigo_curso) && trim($filtros->codigo_curso) !== ''
+                    ? trim($filtros->codigo_curso)
+                    : null
             );
 
             // Ejecuta el UPDATE
@@ -2645,10 +2643,8 @@ public function getformato6PorFormato1($codigo){
                 formato6_codigo,
                 formato1_codigo,
                 (
-                    SELECT mc.modalidad_nombre
+                    SELECT f1.formato1_modalidad
                     FROM formato1 f1
-                    LEFT JOIN modalidad_capacitacion mc
-                        ON mc.modalidad_codigo = f1.formato1_modalidad
                     WHERE f1.formato1_codigo = formato6.formato1_codigo
                     LIMIT 1
                 ) AS formato1_modalidad_nombre,
@@ -2893,10 +2889,8 @@ public function getformato6Reporte($filtros)
                     LIMIT 1
                 ) AS formato1_curso_definido,
                 (
-                    SELECT mc.modalidad_nombre
+                    SELECT f1.formato1_modalidad
                     FROM formato1 f1
-                    LEFT JOIN modalidad_capacitacion mc
-                        ON mc.modalidad_codigo = f1.formato1_modalidad
                     WHERE f1.formato1_codigo = formato6.formato1_codigo
                     LIMIT 1
                 ) AS formato1_modalidad_nombre,
@@ -5206,7 +5200,8 @@ public function getFormato13()
             formato6.formato6_fecha_elaboracion,
             formato6.formato6_modalidad,
             formato6.formato6_area,
-            formato1.formato1_curso_definido
+            formato1.formato1_curso_definido,
+            formato1.formato1_codigo_curso
             FROM formato13
             LEFT JOIN formato6
                 ON formato6.formato6_codigo = formato13.formato6_codigo

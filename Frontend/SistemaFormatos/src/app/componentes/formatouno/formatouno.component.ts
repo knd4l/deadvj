@@ -18,7 +18,7 @@ import { catchError } from 'rxjs/operators';
 })
 export class FormatounoComponent implements OnInit {
   tipocapacitacion: any = [];
-  modalidadcapacitacion: any = [];
+  modalidadcapacitacion: string[] = ['B-learning', 'E-learning'];
   ipAddress: any;
   fecha: any;
   deviceInfo : DeviceInfo;
@@ -50,7 +50,6 @@ export class FormatounoComponent implements OnInit {
   ngOnInit(): void {
     this.cargarFechaHora();
     this.cargarTipoCapacitacion();
-    this.cargarModalidadCapacitacion();
     this.getIP();
     this.formato1Form = this.fb.group({
 
@@ -518,44 +517,6 @@ export class FormatounoComponent implements OnInit {
 		    {
 				"se ejecuto bien hacer algo aqui";
         this.tipocapacitacion=dataobj.data.item;
-       // (this.facultades);
-		    }else{
-"se ejecuto mal hacer algo aqui"
-		  	}
-
-		  }, (err: HttpErrorResponse) => {
-		   	  "error general hacer algo aqui no llamo al servidor o un error grave en el servidor"
-		   if (err.error instanceof Error) {
-
-		   } else {
-
-		   }
-		  }
-		);
-  }
-
-  cargarModalidadCapacitacion(){
-
-    let data: any;
-
-		    data = {
-		    fx: 'modalidadcapacitacion',
-		    d: {},
-		    dpro: 0,
-		    dus: 0,
-		    dcx: 1
-		    };
-
-		    this.moduloService.getModalidad(data).subscribe(
-          res => {
-		    let dataobj: any;
-		    dataobj = res;
-
-
-		    if (dataobj.data.success && dataobj.data.estado > 0)
-		    {
-				"se ejecuto bien hacer algo aqui";
-        this.modalidadcapacitacion=dataobj.data.item;
        // (this.facultades);
 		    }else{
 "se ejecuto mal hacer algo aqui"

@@ -191,7 +191,7 @@ export class FormatotreceverComponent implements OnInit {
                   { text: 'Fecha elaboración', style: 'tableHeader' },
                   { text: formatearFecha(formato.formato6_fecha_elaboracion) },
                   { text: 'Código curso', style: 'tableHeader' },
-                  { text: mostrar(formato.formato6_codigo) },
+                  { text: mostrar(formato.formato1_codigo_curso) },
                   { text: 'Modalidad', style: 'tableHeader' },
                   { text: mostrar(formato.formato6_modalidad) }
                 ],

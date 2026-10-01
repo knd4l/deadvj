@@ -6,8 +6,6 @@ import Swal from 'sweetalert2';
 import { ModulosService } from '../../servicios/modulos.service';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
 (pdfMake as any).vfs = (pdfFonts as any).vfs;
 
@@ -25,6 +23,7 @@ export class FormatounoverComponent implements OnInit {
   tematicasSeleccionadas: any[] = []; //Para almacenar las temáticas seleccionadas
   tematicaSeleccionada: string = '';// Temática que el usuario seleccionó de la lista.
   tematicaNuevaEditada: string = '';// Temática que el usuario puede modificar en el input.
+  codigoCursoDefinido: string = '';
   formatoIdSeleccionado: number;// Código del formato que estamos editando.
   cursoDefinidoGuardado: boolean = false;// Indica si el curso ya fue guardado correctamente.
 
@@ -254,6 +253,7 @@ export class FormatounoverComponent implements OnInit {
 
   this.tematicaSeleccionada = '';
   this.tematicaNuevaEditada = '';
+  this.codigoCursoDefinido = '';
   this.cursoDefinidoGuardado = false;
 }
 
@@ -266,6 +266,7 @@ guardarTematicaFinal() {
   if (!this.formatoIdSeleccionado) {
 
     console.error('No se ha seleccionado un formato.');
+    Swal.fire('Error', 'Seleccione un Formato 1 antes de guardar el curso.', 'error');
 
     return;
   }
@@ -275,12 +276,14 @@ guardarTematicaFinal() {
       !this.tematicaNuevaEditada.trim()) {
 
     console.error('Debe ingresar una temática.');
+    Swal.fire('Campo requerido', 'Ingrese el nombre del curso antes de guardar.', 'warning');
 
     return;
   }
 
   // Guardamos la temática editada.
   const cursoNombre = this.tematicaNuevaEditada.trim();
+  const codigoCurso = this.codigoCursoDefinido.trim();
 
   console.log(
     'Guardando curso:',
@@ -294,7 +297,8 @@ guardarTematicaFinal() {
 
   this.guardarCursoDefinido(
     cursoNombre,
-    this.formatoIdSeleccionado
+    this.formatoIdSeleccionado,
+    codigoCurso
   ).subscribe({
 
     next: (respuesta: any) => {
@@ -336,6 +340,11 @@ guardarTematicaFinal() {
           'No se pudo guardar:',
           respuesta?.data?.message
         );
+        Swal.fire(
+          'No se pudo guardar',
+          respuesta?.data?.message || 'Revise la conexión y confirme que se haya ejecutado la migración 018_codigo_curso_formato1.sql.',
+          'error'
+        );
 
       }
 
@@ -347,6 +356,7 @@ guardarTematicaFinal() {
         'Error al guardar:',
         error
       );
+      Swal.fire('Error de conexión', 'No se pudo guardar el curso. Revise la conexión con el servidor y vuelva a intentarlo.', 'error');
 
     }
 
@@ -369,7 +379,7 @@ guardarTematicaFinal() {
   console.log('TEMÁTICA SELECCIONADA:', tematica);
 }
 
-guardarCursoDefinido(cursoNombre: string, codigoF1: number) {
+guardarCursoDefinido(cursoNombre: string, codigoF1: number, codigoCurso: string) {
 
   // Datos que serán enviados al backend.
   const data = {
@@ -380,7 +390,8 @@ guardarCursoDefinido(cursoNombre: string, codigoF1: number) {
     // Datos específicos del curso.
     d: {
       formato1_id: codigoF1,
-      tematica: cursoNombre
+      tematica: cursoNombre,
+      codigo_curso: codigoCurso
     },
 
     // Datos adicionales utilizados por el sistema.
@@ -393,22 +404,7 @@ guardarCursoDefinido(cursoNombre: string, codigoF1: number) {
   console.log('Datos a guardar:', data);
 
   // Enviamos la información al backend.
-  return this.modulosService
-    .insertarCursoDefinido(data)
-    .pipe(
-
-      catchError((err: any) => {
-
-        console.error(
-          'Error al guardar curso definido:',
-          err
-        );
-
-        return of(null);
-
-      })
-
-    );
+  return this.modulosService.insertarCursoDefinido(data);
 }
 
 
