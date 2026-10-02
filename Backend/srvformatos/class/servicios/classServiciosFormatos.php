@@ -4467,6 +4467,105 @@ public function updateformato6($d)
     }
 }
 
+public function insertFormato5($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $cedula = isset($datos->cedula) ? trim((string) $datos->cedula) : '';
+        $nombres = isset($datos->nombres) ? trim((string) $datos->nombres) : '';
+        $apellidos = isset($datos->apellidos) ? trim((string) $datos->apellidos) : '';
+        $camposNumericos = array('dominioTematica', 'dominioAula', 'habilidadesBlandas', 'notaEntrevista');
+
+        if ($formato6Codigo <= 0 || $cedula === '' || $nombres === '' || $apellidos === '') {
+            throw new Exception('Completa el curso, la cédula, los nombres y los apellidos.');
+        }
+        foreach ($camposNumericos as $campo) {
+            if (!isset($datos->$campo) || !is_numeric($datos->$campo)) {
+                throw new Exception('Los puntajes deben ser valores numéricos.');
+            }
+        }
+
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT f1.formato1_codigo
+            FROM formato6 f6
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
+            WHERE f6.formato6_codigo = :formato6_codigo
+              AND f6.formato6_estado = 'Activo'
+              AND f1.formato1_curso_definido IS NOT NULL
+              AND TRIM(f1.formato1_curso_definido) <> ''
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if (!$dbc->single()) {
+            throw new Exception('El curso seleccionado no está disponible.');
+        }
+
+        $dbc->query("INSERT INTO formato5 (
+            formato6_codigo,
+            formato5_cedula,
+            formato5_nombres,
+            formato5_apellidos,
+            formato5_dominio_tematica,
+            formato5_dominio_aula,
+            formato5_habilidades_blandas,
+            formato5_nota_entrevista,
+            formato5_observaciones
+        ) VALUES (
+            :formato6_codigo,
+            :cedula,
+            :nombres,
+            :apellidos,
+            :dominio_tematica,
+            :dominio_aula,
+            :habilidades_blandas,
+            :nota_entrevista,
+            :observaciones
+        )");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':cedula', $cedula);
+        $dbc->bind(':nombres', $nombres);
+        $dbc->bind(':apellidos', $apellidos);
+        $dbc->bind(':dominio_tematica', $datos->dominioTematica);
+        $dbc->bind(':dominio_aula', $datos->dominioAula);
+        $dbc->bind(':habilidades_blandas', $datos->habilidadesBlandas);
+        $dbc->bind(':nota_entrevista', $datos->notaEntrevista);
+        $dbc->bind(':observaciones', isset($datos->observaciones) ? trim((string) $datos->observaciones) : '');
+        $dbc->execute();
+
+        $formato5Codigo = (int) $dbc->lastInsertId();
+        $result[] = array('formato5_codigo' => $formato5Codigo);
+        $this->estado = new Exception_Object(1, 'Formato 5 guardado correctamente.');
+        $this->estado->setLastID($formato5Codigo);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 5: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
 public function insertFormato13($datos)
 {
     $dbc = null;

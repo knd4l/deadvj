@@ -40,6 +40,7 @@ import { FormatoseisComponent } from './componentes/formatoseis/formatoseis.comp
 import { FormatoseisverComponent } from './componentes/formatoseisver/formatoseisver.component';
 import { FormatotreceComponent } from './componentes/formatotrece/formatotrece.component';
 import { FormatotreceverComponent } from './componentes/formatotrecever/formatotrecever.component';
+import { FormatocincoComponent } from './componentes/formatocinco/formatocinco.component';
 
 
 export const msalInstance = new PublicClientApplication({
@@ -75,7 +76,8 @@ UsuariosistemaComponent,
      FormatoseisComponent,
     FormatoseisverComponent,
     FormatotreceComponent,
-    FormatotreceverComponent
+    FormatotreceverComponent,
+    FormatocincoComponent
 
   ],
   imports: [

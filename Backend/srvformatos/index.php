@@ -98,6 +98,7 @@ if ($view == "no identificado" || $view == "none") {
 		'updateformato6'=>true,
 		'insertformato13'=>true,
 		'getformato13'=>true,
+		'insertformato5'=>true,
 
 		
 	);

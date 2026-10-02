@@ -1,0 +1,17 @@
+.card-header.bg-institucional {
+  background-color: #6c1313 !important;
+  color: #fff;
+}
+
+.form-control,
+.form-select {
+  min-height: 42px;
+}
+
+.btn-institucional,
+.btn-institucional:hover,
+.btn-institucional:focus {
+  background-color: #6c1313;
+  border-color: #6c1313;
+  color: #fff;
+}

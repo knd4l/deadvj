@@ -1,0 +1,61 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional text-center">
+      <h4 class="mb-0"><b>FORMATO 5</b></h4>
+    </div>
+    <div class="card-body">
+      <form #formulario="ngForm" (ngSubmit)="guardar(formulario)" novalidate>
+        <div class="mb-3">
+          <label class="form-label fw-bold" for="cursoFormato5">Curso definido</label>
+          <select class="form-select" id="cursoFormato5" name="formato6Codigo" [(ngModel)]="datos.formato6Codigo" required>
+            <option [ngValue]="null">Seleccionar curso</option>
+            <option *ngFor="let curso of cursos" [ngValue]="curso.formato6_codigo">
+              {{ curso.formato1_codigo_curso || 'Sin código' }} - {{ curso.formato1_curso_definido }}
+            </option>
+          </select>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold" for="cedulaFormato5">Número de cédula</label>
+            <input class="form-control" type="text" id="cedulaFormato5" name="cedula" [(ngModel)]="datos.cedula" inputmode="numeric" maxlength="20" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold" for="nombresFormato5">Nombres</label>
+            <input class="form-control" type="text" id="nombresFormato5" name="nombres" [(ngModel)]="datos.nombres" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold" for="apellidosFormato5">Apellidos</label>
+            <input class="form-control" type="text" id="apellidosFormato5" name="apellidos" [(ngModel)]="datos.apellidos" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold" for="dominioTematica">Dominio de temática</label>
+            <input class="form-control" type="number" id="dominioTematica" name="dominioTematica" [(ngModel)]="datos.dominioTematica" step="any" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold" for="dominioAula">Dominio de aula</label>
+            <input class="form-control" type="number" id="dominioAula" name="dominioAula" [(ngModel)]="datos.dominioAula" step="any" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold" for="habilidadesBlandas">Habilidades blandas</label>
+            <input class="form-control" type="number" id="habilidadesBlandas" name="habilidadesBlandas" [(ngModel)]="datos.habilidadesBlandas" step="any" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold" for="notaEntrevista">Nota de entrevista</label>
+            <input class="form-control" type="number" id="notaEntrevista" name="notaEntrevista" [(ngModel)]="datos.notaEntrevista" step="any" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold" for="observacionesFormato5">Observaciones</label>
+            <input class="form-control" type="text" id="observacionesFormato5" name="observaciones" [(ngModel)]="datos.observaciones">
+          </div>
+        </div>
+
+        <div class="text-end mt-4">
+          <button class="btn btn-institucional" type="submit" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : 'Guardar Formato 5' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
