@@ -8,41 +8,29 @@
       <div *ngIf="cargando" class="py-4 text-center">Cargando registros...</div>
       <div *ngIf="!cargando && formatos.length === 0" class="py-4 text-center text-muted">No hay registros guardados.</div>
       <div *ngIf="!cargando && formatos.length > 0" class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
+        <table class="table table-bordered table-hover table-custom text-center align-middle">
+          <colgroup>
+            <col style="width: 23%">
+            <col style="width: 43%">
+            <col style="width: 17%">
+            <col style="width: 17%">
+          </colgroup>
           <thead>
             <tr>
               <th>Código del curso</th>
-              <th>Curso</th>
-              <th>Fecha de elaboración</th>
-              <th>Modalidad</th>
-              <th>Área</th>
-              <th>Línea gráfica institucional</th>
-              <th>Alianza/convenio</th>
-              <th>Identificadores</th>
-              <th>Aspectos a considerar</th>
-              <th>Otros</th>
-              <th>Tipo de medio</th>
+              <th>Nombre del curso</th>
               <th>Publicaciones</th>
-              <th>Reporte</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let formato of formatos">
               <td>{{ formato.formato1_codigo_curso || '—' }}</td>
               <td>{{ formato.formato1_curso_definido || '—' }}</td>
-              <td>{{ formato.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
-              <td>{{ formato.formato6_modalidad || '—' }}</td>
-              <td>{{ formato.formato6_area || '—' }}</td>
-              <td>{{ formato.formato13_linea_grafica_institucional === 'SI' ? 'Sí' : 'No' }}</td>
-              <td>{{ formato.formato13_alianza_convenio === 'SI' ? 'Sí' : 'No' }}</td>
-              <td>{{ formato.formato13_identificadores || '—' }}</td>
-              <td>{{ formato.formato13_aspectos_considerar === 'SI' ? 'Sí' : 'No' }}</td>
-              <td>{{ formato.formato13_otros || '—' }}</td>
-              <td>{{ formato.tipo_medio || '—' }}</td>
-              <td>{{ formato.publicacionesReporte.length }}</td>
-              <td>
-                <button class="btn btn-institucional btn-sm" type="button" (click)="generarReporte(formato)">
-                  <i class="fa fa-file-pdf" aria-hidden="true"></i> Ver reporte
+              <td class="text-center">{{ formato.publicacionesReporte.length }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-institucional" type="button" (click)="generarReporte(formato)" aria-label="Ver reporte PDF" title="Ver reporte PDF">
+                  <i class="fa fa-file-pdf" aria-hidden="true"></i> Ver
                 </button>
               </td>
             </tr>

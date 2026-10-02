@@ -325,6 +325,9 @@ export class FormatotreceComponent implements OnInit {
   guardarFormato13(formulario: any): void {
     if (formulario.invalid || this.guardando) {
       formulario.control.markAllAsTouched();
+      if (formulario.invalid) {
+        Swal.fire('Datos incompletos', 'Completa los campos obligatorios antes de guardar el Formato 13.', 'warning');
+      }
       return;
     }
     if (!this.formato6SeleccionadoCodigo) {
