@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ModulosService } from '../../servicios/modulos.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
-interface DatosFormato5 {
-  formato6Codigo: number | null;
+interface ParticipanteFormato5 {
+  formato5Codigo?: number;
   cedula: string;
   nombres: string;
   apellidos: string;
@@ -14,6 +15,12 @@ interface DatosFormato5 {
   observaciones: string;
 }
 
+interface UsuarioFormato5 {
+  cedula: string;
+  nombres: string;
+  apellidos: string;
+}
+
 @Component({
   selector: 'app-formatocinco',
   templateUrl: './formatocinco.component.html',
@@ -21,18 +28,33 @@ interface DatosFormato5 {
 })
 export class FormatocincoComponent implements OnInit {
   cursos: any[] = [];
+  usuarios: UsuarioFormato5[] = [];
   guardando = false;
-  datos: DatosFormato5 = this.nuevoFormulario();
+  editando = false;
+  formato6Codigo: number | null = null;
+  participantes: ParticipanteFormato5[] = [this.nuevoParticipante()];
 
-  constructor(private modulosService: ModulosService) {}
+  constructor(
+    private modulosService: ModulosService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.cargarCursos();
+    this.cargarUsuarios();
+    this.route.queryParamMap.subscribe((params) => {
+      const codigo = Number(params.get('editar'));
+      if (Number.isInteger(codigo) && codigo > 0) {
+        this.cargarEntrevistaParaEditar(codigo);
+      } else {
+        this.editando = false;
+      }
+    });
   }
 
-  private nuevoFormulario(): DatosFormato5 {
+  private nuevoParticipante(): ParticipanteFormato5 {
     return {
-      formato6Codigo: null,
       cedula: '',
       nombres: '',
       apellidos: '',
@@ -42,6 +64,57 @@ export class FormatocincoComponent implements OnInit {
       notaEntrevista: null,
       observaciones: ''
     };
+  }
+
+  private cargarEntrevistaParaEditar(codigo: number): void {
+    this.modulosService.obtenerFormatos5({ fx: 'getformato5', d: {} }).subscribe({
+      next: (respuesta: any) => {
+        const entrevista = respuesta?.data?.success && Array.isArray(respuesta.data.item)
+          ? respuesta.data.item.find((registro: any) => Number(registro.formato5_codigo) === codigo)
+          : null;
+
+        if (!entrevista) {
+          this.editando = false;
+          Swal.fire('Error', 'No se encontró la entrevista que deseas editar.', 'error');
+          return;
+        }
+
+        this.editando = true;
+        this.formato6Codigo = Number(entrevista.formato6_codigo);
+        this.participantes = [{
+          formato5Codigo: Number(entrevista.formato5_codigo),
+          cedula: entrevista.formato5_cedula || '',
+          nombres: entrevista.formato5_nombres || '',
+          apellidos: entrevista.formato5_apellidos || '',
+          dominioTematica: Number(entrevista.formato5_dominio_tematica),
+          dominioAula: Number(entrevista.formato5_dominio_aula),
+          habilidadesBlandas: Number(entrevista.formato5_habilidades_blandas),
+          notaEntrevista: Number(entrevista.formato5_nota_entrevista),
+          observaciones: entrevista.formato5_observaciones || ''
+        }];
+      },
+      error: () => {
+        this.editando = false;
+        Swal.fire('Error', 'No se pudo cargar la entrevista para editar.', 'error');
+      }
+    });
+  }
+
+  agregarParticipante(): void {
+    this.participantes.push(this.nuevoParticipante());
+  }
+
+  quitarParticipante(indice: number): void {
+    if (this.participantes.length > 1) {
+      this.participantes.splice(indice, 1);
+    }
+  }
+
+  seleccionarUsuario(participante: ParticipanteFormato5): void {
+    const cedula = participante.cedula.trim();
+    const usuario = this.usuarios.find((item) => item.cedula === cedula);
+    participante.nombres = usuario?.nombres || '';
+    participante.apellidos = usuario?.apellidos || '';
   }
 
   cargarCursos(): void {
@@ -58,6 +131,23 @@ export class FormatocincoComponent implements OnInit {
     });
   }
 
+  cargarUsuarios(): void {
+    this.modulosService.obtenerUsuariosFormato5({ fx: 'getusuariosformato5', d: {} }).subscribe({
+      next: (respuesta: any) => {
+        this.usuarios = respuesta?.data?.success && Array.isArray(respuesta.data.item)
+          ? respuesta.data.item
+          : [];
+        if (this.usuarios.length === 0) {
+          Swal.fire('Aviso', 'No hay usuarios activos disponibles para seleccionar.', 'info');
+        }
+      },
+      error: () => {
+        this.usuarios = [];
+        Swal.fire('Error', 'No se pudieron cargar las cédulas de usuarios.', 'error');
+      }
+    });
+  }
+
   guardar(formulario: any): void {
     if (this.guardando) {
       return;
@@ -70,13 +160,22 @@ export class FormatocincoComponent implements OnInit {
     }
 
     this.guardando = true;
-    this.modulosService.insertarFormato5({ fx: 'insertformato5', d: this.datos }).subscribe({
+    this.modulosService.insertarFormato5({
+      fx: 'insertformato5',
+      d: { formato6Codigo: this.formato6Codigo, participantes: this.participantes }
+    }).subscribe({
       next: (respuesta: any) => {
         this.guardando = false;
         if (respuesta?.data?.success) {
-          Swal.fire('Guardado', 'El Formato 5 se guardó correctamente.', 'success');
-          this.datos = this.nuevoFormulario();
-          formulario.resetForm(this.datos);
+        if (this.editando) {
+          Swal.fire('Actualizado', 'La entrevista se actualizó correctamente.', 'success')
+            .then(() => this.router.navigate(['/verformatocinco']));
+          return;
+        }
+        Swal.fire('Guardado', respuesta.data.message || 'Las entrevistas anteriores del curso se reemplazaron correctamente.', 'success');
+        this.formato6Codigo = null;
+        this.participantes = [this.nuevoParticipante()];
+        formulario.resetForm();
         } else {
           Swal.fire('Error', respuesta?.data?.message || 'No se pudo guardar el Formato 5.', 'error');
         }

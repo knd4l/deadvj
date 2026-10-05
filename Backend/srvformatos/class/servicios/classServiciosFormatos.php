@@ -4474,18 +4474,32 @@ public function insertFormato5($datos)
 
     try {
         $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
-        $cedula = isset($datos->cedula) ? trim((string) $datos->cedula) : '';
-        $nombres = isset($datos->nombres) ? trim((string) $datos->nombres) : '';
-        $apellidos = isset($datos->apellidos) ? trim((string) $datos->apellidos) : '';
         $camposNumericos = array('dominioTematica', 'dominioAula', 'habilidadesBlandas', 'notaEntrevista');
+        $participantes = isset($datos->participantes) && is_array($datos->participantes)
+            ? $datos->participantes
+            : array($datos);
 
-        if ($formato6Codigo <= 0 || $cedula === '' || $nombres === '' || $apellidos === '') {
-            throw new Exception('Completa el curso, la cédula, los nombres y los apellidos.');
+        if ($formato6Codigo <= 0 || count($participantes) === 0) {
+            throw new Exception('Selecciona el curso y agrega al menos una evaluación.');
         }
-        foreach ($camposNumericos as $campo) {
-            if (!isset($datos->$campo) || !is_numeric($datos->$campo)) {
-                throw new Exception('Los puntajes deben ser valores numéricos.');
+
+        $edicionIndividual = false;
+        foreach ($participantes as $participante) {
+            $cedula = isset($participante->cedula) ? trim((string) $participante->cedula) : '';
+            if ($cedula === '') {
+                throw new Exception('Selecciona una cédula registrada en cada evaluación.');
             }
+            if (isset($participante->formato5Codigo) && (int) $participante->formato5Codigo > 0) {
+                $edicionIndividual = true;
+            }
+            foreach ($camposNumericos as $campo) {
+                if (!isset($participante->$campo) || !is_numeric($participante->$campo)) {
+                    throw new Exception('Completa todos los puntajes con valores numéricos.');
+                }
+            }
+        }
+        if ($edicionIndividual && count($participantes) !== 1) {
+            throw new Exception('Edita una entrevista a la vez.');
         }
 
         $dbc = $this->getInitDatabase();
@@ -4493,6 +4507,7 @@ public function insertFormato5($datos)
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
+        $dbc->beginTransaction();
         $dbc->query("SELECT f1.formato1_codigo
             FROM formato6 f6
             INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
@@ -4506,43 +4521,107 @@ public function insertFormato5($datos)
             throw new Exception('El curso seleccionado no está disponible.');
         }
 
-        $dbc->query("INSERT INTO formato5 (
-            formato6_codigo,
-            formato5_cedula,
-            formato5_nombres,
-            formato5_apellidos,
-            formato5_dominio_tematica,
-            formato5_dominio_aula,
-            formato5_habilidades_blandas,
-            formato5_nota_entrevista,
-            formato5_observaciones
-        ) VALUES (
-            :formato6_codigo,
-            :cedula,
-            :nombres,
-            :apellidos,
-            :dominio_tematica,
-            :dominio_aula,
-            :habilidades_blandas,
-            :nota_entrevista,
-            :observaciones
-        )");
-        $dbc->bind(':formato6_codigo', $formato6Codigo);
-        $dbc->bind(':cedula', $cedula);
-        $dbc->bind(':nombres', $nombres);
-        $dbc->bind(':apellidos', $apellidos);
-        $dbc->bind(':dominio_tematica', $datos->dominioTematica);
-        $dbc->bind(':dominio_aula', $datos->dominioAula);
-        $dbc->bind(':habilidades_blandas', $datos->habilidadesBlandas);
-        $dbc->bind(':nota_entrevista', $datos->notaEntrevista);
-        $dbc->bind(':observaciones', isset($datos->observaciones) ? trim((string) $datos->observaciones) : '');
-        $dbc->execute();
+        if (!$edicionIndividual) {
+            $dbc->query("DELETE FROM formato5
+                WHERE formato6_codigo = :formato6_codigo");
+            $dbc->bind(':formato6_codigo', $formato6Codigo);
+            $dbc->execute();
+        }
 
-        $formato5Codigo = (int) $dbc->lastInsertId();
-        $result[] = array('formato5_codigo' => $formato5Codigo);
-        $this->estado = new Exception_Object(1, 'Formato 5 guardado correctamente.');
-        $this->estado->setLastID($formato5Codigo);
+        foreach ($participantes as $participante) {
+            $cedula = trim((string) $participante->cedula);
+            $dbc->query("SELECT USUARIO_NOMBRES, USUARIO_APELLIDOS
+                FROM usuarios
+                WHERE USUARIO_IDENTIFICACION = :cedula
+                  AND USUARIO_ESTADO = 'ACTIVO'
+                LIMIT 1");
+            $dbc->bind(':cedula', $cedula);
+            $usuario = $dbc->single();
+            if (!$usuario) {
+                throw new Exception('La cédula seleccionada no corresponde a un usuario activo.');
+            }
+
+            $observaciones = isset($participante->observaciones) ? trim((string) $participante->observaciones) : '';
+            $formato5Codigo = isset($participante->formato5Codigo) ? (int) $participante->formato5Codigo : 0;
+
+            if ($formato5Codigo > 0) {
+                $dbc->query("SELECT formato5_codigo
+                    FROM formato5
+                    WHERE formato5_codigo = :formato5_codigo
+                      AND formato6_codigo = :formato6_codigo
+                    LIMIT 1");
+                $dbc->bind(':formato5_codigo', $formato5Codigo);
+                $dbc->bind(':formato6_codigo', $formato6Codigo);
+                if (!$dbc->single()) {
+                    throw new Exception('La entrevista que intentas editar no existe para el curso seleccionado.');
+                }
+
+                $dbc->query("UPDATE formato5 SET
+                    formato5_cedula = :cedula,
+                    formato5_nombres = :nombres,
+                    formato5_apellidos = :apellidos,
+                    formato5_dominio_tematica = :dominio_tematica,
+                    formato5_dominio_aula = :dominio_aula,
+                    formato5_habilidades_blandas = :habilidades_blandas,
+                    formato5_nota_entrevista = :nota_entrevista,
+                    formato5_observaciones = :observaciones
+                    WHERE formato5_codigo = :formato5_codigo
+                      AND formato6_codigo = :formato6_codigo");
+                $dbc->bind(':formato5_codigo', $formato5Codigo);
+                $dbc->bind(':formato6_codigo', $formato6Codigo);
+            } else {
+                $dbc->query("INSERT INTO formato5 (
+                    formato6_codigo,
+                    formato5_cedula,
+                    formato5_nombres,
+                    formato5_apellidos,
+                    formato5_dominio_tematica,
+                    formato5_dominio_aula,
+                    formato5_habilidades_blandas,
+                    formato5_nota_entrevista,
+                    formato5_observaciones
+                ) VALUES (
+                    :formato6_codigo,
+                    :cedula,
+                    :nombres,
+                    :apellidos,
+                    :dominio_tematica,
+                    :dominio_aula,
+                    :habilidades_blandas,
+                    :nota_entrevista,
+                    :observaciones
+                )");
+                $dbc->bind(':formato6_codigo', $formato6Codigo);
+            }
+
+            $dbc->bind(':cedula', $cedula);
+            $dbc->bind(':nombres', $usuario['USUARIO_NOMBRES']);
+            $dbc->bind(':apellidos', $usuario['USUARIO_APELLIDOS']);
+            $dbc->bind(':dominio_tematica', $participante->dominioTematica);
+            $dbc->bind(':dominio_aula', $participante->dominioAula);
+            $dbc->bind(':habilidades_blandas', $participante->habilidadesBlandas);
+            $dbc->bind(':nota_entrevista', $participante->notaEntrevista);
+            $dbc->bind(':observaciones', $observaciones);
+            $dbc->execute();
+
+            if ($formato5Codigo <= 0) {
+                $formato5Codigo = (int) $dbc->lastInsertId();
+                if ($formato5Codigo <= 0) {
+                    throw new Exception('No se pudo obtener el código de una evaluación del Formato 5.');
+                }
+            }
+            $result[] = array('formato5_codigo' => $formato5Codigo);
+        }
+        $dbc->endTransaction();
+        $mensaje = $edicionIndividual
+            ? 'Entrevista actualizada correctamente.'
+            : 'Las entrevistas anteriores del curso fueron reemplazadas correctamente.';
+        $this->estado = new Exception_Object(1, $mensaje);
+        $this->estado->setLastID(count($result));
     } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
         $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 5: ' . $e->getMessage());
         $this->estado->setLastID(-1);
     }
@@ -4557,6 +4636,112 @@ public function insertFormato5($datos)
     $resultados->data->message = $this->estado->getMessage();
     $resultados->data->estado = $this->estado->getCode();
     $resultados->data->item = $result;
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getFormato5()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT f5.*,
+                (
+                    SELECT COUNT(*)
+                    FROM formato5 f5_anterior
+                    WHERE f5_anterior.formato6_codigo = f5.formato6_codigo
+                      AND f5_anterior.formato5_cedula = f5.formato5_cedula
+                      AND f5_anterior.formato5_codigo <= f5.formato5_codigo
+                ) AS formato5_numero_entrevista,
+                f6.formato6_fecha_elaboracion,
+                f6.formato6_requerimiento,
+                f6.formato6_modalidad,
+                f6.formato6_area,
+                f1.formato1_codigo_curso,
+                f1.formato1_curso_definido,
+                f1.formato1_fecha_ejecucion_desde,
+                f1.formato1_fecha_ejecucion_hasta
+            FROM formato5 f5
+            INNER JOIN formato6 f6 ON f6.formato6_codigo = f5.formato6_codigo
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
+            ORDER BY f5.formato5_codigo DESC");
+        $result = $dbc->resultset();
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 5: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getUsuariosFormato5()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT USUARIO_IDENTIFICACION AS cedula,
+                USUARIO_NOMBRES AS nombres,
+                USUARIO_APELLIDOS AS apellidos
+            FROM usuarios
+            WHERE USUARIO_ESTADO = 'ACTIVO'
+              AND USUARIO_IDENTIFICACION IS NOT NULL
+              AND TRIM(USUARIO_IDENTIFICACION) <> ''
+            ORDER BY USUARIO_APELLIDOS, USUARIO_NOMBRES");
+        $result = $dbc->resultset();
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los usuarios: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
 
     if ($this->isHTML) {
         header('Content-type: application/json');
@@ -5317,9 +5502,13 @@ public function getFormato13()
 
         $dbc->query("SELECT formato13.*,
             formato6.formato6_fecha_elaboracion,
+            formato6.formato6_requerimiento,
             formato6.formato6_modalidad,
             formato6.formato6_area,
-            formato1.formato1_curso_definido
+            formato1.formato1_curso_definido,
+            formato1.formato1_codigo_curso,
+            formato1.formato1_fecha_ejecucion_desde,
+            formato1.formato1_fecha_ejecucion_hasta
             FROM formato13
             LEFT JOIN formato6
                 ON formato6.formato6_codigo = formato13.formato6_codigo

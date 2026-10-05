@@ -8,6 +8,35 @@
   min-height: 42px;
 }
 
+.course-table thead th {
+  background-color: #f4efe6;
+  color: var(--institucional-sec);
+}
+
+.participant-list {
+  display: grid;
+  gap: 16px;
+}
+
+.participant-entry {
+  padding: 16px;
+  border: 1px solid #6c1313;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.participant-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.participant-heading h5 {
+  font-size: 1rem;
+}
+
 .btn-institucional,
 .btn-institucional:hover,
 .btn-institucional:focus {

@@ -138,6 +138,13 @@ export class FormatotreceverComponent implements OnInit {
       const mostrar = (valor: any): string => valor === null || valor === undefined || valor === '' ? '—' : String(valor);
       const mostrarSiNo = (valor: any): string => valor === 'SI' ? 'Sí' : valor === 'NO' ? 'No' : mostrar(valor);
       const formatearFecha = (valor: any): string => mostrar(valor).split(' ')[0];
+      const fechasEjecucion = [
+        formatearFecha(formato.formato1_fecha_ejecucion_desde),
+        formatearFecha(formato.formato1_fecha_ejecucion_hasta)
+      ].filter((fecha) => fecha !== '—').join(' - ') || '—';
+      const curso = [formato.formato1_codigo_curso, formato.formato1_curso_definido]
+        .filter((valor) => valor !== null && valor !== undefined && valor !== '')
+        .join(' - ') || '—';
       const layoutCuadro = { hLineWidth: () => 0.7, vLineWidth: () => 0.7 };
       const publicaciones = Array.isArray(formato.publicacionesReporte) ? formato.publicacionesReporte : [];
       const tablasPublicaciones = publicaciones.map((publicacion: any, indice: number) => ({
@@ -178,30 +185,46 @@ export class FormatotreceverComponent implements OnInit {
 
       const documento = {
         pageSize: 'A4',
-        pageMargins: [40, 132, 40, 78],
+        pageMargins: [40, 100, 40, 78],
         header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
         footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
         content: [
           { text: 'REPORTE DE PUBLICACIONES - FORMATO 13', style: 'title' },
           {
             table: {
-              widths: [85, '*', 70, 48, 55, '*'],
+              widths: [75, '*', 80, '*', 75, '*'],
               body: [
                 [
                   { text: 'Fecha elaboración', style: 'tableHeader' },
                   { text: formatearFecha(formato.formato6_fecha_elaboracion) },
-                  { text: 'Código curso', style: 'tableHeader' },
-                  { text: mostrar(formato.formato1_codigo_curso) },
-                  { text: 'Modalidad', style: 'tableHeader' },
-                  { text: mostrar(formato.formato6_modalidad) }
+                  { text: 'Tipo de capacitación', style: 'tableHeader' },
+                  { text: mostrar(formato.formato6_requerimiento) },
+                  { text: 'Fecha de ejecución', style: 'tableHeader' },
+                  { text: fechasEjecucion }
                 ],
                 [
-                  { text: 'Nombre del curso', style: 'tableHeader' },
-                  { text: mostrar(formato.formato1_curso_definido), colSpan: 3 },
+                  { text: 'Curso', style: 'tableHeader' },
+                  { text: curso, colSpan: 5 },
                   {},
+                  {},
+                  {},
+                  {}
+                ],
+                [
+                  { text: 'Modalidad', style: 'tableHeader' },
+                  { text: mostrar(formato.formato6_modalidad), colSpan: 2 },
                   {},
                   { text: 'Área', style: 'tableHeader' },
-                  { text: mostrar(formato.formato6_area) }
+                  { text: mostrar(formato.formato6_area), colSpan: 2 },
+                  {}
+                ],
+                [
+                  { text: 'Observación', style: 'tableHeader' },
+                  { text: mostrar(formato.formato13_otros), colSpan: 5 },
+                  {},
+                  {},
+                  {},
+                  {}
                 ]
               ]
             },

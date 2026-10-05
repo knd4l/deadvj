@@ -59,6 +59,14 @@ insertarFormato5(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
+obtenerFormatos5(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
+obtenerUsuariosFormato5(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
 insertarFormato13(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }

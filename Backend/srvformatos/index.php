@@ -99,6 +99,8 @@ if ($view == "no identificado" || $view == "none") {
 		'insertformato13'=>true,
 		'getformato13'=>true,
 		'insertformato5'=>true,
+		'getformato5'=>true,
+		'getusuariosformato5'=>true,
 
 		
 	);

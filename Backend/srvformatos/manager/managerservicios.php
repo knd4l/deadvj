@@ -111,6 +111,16 @@ case 'insertformato5':
 	$clsCursos = new classServiciosFormatos();
 	$clsCursos->insertFormato5($jdata->d);
 	break;
+
+case 'getformato5':
+	$clsCursos = new classServiciosFormatos();
+	$clsCursos->getFormato5();
+	break;
+
+case 'getusuariosformato5':
+	$clsCursos = new classServiciosFormatos();
+	$clsCursos->getUsuariosFormato5();
+	break;
 	
 }
 
