@@ -66,6 +66,29 @@ export class FormatocincoComponent implements OnInit {
     };
   }
 
+  usuariosDisponiblesPara(participanteActual: ParticipanteFormato5): UsuarioFormato5[] {
+    const cedulasSeleccionadas = new Set(
+      this.participantes
+        .filter((participante) => participante !== participanteActual)
+        .map((participante) => participante.cedula.trim())
+        .filter(Boolean)
+    );
+    return this.usuarios.filter((usuario) =>
+      !cedulasSeleccionadas.has(usuario.cedula) || usuario.cedula === participanteActual.cedula
+    );
+  }
+
+  actualizarNotaEntrevista(participante: ParticipanteFormato5): void {
+    const notas = [
+      participante.dominioTematica,
+      participante.dominioAula,
+      participante.habilidadesBlandas
+    ];
+    participante.notaEntrevista = notas.every((nota) => nota !== null && nota !== undefined)
+      ? notas.reduce<number>((suma, nota) => suma + Number(nota), 0) / 3
+      : null;
+  }
+
   private cargarEntrevistaParaEditar(codigo: number): void {
     this.modulosService.obtenerFormatos5({ fx: 'getformato5', d: {} }).subscribe({
       next: (respuesta: any) => {
@@ -112,6 +135,17 @@ export class FormatocincoComponent implements OnInit {
 
   seleccionarUsuario(participante: ParticipanteFormato5): void {
     const cedula = participante.cedula.trim();
+    const yaSeleccionada = this.participantes.some((otra) =>
+      otra !== participante && otra.cedula.trim() === cedula
+    );
+    if (cedula && yaSeleccionada) {
+      participante.cedula = '';
+      participante.nombres = '';
+      participante.apellidos = '';
+      Swal.fire('Cédula duplicada', 'Cada entrevista debe tener una cédula distinta.', 'warning');
+      return;
+    }
+
     const usuario = this.usuarios.find((item) => item.cedula === cedula);
     participante.nombres = usuario?.nombres || '';
     participante.apellidos = usuario?.apellidos || '';
@@ -156,6 +190,12 @@ export class FormatocincoComponent implements OnInit {
     if (formulario.invalid) {
       formulario.control.markAllAsTouched();
       Swal.fire('Datos incompletos', 'Completa los campos obligatorios antes de guardar el Formato 5.', 'warning');
+      return;
+    }
+
+    const cedulas = this.participantes.map((participante) => participante.cedula.trim());
+    if (new Set(cedulas).size !== cedulas.length) {
+      Swal.fire('Cédula duplicada', 'Cada entrevista debe tener una cédula distinta.', 'warning');
       return;
     }
 

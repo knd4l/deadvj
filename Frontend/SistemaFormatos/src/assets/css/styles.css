@@ -104,7 +104,7 @@
 }
 
 .btn-institucional:hover {
-  background-color: var(--institucional-sec);
+  background-color: var(--institucional);
   color: #fff;
 }
 

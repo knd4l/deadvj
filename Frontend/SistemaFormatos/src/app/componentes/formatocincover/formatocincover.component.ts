@@ -139,7 +139,7 @@ export class FormatocincoverComponent implements OnInit {
         header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
         footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
         content: [
-          { text: 'REPORTE DE EVALUACIÓN - FORMATO 5', style: 'title' },
+          
           {
             table: {
               widths: [75, '*', 80, '*', 75, '*'],
@@ -232,7 +232,7 @@ export class FormatocincoverComponent implements OnInit {
           }))
         ],
         styles: {
-          title: { fontSize: 12, bold: true, alignment: 'center', margin: [0, 8, 0, 14] },
+          title: { fontSize: 12, bold: true, alignment: 'center', margin: [0, -60, 0, 14] },
           sectionTitle: { fontSize: 12, bold: true, margin: [0, 4, 0, 8] },
           tableHeader: { bold: true }
         },

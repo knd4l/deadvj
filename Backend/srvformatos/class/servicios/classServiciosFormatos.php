@@ -4474,7 +4474,7 @@ public function insertFormato5($datos)
 
     try {
         $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
-        $camposNumericos = array('dominioTematica', 'dominioAula', 'habilidadesBlandas', 'notaEntrevista');
+        $camposNumericos = array('dominioTematica', 'dominioAula', 'habilidadesBlandas');
         $participantes = isset($datos->participantes) && is_array($datos->participantes)
             ? $datos->participantes
             : array($datos);
@@ -4484,11 +4484,16 @@ public function insertFormato5($datos)
         }
 
         $edicionIndividual = false;
+        $cedulasParticipantes = array();
         foreach ($participantes as $participante) {
             $cedula = isset($participante->cedula) ? trim((string) $participante->cedula) : '';
             if ($cedula === '') {
                 throw new Exception('Selecciona una cédula registrada en cada evaluación.');
             }
+            if (isset($cedulasParticipantes[$cedula])) {
+                throw new Exception('Cada entrevista debe tener una cédula distinta.');
+            }
+            $cedulasParticipantes[$cedula] = true;
             if (isset($participante->formato5Codigo) && (int) $participante->formato5Codigo > 0) {
                 $edicionIndividual = true;
             }
@@ -4542,6 +4547,11 @@ public function insertFormato5($datos)
             }
 
             $observaciones = isset($participante->observaciones) ? trim((string) $participante->observaciones) : '';
+            $notaEntrevista = (
+                (float) $participante->dominioTematica
+                + (float) $participante->dominioAula
+                + (float) $participante->habilidadesBlandas
+            ) / 3;
             $formato5Codigo = isset($participante->formato5Codigo) ? (int) $participante->formato5Codigo : 0;
 
             if ($formato5Codigo > 0) {
@@ -4600,7 +4610,7 @@ public function insertFormato5($datos)
             $dbc->bind(':dominio_tematica', $participante->dominioTematica);
             $dbc->bind(':dominio_aula', $participante->dominioAula);
             $dbc->bind(':habilidades_blandas', $participante->habilidadesBlandas);
-            $dbc->bind(':nota_entrevista', $participante->notaEntrevista);
+            $dbc->bind(':nota_entrevista', $notaEntrevista);
             $dbc->bind(':observaciones', $observaciones);
             $dbc->execute();
 
