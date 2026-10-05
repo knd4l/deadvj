@@ -154,7 +154,7 @@ export class FormatotreceverComponent implements OnInit {
             [
               { text: [{ text: 'Nro. de publicación: ', bold: true }, { text: String(indice + 1) }] },
               { text: [{ text: 'Fecha de publicación: ', bold: true }, { text: formatearFecha(publicacion.fechaPublicacion) }] },
-              { text: [{ text: 'de publicación: ', bold: true }, { text: mostrar(publicacion.tipoPublicacion) }] }
+              { text: [{ text: 'Tipo de publicación: ', bold: true }, { text: mostrar(publicacion.tipoPublicacion) }] }
             ],
             [
               { text: 'Medio', style: 'tableHeader' },

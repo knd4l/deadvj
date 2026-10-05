@@ -4661,7 +4661,6 @@ public function getFormato5()
                     SELECT COUNT(*)
                     FROM formato5 f5_anterior
                     WHERE f5_anterior.formato6_codigo = f5.formato6_codigo
-                      AND f5_anterior.formato5_cedula = f5.formato5_cedula
                       AND f5_anterior.formato5_codigo <= f5.formato5_codigo
                 ) AS formato5_numero_entrevista,
                 f6.formato6_fecha_elaboracion,
