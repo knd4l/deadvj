@@ -110,13 +110,15 @@ export class FormatotreceComponent implements OnInit {
   guardando = false;
   cursosFormato6: any[] = [];
   formato6SeleccionadoCodigo: number | null = null;
-  tiposMedio = ['Facebook', 'WhatsApp', 'X', 'LinkedIn'];
+  tiposMedio: string[] = [];
+  cargandoTiposMedio = false;
   tiposRecurso = ['Video', 'Imagen', 'Texto', 'URL'];
 
   constructor(private modulosService: ModulosService) {}
 
   ngOnInit(): void {
     this.cargarCursosFormato6();
+    this.cargarTiposMedio();
   }
 
   get cursoSeleccionado(): any {
@@ -135,6 +137,27 @@ export class FormatotreceComponent implements OnInit {
       error: () => {
         this.cursosFormato6 = [];
         Swal.fire('Error', 'No se pudieron cargar los cursos del Formato 6.', 'error');
+      }
+    });
+  }
+
+  cargarTiposMedio(): void {
+    this.cargandoTiposMedio = true;
+    this.modulosService.obtenerTiposMedioFormato13({ fx: 'gettiposmedioformato13', d: {} }).subscribe({
+      next: (respuesta: any) => {
+        this.cargandoTiposMedio = false;
+        if (respuesta?.data?.success && Array.isArray(respuesta.data.item)) {
+          this.tiposMedio = respuesta.data.item.map((medio: any) => medio.tipo_medio_nombre);
+          return;
+        }
+
+        this.tiposMedio = [];
+        Swal.fire('Error', respuesta?.data?.message || 'No se pudieron cargar los tipos de medio.', 'error');
+      },
+      error: () => {
+        this.cargandoTiposMedio = false;
+        this.tiposMedio = [];
+        Swal.fire('Error', 'No se pudieron cargar los tipos de medio.', 'error');
       }
     });
   }

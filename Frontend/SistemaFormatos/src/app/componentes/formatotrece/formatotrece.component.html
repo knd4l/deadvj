@@ -84,8 +84,8 @@
         <ng-template #camposPublicacion let-publicacion let-prefijo="prefijo">
           <div class="mb-3">
             <label class="form-label fw-bold" [for]="prefijo + 'TipoMedio'">Tipo de medio</label>
-            <select class="form-select" [id]="prefijo + 'TipoMedio'" [name]="prefijo + 'TipoMedio'" [(ngModel)]="publicacion.tipoMedio" required>
-              <option value="">Seleccionar</option>
+            <select class="form-select" [id]="prefijo + 'TipoMedio'" [name]="prefijo + 'TipoMedio'" [(ngModel)]="publicacion.tipoMedio" [disabled]="cargandoTiposMedio || tiposMedio.length === 0" required>
+              <option value="">{{ cargandoTiposMedio ? 'Cargando tipos de medio...' : 'Seleccionar' }}</option>
               <option *ngFor="let medio of tiposMedio" [value]="medio">{{ medio }}</option>
             </select>
           </div>

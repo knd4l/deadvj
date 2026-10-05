@@ -75,6 +75,10 @@ obtenerFormatos13(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
+obtenerTiposMedioFormato13(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
 //Obtiene el formato 6 para generar el reporte PDF
 obtenerFormato6Reporte(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);

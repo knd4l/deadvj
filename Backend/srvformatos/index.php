@@ -98,6 +98,7 @@ if ($view == "no identificado" || $view == "none") {
 		'updateformato6'=>true,
 		'insertformato13'=>true,
 		'getformato13'=>true,
+		'gettiposmedioformato13'=>true,
 		'insertformato5'=>true,
 		'getformato5'=>true,
 		'getusuariosformato5'=>true,
@@ -131,6 +132,5 @@ if ($view == "no identificado" || $view == "none") {
 }
 
 ?>
-
 
 
