@@ -296,9 +296,6 @@ guardarModulo(
     nuevoHorario
   );
 
-  this.actualizarCargaHoraria();
-
-
   // =====================================================
   // PREPARAR OTRA FILA DE HORARIO
   // =====================================================
@@ -476,7 +473,26 @@ cargarFormatos1Definidos(): void {
     
   
   }
+  private readonly formato6Inicial = JSON.parse(JSON.stringify(this.formato6));
   horasCargaHoraria: number = 0;
+
+  private reiniciarDatosCurso(): void {
+    this.formato6 = JSON.parse(JSON.stringify(this.formato6Inicial));
+    this.modulos = [];
+    this.modulosGuardados = [];
+    this.presupuesto = [{
+      partida: 1,
+      numeroInstructores: 1,
+      valor: 0,
+      total: 0,
+      descripcion: ''
+    }];
+    this.horasCargaHoraria = 0;
+    this.formato6Codigo = 0;
+    this.formato6Existe = false;
+    this.moduloActual = 1;
+    this.agregarModulo();
+  }
 
   obtenerHorasCargaHoraria(): void {
 
@@ -492,12 +508,13 @@ calcularTotalPresupuesto(indice: number): void {
   const fila = this.presupuesto[indice]; 
   // La primera fila utiliza la carga horaria 
   if (indice === 0) { 
-    const valor = Number(fila.valor) || 0; 
-    const horas = Number(this.formato6.cargaHoraria) || 0; 
-    fila.total = valor * horas; 
+    const valor = this.convertirNumero(fila.valor);
+    const horas = this.convertirNumero(this.formato6.cargaHoraria);
+    const instructores = this.convertirNumero(fila.numeroInstructores) || 1;
+    fila.total = valor * horas * instructores;
   }
 
-    this.calcularTotalGeneral(); 
+  this.calcularTotalGeneral();
 }
 
 convertirNumero(valor: any): number { 
@@ -536,7 +553,7 @@ convertirNumero(valor: any): number {
   calcularTotalGeneral(): number { 
     return this.presupuesto.reduce( 
       (suma: number, fila: any) => 
-        suma + (Number(fila.total) || 0),0 ); 
+        suma + this.convertirNumero(fila.total), 0 );
 }
 
   obtenerPresupuestoParaGuardar(): any[] {
@@ -647,8 +664,6 @@ eliminarModulo(index: number): void {
     this.modulosGuardados.filter(
       (modulo: any) => modulo.id !== moduloEliminado?.id
     );
-
-  this.actualizarCargaHoraria();
 
 }
 
@@ -827,23 +842,6 @@ obtenerHorasProgramadasHorario(
 
   return horasPorSesion * cantidadSesiones;
 }
-
-actualizarCargaHoraria(): void {
-
-  const total = this.modulosGuardados.reduce(
-    (suma: number, modulo: any) =>
-      suma + this.obtenerTotalHorasModulo(modulo),
-    0
-  );
-
-  this.formato6.cargaHoraria = String(
-    Math.round((total + Number.EPSILON) * 100) / 100
-  );
-
-}
-
-
-
 
 eliminarHorario(index: number): void {
 
@@ -1182,7 +1180,6 @@ guardarFormato6(): void {
     ).subscribe({
 
       next: (respuesta: any) => {
-
         console.log(
           'Respuesta actualización:',
           respuesta
@@ -1448,7 +1445,6 @@ guardarFormato6(): void {
   ).subscribe({
 
     next: (respuesta: any) => {
-
       console.log(
         'Respuesta del servidor:',
         respuesta
@@ -1507,6 +1503,9 @@ guardarFormato6(): void {
     .subscribe({
 
       next: (respuesta: any) => {
+        if (Number(this.formato1Codigo) !== Number(codigo)) {
+          return;
+        }
 
         console.log(
           'Datos del Formato 1:',
@@ -1674,6 +1673,9 @@ cargarFormato6Existente(codigo: number): void {
   ).subscribe({
 
     next: (respuesta: any) => {
+      if (Number(this.formato1Codigo) !== Number(codigo)) {
+        return;
+      }
 
       console.log(
         'Respuesta Formato 6 existente:',
@@ -1734,9 +1736,6 @@ cargarFormato6Existente(codigo: number): void {
         this.formato6.area =
           datos.formato6_area || '';
 
-        this.formato6.cargaHoraria =
-          datos.formato6_carga_horaria || '';
-
           console.log('PERIODOS RECIBIDOS:', datos.formato6_periodos);
           console.log('HORARIO RECIBIDO:', datos.formato6_horario);
 
@@ -1793,8 +1792,7 @@ seleccionarFormato1(): void {
   if (!this.formato1Seleccionado) {
     this.formato1Codigo = 0;
     this.cursoNombre = '';
-    this.formato6Existe = false;
-    this.formato6Codigo = 0;
+    this.reiniciarDatosCurso();
 
     // Limpiamos los datos guardados
     sessionStorage.removeItem('formato1_codigo_formato6');
@@ -1803,6 +1801,8 @@ seleccionarFormato1(): void {
   }
 
   console.log('FORMATO 1 SELECCIONADO:', this.formato1Seleccionado);
+
+  this.reiniciarDatosCurso();
 
   //Guardamos el codigo del formato 1
   this.formato1Codigo =

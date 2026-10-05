@@ -232,8 +232,6 @@ export class FormatocincoverComponent implements OnInit {
           }))
         ],
         styles: {
-          title: { fontSize: 12, bold: true, alignment: 'center', margin: [0, -60, 0, 14] },
-          sectionTitle: { fontSize: 12, bold: true, margin: [0, 4, 0, 8] },
           tableHeader: { bold: true }
         },
         defaultStyle: { fontSize: 10 }

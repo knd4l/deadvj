@@ -91,6 +91,21 @@ describe('FormatoseisComponent', () => {
     expect(component.calcularTotalGeneral()).toBe(85);
   });
 
+  it('updates total expenses when the instructor count or value changes', () => {
+    component.formato6.cargaHoraria = '10';
+    component.presupuesto[0].numeroInstructores = 2;
+    component.presupuesto[0].valor = '5';
+
+    component.calcularTotalPresupuesto(0);
+    expect(component.presupuesto[0].total).toBe(100);
+    expect(component.calcularTotalGeneral()).toBe(100);
+
+    component.presupuesto[0].numeroInstructores = 3;
+    component.calcularTotalPresupuesto(0);
+    expect(component.presupuesto[0].total).toBe(150);
+    expect(component.calcularTotalGeneral()).toBe(150);
+  });
+
   it('adds the instructor and hour description to the first budget item', () => {
     component.formato6.cargaHoraria = '16';
     component.presupuesto[0].numeroInstructores = 2;

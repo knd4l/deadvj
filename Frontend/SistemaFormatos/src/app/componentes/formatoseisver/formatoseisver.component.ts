@@ -556,21 +556,64 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
     }
 
-    const horarioModulo1 =
-      horariosDebug.find(
-        (horario: any) =>
-          String(horario.modulo_nombre || '').trim() !== ''
-      ) || {};
+    const periodosPorModulo = new Map<string, {
+      nombre: string;
+      desde: string;
+      hasta: string;
+      orden: number;
+    }>();
 
-    const nombreModulo1 =
-      horarioModulo1.modulo_nombre || 'Módulo 1';
+    const obtenerClaveModulo = (modulo: any, index: number): string => {
+      const id = modulo.modulo_id || modulo.moduloId || modulo.id;
+      const nombre = String(modulo.modulo_nombre || modulo.nombre || '').trim();
+      const numeroNombre = nombre.match(/\d+/)?.[0];
+      return String(numeroNombre || nombre || id || index + 1).toLowerCase();
+    };
 
-    const fechaDesdeModulo1 =
-      horarioModulo1.modulo_desde || '';
+    const registrarPeriodoModulo = (
+      modulo: any,
+      index: number,
+      fuenteHorario: boolean
+    ): void => {
+      const clave = obtenerClaveModulo(modulo, index);
+      const nombre = String(modulo.modulo_nombre || modulo.nombre || '').trim();
+      const periodo = periodosPorModulo.get(clave);
 
-    const fechaHastaModulo1 =
-      horarioModulo1.modulo_hasta || '';
+      if (!periodo) {
+        periodosPorModulo.set(clave, {
+          nombre: nombre || `Módulo ${index + 1}`,
+          desde: modulo.modulo_desde || modulo.desde || '',
+          hasta: modulo.modulo_hasta || modulo.hasta || '',
+          orden: index
+        });
+        return;
+      }
 
+      if (nombre && /^Módulo \d+$/i.test(periodo.nombre)) {
+        periodo.nombre = nombre;
+      }
+      if (!periodo.desde) {
+        periodo.desde = modulo.modulo_desde || modulo.desde || '';
+      }
+      if (!periodo.hasta) {
+        periodo.hasta = modulo.modulo_hasta || modulo.hasta || '';
+      }
+      if (fuenteHorario && periodo.orden > index) {
+        periodo.orden = index;
+      }
+    };
+
+    (Array.isArray(formato?.modulos) ? formato.modulos : [])
+      .forEach((modulo: any, index: number) => registrarPeriodoModulo(modulo, index, false));
+    horariosDebug.forEach((horario: any, index: number) =>
+      registrarPeriodoModulo(horario, index, true)
+    );
+
+    const periodosModulos = Array.from(periodosPorModulo.values())
+      .sort((a, b) => a.orden - b.orden)
+      .map((modulo) =>
+        `${modulo.nombre}: ${formatearFecha(modulo.desde)} al ${formatearFecha(modulo.hasta)}`
+      );
 
     const textoPeriodos =
       [
@@ -578,9 +621,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
         `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}`,
         'Ejecución del curso:',
         `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}`,
-        `${nombreModulo1}:`,
-        'Período del módulo:',
-        `${formatearFecha(fechaDesdeModulo1)} al ${formatearFecha(fechaHastaModulo1)}`
+        ...periodosModulos
       ].join('\n');
 
     const modalidadFormato1 =
@@ -618,50 +659,38 @@ async generarPDFFormato6(formato: any): Promise<void> {
     // 2. HORARIO
     // =====================================================
 
-    let textoHorario = '';
+    const horariosPorModulo = new Map<string, { nombre: string; actividades: string[] }>();
 
-
-    horariosDebug.forEach(
-      (horario: any) => {
-
-        const dias =
-          obtenerDiasHorarios(
-            horario
-          );
-
-
-        if (
-          !horario.tipo_actividad
-        ) {
-          return;
-        }
-
-
-        // Tipo de actividad
-
-        textoHorario +=
-          horario.tipo_actividad +
-          '\n';
-
-
-        // Días y horas
-
-        dias.forEach(
-          (diaHorario: any) => {
-
-            textoHorario +=
-              `${diaHorario.dia || ''}: ` +
-              `${diaHorario.horaDesde || ''} - ` +
-              `${diaHorario.horaHasta || ''}\n`;
-
-          }
-        );
-
-
-        textoHorario += '\n';
-
+    horariosDebug.forEach((horario: any, index: number) => {
+      if (!horario.tipo_actividad) {
+        return;
       }
-    );
+
+      const nombreOriginal = String(horario.modulo_nombre || '').trim();
+      const moduloId = horario.modulo_id ||
+        nombreOriginal.match(/\d+/)?.[0] ||
+        index + 1;
+      const nombreModulo = nombreOriginal || `Módulo ${moduloId}`;
+      const claveModulo = String(horario.modulo_id || nombreOriginal || moduloId).toLowerCase();
+      let modulo = horariosPorModulo.get(claveModulo);
+
+      if (!modulo) {
+        modulo = { nombre: nombreModulo, actividades: [] };
+        horariosPorModulo.set(claveModulo, modulo);
+      }
+
+      const lineasActividad = [String(horario.tipo_actividad)];
+      obtenerDiasHorarios(horario).forEach((diaHorario: any) => {
+        lineasActividad.push(
+          `${diaHorario.dia || ''}: ${diaHorario.horaDesde || ''} - ${diaHorario.horaHasta || ''}`
+        );
+      });
+      modulo.actividades.push(lineasActividad.join('\n'));
+    });
+
+    const textoHorario = Array.from(horariosPorModulo.values())
+      .map((modulo) => `${modulo.nombre}:\n${modulo.actividades.join('\n\n')}`)
+      .join('\n\n');
 
 
     // =====================================================
@@ -1800,7 +1829,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     1.3,
 
                   alignment:
-                    'center'
+                    'left'
 
                 }
 
@@ -1832,7 +1861,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     1.3,
 
                   alignment:
-                    'center'
+                    'left'
 
                 }
 

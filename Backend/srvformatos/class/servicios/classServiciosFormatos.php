@@ -4941,33 +4941,6 @@ private function insertarPublicacionesFormato13($dbc, $formato13Codigo, $publica
     }
 }
 
-private function insertarPublicacionesCuadroFormato13($dbc, $tabla, $formato13Codigo, $principal, $adicionales, $columnas, $valoresPredeterminados = array())
-{
-    $idPrincipal = 0;
-    $publicaciones = array_merge(array($principal), $adicionales);
-
-    foreach ($publicaciones as $indice => $publicacion) {
-        $campos = array('formato13_codigo' => $formato13Codigo);
-        foreach ($columnas as $columna => $propiedad) {
-            $valor = isset($publicacion[$propiedad]) && $publicacion[$propiedad] !== ''
-                ? $publicacion[$propiedad]
-                : (isset($valoresPredeterminados[$columna]) ? $valoresPredeterminados[$columna] : null);
-            $campos[$columna] = $valor;
-        }
-
-        $codigo = $this->insertarCuadroFormato13($dbc, $tabla, $campos);
-        if ($indice === 0) {
-            $idPrincipal = $codigo;
-        }
-    }
-
-    if ($idPrincipal <= 0) {
-        throw new Exception('No se pudo guardar la publicación principal del cuadro ' . $tabla . '.');
-    }
-
-    return $idPrincipal;
-}
-
 private function obtenerPublicacionesCuadroFormato13($dbc, $tabla, $codigoCuadro, $columnas)
 {
     $nombresColumnas = array_merge(array('formato13_codigo', $codigoCuadro), array_keys($columnas));
@@ -5470,32 +5443,6 @@ private function insertarPublicacionesRelacionadasFormato13($dbc, $codigo, $tabl
         }
         $dbc->execute();
     }
-}
-
-private function obtenerPublicacionesRelacionadasFormato13($dbc, $tabla, $columnas)
-{
-    $dbc->query('SELECT * FROM ' . $tabla . ' ORDER BY formato13_codigo, orden_publicacion');
-    $filas = $dbc->resultset();
-    $publicaciones = array();
-
-    foreach ($filas as $fila) {
-        if ((int) $fila['orden_publicacion'] === 1) {
-            continue;
-        }
-
-        $codigo = $fila['formato13_codigo'];
-        if (!isset($publicaciones[$codigo])) {
-            $publicaciones[$codigo] = array();
-        }
-
-        $publicacion = array();
-        foreach ($columnas as $columna => $propiedad) {
-            $publicacion[$propiedad] = $fila[$columna];
-        }
-        $publicaciones[$codigo][] = $publicacion;
-    }
-
-    return $publicaciones;
 }
 
 public function getFormato13()

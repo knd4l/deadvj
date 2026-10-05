@@ -20,8 +20,6 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { AuthModule } from '@auth0/auth0-angular';
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { FormatounoComponent } from './componentes/formatouno/formatouno.component';
-import { FormatodosComponent } from './componentes/formatodos/formatodos.component';
-import { ListaformatosComponent } from './componentes/listaformatos/listaformatos.component';
 import { FormatounoverComponent } from './componentes/formatounover/formatounover.component';
 import { MsalService, MsalBroadcastService } from '@azure/msal-angular';
 import {
@@ -69,8 +67,6 @@ UsuariosistemaComponent,
 
     MiperfilComponent,
      FormatounoComponent,
-     FormatodosComponent,
-     ListaformatosComponent,
      FormatounoverComponent,
      CrearcontratoComponent,
      VercontratoComponent,

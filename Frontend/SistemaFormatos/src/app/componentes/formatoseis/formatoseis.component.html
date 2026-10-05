@@ -356,7 +356,7 @@
         INSCRIPCIONES y MATRÍCULA:
       </div>
 
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-left gap-2">
 
         <span>Desde</span>
 
@@ -393,7 +393,7 @@
         EJECUCIÓN DEL CURSO:
       </div>
 
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-left gap-2">
 
         <span>Desde</span>
 
@@ -1488,6 +1488,7 @@
                 style="max-width: 100px;"
                 name="instructores{{i}}"
                 [(ngModel)]="fila.numeroInstructores"
+                (ngModelChange)="calcularTotalPresupuesto(i)"
                 min="1">
 
               <span>
@@ -1572,32 +1573,15 @@
         </tr>
 
 
-        <!-- =========================================
-             TOTAL GENERAL
-             ========================================= -->
-
-        <tr>
-
-          <td
-            colspan="3"
-            class="text-end fw-bold">
-
-            TOTAL EGRESOS
-
-          </td>
-
-          <td
-            class="text-end fw-bold">
-
-            {{ calcularTotalGeneral() | number:'1.2-2' }}
-
-          </td>
-
-          <td></td>
-
-        </tr>
-
       </tbody>
+
+      <tfoot>
+        <tr class="table-secondary fw-bold">
+          <td colspan="3" class="text-end">TOTAL EGRESOS</td>
+          <td class="text-end">{{ calcularTotalGeneral() | number:'1.2-2' }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
 
     </table>
 

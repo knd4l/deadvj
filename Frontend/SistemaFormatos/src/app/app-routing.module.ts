@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { LoginComponent } from "./componentes/login/login.component";
 import { PrincipalComponent } from './componentes/principal/principal.component';
 import { UsuariosComponent } from "./componentes/usuarios/usuarios.component";
@@ -43,8 +42,7 @@ const routes: Routes = [
 
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes),HttpClientModule,],
-  providers: [ HttpClientModule],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

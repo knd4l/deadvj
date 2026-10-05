@@ -45,8 +45,10 @@ export class FormatounoComponent implements OnInit {
   fechaEjecucionHasta:[''];
 
 
+  // Inyecta los servicios usados por el formulario.
   constructor(private fb: FormBuilder,private moduloService: ModulosService,public CookieService:CookieService,private formularioService: FormulariosService, private deviceService: DeviceDetectorService,private router:Router) { }
 
+  // Prepara el formulario y carga los datos iniciales.
   ngOnInit(): void {
     this.cargarFechaHora();
     this.cargarTipoCapacitacion();
@@ -107,7 +109,7 @@ export class FormatounoComponent implements OnInit {
   // 3️⃣ Activar listeners de checkboxes
   this.controlarDocumentos();
   }
-
+  // Guarda la categoría elegida.
   categoriaSeleccionada(valor:any){
     this.codigocategoria=valor;
 
@@ -116,6 +118,7 @@ export class FormatounoComponent implements OnInit {
 
 
   //PARA SUBIR ACUERDO DE CALIDAD
+  // Valida y selecciona el PDF del Acuerdo de Calidad.
   seleccionarArchivo(event:any) {
     const file = event.target.files?.[0] as File | undefined;
     if (file?.type === 'application/pdf') {
@@ -137,6 +140,7 @@ export class FormatounoComponent implements OnInit {
   }
   }
 
+  // Sube el archivo seleccionado del Acuerdo de Calidad.
   upload() {
     if (!this.archivo) {
       Swal.fire('Archivo requerido', 'Seleccione el PDF de Acuerdo de Calidad.', 'warning');
@@ -163,6 +167,7 @@ export class FormatounoComponent implements OnInit {
 
 
   //PARA SUBIR CRITERIO DE CALIDAD
+  // Valida y selecciona el PDF del Criterio de Calificación.
   seleccionarArchivo_Crit(event:any) {
     const file = event.target.files?.[0] as File | undefined;
     if (file?.type === 'application/pdf') {
@@ -184,6 +189,7 @@ export class FormatounoComponent implements OnInit {
   }
   }
 
+  // Sube el archivo seleccionado del Criterio de Calificación.
   upload_Crit() {
     if (!this.archivo_crit) {
       Swal.fire('Archivo requerido', 'Seleccione el PDF de Criterio de Calificación.', 'warning');
@@ -209,7 +215,7 @@ export class FormatounoComponent implements OnInit {
 
 
 
-
+  // Asigna un archivo al control indicado.
   onFileChange(event: any, controlName: string): void {
     const file = event.target.files[0];
     if (file) {
@@ -218,7 +224,7 @@ export class FormatounoComponent implements OnInit {
    // console.log(this.formato1Form);
   }
 
-
+  // Guarda el nombre del archivo en el control indicado.
   onFileSelected(event: Event, controlName: string): void {
     const input = event.target as HTMLInputElement;
 
@@ -230,7 +236,7 @@ export class FormatounoComponent implements OnInit {
     }
   }
 
-
+  // Comprueba que cada documento marcado tenga un archivo asociado.
   validarArchivoRequerido() {
     return (form: FormGroup) => {
 
@@ -250,7 +256,7 @@ export class FormatounoComponent implements OnInit {
     };
   }
 
-
+  // Habilita o deshabilita campos según los documentos seleccionados.
   controlarDocumentos(): void {
 
     this.formato1Form.get('actaTrabajo')?.valueChanges.subscribe(valor => {
@@ -273,7 +279,7 @@ export class FormatounoComponent implements OnInit {
 
   }
 
-
+  // Valida los datos requeridos para los documentos seleccionados.
   validarDocumentos(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
 
@@ -303,13 +309,12 @@ export class FormatounoComponent implements OnInit {
       return null;
     };
   }
+  // Muestra los valores actuales del formulario para depuración.
   guardarprueba(): void {
     console.log(this.formato1Form.value);
 
   }
-
-
-
+  // Valida y guarda el Formato 1 junto con sus anexos.
   guardarformato1(): void {
     if (this.isGuardando) {
       console.warn('Ya hay un guardado en progreso, aguardando...');
@@ -424,6 +429,7 @@ export class FormatounoComponent implements OnInit {
     });
   }
 
+  // Inserta el formato y guarda sus datos relacionados.
   private insertarFormato1(data: any): void {
       this.moduloService.insertarFormato1(data).subscribe({
       next: (res: any) => {
@@ -494,7 +500,7 @@ export class FormatounoComponent implements OnInit {
     });
   }
 
-
+  // Carga las opciones de tipo de capacitación.
    cargarTipoCapacitacion(){
 
     let data: any;
@@ -533,14 +539,17 @@ export class FormatounoComponent implements OnInit {
 		);
   }
 
+  // Expone el arreglo de temáticas del formulario.
   get tematicas() {
     return this.formato1Form.get('tematicas') as FormArray;
   }
 
+  // Expone el arreglo de instructores del formulario.
   get instructores() {
     return this.formato1Form.get('instructores') as FormArray;
   }
 
+  // Guarda una temática tentativa asociada al formato.
   guardarTematicasTent(temanombre: string, codigof1: any) {
 
     const data = {
@@ -561,6 +570,7 @@ export class FormatounoComponent implements OnInit {
       })
     );
   }
+  // Guarda todas las temáticas ingresadas.
   guardarTematicasTentIngresadas(codigoform1: any) {
 
     const tematicas = this.tematicas.value
@@ -582,6 +592,7 @@ export class FormatounoComponent implements OnInit {
   }
 
 
+  // Guarda un instructor tentativo asociado al formato.
   guardarInstructorTent(instnombre: string, codigof1: any) {
 
     const data = {
@@ -603,6 +614,7 @@ export class FormatounoComponent implements OnInit {
     );
   }
 
+  // Guarda todos los instructores ingresados.
   guardarInstructorTentIngresado(codigoform1: any) {
 
     const instructores = this.instructores.value
@@ -623,6 +635,7 @@ export class FormatounoComponent implements OnInit {
     return forkJoin(requests);
   }
 
+  // Guarda una consecuencia asociada al formato.
   guardarConsecuenciaTexto(consecuencia: string, codigof1: any) {
     const data = {
       fx: 'insertconsecuencia',
@@ -643,6 +656,7 @@ export class FormatounoComponent implements OnInit {
     );
   }
 
+  // Guarda las consecuencias que tengan contenido.
   guardarConsecuenciasIngresadas(codigoform1: any) {
     const consecuencias = [
       this.formato1Form.get('consecuencia1')?.value,
@@ -665,6 +679,7 @@ export class FormatounoComponent implements OnInit {
     return forkJoin(requests);
   }
 
+  // Consulta y almacena la dirección IP actual.
   getIP()
   {
     this.formularioService.getIPAddress().subscribe((res:any)=>{
@@ -672,6 +687,7 @@ export class FormatounoComponent implements OnInit {
     });
   }
 
+  // Genera la fecha, hora y año usados por el formato.
   cargarFechaHora() {
     var hoy = new Date();
     var dd = hoy.getDate();
