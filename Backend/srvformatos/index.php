@@ -102,6 +102,9 @@ if ($view == "no identificado" || $view == "none") {
 		'insertformato5'=>true,
 		'getformato5'=>true,
 		'getusuariosformato5'=>true,
+		'getusuariosformato32'=>true,
+		'insertformato32'=>true,
+		'getformato32'=>true,
 
 		
 	);
@@ -132,5 +135,3 @@ if ($view == "no identificado" || $view == "none") {
 }
 
 ?>
-
-

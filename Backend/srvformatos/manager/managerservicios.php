@@ -126,6 +126,21 @@ case 'getusuariosformato5':
 	$clsCursos = new classServiciosFormatos();
 	$clsCursos->getUsuariosFormato5();
 	break;
+
+case 'getusuariosformato32':
+	$clsCursos = new classServiciosFormatos();
+	$clsCursos->getUsuariosFormato5();
+	break;
+
+case 'insertformato32':
+	$clsCursos = new classServiciosFormatos();
+	$clsCursos->insertFormato32($jdata->d);
+	break;
+
+case 'getformato32':
+	$clsCursos = new classServiciosFormatos();
+	$clsCursos->getFormato32();
+	break;
 	
 }
 

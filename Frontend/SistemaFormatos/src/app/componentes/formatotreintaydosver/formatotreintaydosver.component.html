@@ -1,0 +1,52 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional d-flex align-items-center justify-content-between">
+      <h4 class="mb-0"><b>FORMATOS 32 - NOTIFICACIONES</b></h4>
+      <button class="btn btn-institucional btn-sm" type="button" (click)="cargarFormatos()" [disabled]="cargando">
+        {{ cargando ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
+    <div class="card-body">
+      <div *ngIf="cargando && formatos.length === 0" class="py-4 text-center">Cargando registros...</div>
+      <div *ngIf="!cargando && formatos.length === 0" class="py-4 text-center text-muted">
+        No hay registros guardados.
+      </div>
+      <div *ngIf="formatos.length > 0" class="table-responsive">
+        <table class="table table-bordered table-hover text-center align-middle">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Notificaciones</th>
+              <th>Curso</th>
+              <th>Instructor-gestor</th>
+              <th>Medio(s)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let formato of formatos">
+              <td>{{ formato.formato32_codigo }}</td>
+              <td>{{ formato.notificaciones.length }}</td>
+              <td>
+                {{ formato.formato1_codigo_curso || 'Sin código' }}
+                <span *ngIf="formato.formato1_curso_definido"> - {{ formato.formato1_curso_definido }}</span>
+              </td>
+              <td>{{ formato.instructor_nombres }} {{ formato.instructor_apellidos }}</td>
+              <td>{{ resumenMedios(formato) }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-institucional"
+                  type="button"
+                  (click)="verPdf(formato)"
+                  aria-label="Ver PDF de la notificación"
+                  title="Ver PDF">
+                  <i class="fa fa-file-pdf" aria-hidden="true"></i> Ver PDF
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,179 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional text-center">
+      <h4 class="mb-0"><b>FORMATO 32 - NOTIFICACIÓN</b></h4>
+    </div>
+    <div class="card-body">
+      <form #formulario="ngForm" (ngSubmit)="guardar(formulario)" novalidate>
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered align-middle mb-0">
+            <tbody>
+              <tr>
+                <th scope="row" class="field-label">Instructor-gestor</th>
+                <td>
+                  <select
+                    class="form-select"
+                    id="instructorFormato32"
+                    name="instructorIdentificacion"
+                    [(ngModel)]="instructorIdentificacion"
+                    required>
+                    <option value="">Seleccionar instructor-gestor</option>
+                    <option *ngFor="let usuario of usuarios" [value]="usuario.cedula">
+                      {{ usuario.nombres }} {{ usuario.apellidos }} - {{ usuario.cedula }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row" class="field-label">Curso definido</th>
+                <td>
+                  <select
+                    class="form-select"
+                    id="cursoFormato32"
+                    name="formato6Codigo"
+                    [(ngModel)]="formato6Codigo"
+                    required>
+                    <option [ngValue]="null">Seleccionar curso</option>
+                    <option *ngFor="let curso of cursos" [ngValue]="curso.formato6_codigo">
+                      {{ curso.formato1_codigo_curso || 'Sin código' }} - {{ curso.formato1_curso_definido }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section *ngFor="let notificacion of notificaciones; let i = index" class="table-responsive notification-section">
+          <table class="table table-bordered align-middle mb-0">
+            <thead>
+              <tr>
+                <th colspan="2" class="notification-heading">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span>Notificación {{ i + 1 }}</span>
+                    <button
+                      *ngIf="notificaciones.length > 1"
+                      class="btn btn-outline-danger btn-sm"
+                      type="button"
+                      (click)="quitarNotificacion(i)">
+                      Quitar
+                    </button>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row" class="field-label">Fecha de notificación</th>
+                <td>
+                  <input
+                    class="form-control"
+                    type="date"
+                    [id]="'fechaNotificacionFormato32-' + i"
+                    [name]="'fechaNotificacion' + i"
+                    [(ngModel)]="notificacion.fechaNotificacion"
+                    required>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row" class="field-label">Tipo de notificación</th>
+                <td>
+                  <div class="d-flex flex-wrap gap-4">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'notificacionIndividualFormato32-' + i"
+                        [checked]="notificacion.tipoNotificacion === 'individual'"
+                        (change)="cambiarTipoNotificacion(notificacion, 'individual', $event)">
+                      <label class="form-check-label" [for]="'notificacionIndividualFormato32-' + i">Individual</label>
+                    </div>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'notificacionGrupalFormato32-' + i"
+                        [checked]="notificacion.tipoNotificacion === 'grupal'"
+                        (change)="cambiarTipoNotificacion(notificacion, 'grupal', $event)">
+                      <label class="form-check-label" [for]="'notificacionGrupalFormato32-' + i">Grupal</label>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <ng-container *ngIf="notificacion.tipoNotificacion === 'individual'">
+                <tr>
+                  <th scope="row" class="field-label">Nombres</th>
+                  <td>
+                    <input
+                      class="form-control"
+                      type="text"
+                      [id]="'nombresFormato32-' + i"
+                      [name]="'nombres' + i"
+                      [(ngModel)]="notificacion.nombres"
+                      maxlength="150"
+                      required>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="field-label">Apellidos</th>
+                  <td>
+                    <input
+                      class="form-control"
+                      type="text"
+                      [id]="'apellidosFormato32-' + i"
+                      [name]="'apellidos' + i"
+                      [(ngModel)]="notificacion.apellidos"
+                      maxlength="150"
+                      required>
+                  </td>
+                </tr>
+              </ng-container>
+              <tr>
+                <th scope="row" class="field-label">Medio de notificación</th>
+                <td>
+                  <div class="d-flex flex-wrap gap-4">
+                    <div class="form-check" *ngFor="let medio of opcionesMedio">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'medioNotificacionFormato32-' + i + '-' + medio.valor"
+                        [checked]="notificacion.mediosNotificacion.includes(medio.valor)"
+                        (change)="alternarMedio(notificacion, medio.valor, $event)">
+                      <label class="form-check-label" [for]="'medioNotificacionFormato32-' + i + '-' + medio.valor">
+                        {{ medio.etiqueta }}
+                      </label>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row" class="field-label">Detalle</th>
+                <td>
+                  <textarea
+                    class="form-control"
+                    [id]="'detalleFormato32-' + i"
+                    [name]="'detalle' + i"
+                    [(ngModel)]="notificacion.detalle"
+                    rows="5"
+                    required></textarea>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="d-flex justify-content-start mt-3">
+          <button class="btn btn-institucional" type="button" (click)="agregarNotificacion()">
+            <i class="fa fa-plus" aria-hidden="true"></i> Agregar otra notificación
+          </button>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button class="btn btn-institucional" type="submit" [disabled]="guardando || usuarios.length === 0 || cursos.length === 0">
+            {{ guardando ? 'Guardando...' : 'Guardar Formato 32' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>

@@ -502,6 +502,7 @@ public function getUsuariosLogin($filtros){
 public function insertformato1($filtros) {
   try
   {
+   $transaccionIniciada = false;
       
    $result = array();
    $dataa = new stdClass();
@@ -550,6 +551,8 @@ public function insertformato1($filtros) {
 
    if ($dbc->getEstado()->codigo == 0) {
 
+        $dbc->beginTransaction();
+        $transaccionIniciada = true;
         $dbc->query($get_Dataa);
 
             $dbc->bind(":formato1_tipo_capacitacion",$filtros->fformato1_tipo_capacitacion);
@@ -590,16 +593,60 @@ public function insertformato1($filtros) {
          VALUES (:anexo_formato1_codigo, :anexo_acta_trabajo, :anexo_acta_trabajo_descripcion, :anexo_acuerdo_calidad, :anexo_acuerdo_calidad_ruta, :anexo_criterio_aceptacion, :anexo_criterio_aceptacion_ruta, 'ACTIVO')");
        $dbc->bind(":anexo_formato1_codigo", $recordsID);
        $dbc->bind(":anexo_acta_trabajo", $anexoActa);
-       $dbc->bind(":anexo_acta_trabajo_descripcion", $anexoActaDescripcion);
+       $dbc->bind(":anexo_acta_trabajo_descripcion", $anexoActa === 'SI' ? $anexoActaDescripcion : null);
        $dbc->bind(":anexo_acuerdo_calidad", $anexoAcuerdo);
        $dbc->bind(":anexo_acuerdo_calidad_ruta", $anexoAcuerdoRuta);
        $dbc->bind(":anexo_criterio_aceptacion", $anexoCriterio);
        $dbc->bind(":anexo_criterio_aceptacion_ruta", $anexoCriterioRuta);
        $dbc->execute();
 
+       $consecuencias = array(
+         isset($filtros->fformato1_consecuencia1) ? trim($filtros->fformato1_consecuencia1) : '',
+         isset($filtros->fformato1_consecuencia2) ? trim($filtros->fformato1_consecuencia2) : '',
+         isset($filtros->fformato1_consecuencia3) ? trim($filtros->fformato1_consecuencia3) : ''
+       );
+       foreach ($consecuencias as $consecuencia) {
+         if ($consecuencia === '') {
+           continue;
+         }
+
+         $dbc->query("INSERT INTO consecuencias_formato1
+           (consecuencia_descripcion, consecuencia_formato1_codigo, consecuencia_estado)
+           VALUES (:consecuencia_descripcion, :consecuencia_formato1_codigo, 'ACTIVO')");
+         $dbc->bind(":consecuencia_descripcion", $consecuencia);
+         $dbc->bind(":consecuencia_formato1_codigo", $recordsID);
+         $dbc->execute();
+       }
+
+       $instructores = isset($filtros->fformato1_instructores_tentativos_lista)
+         && is_array($filtros->fformato1_instructores_tentativos_lista)
+         ? $filtros->fformato1_instructores_tentativos_lista
+         : preg_split('/[,;\r\n]+/u', isset($filtros->fformato1_instructores_tentativos) ? $filtros->fformato1_instructores_tentativos : '');
+       $instructoresUnicos = array();
+       foreach ($instructores as $instructor) {
+         $instructor = trim((string) $instructor);
+         if ($instructor === '') {
+           continue;
+         }
+
+         $claveInstructor = function_exists('mb_strtolower')
+           ? mb_strtolower($instructor, 'UTF-8')
+           : strtolower($instructor);
+         if (isset($instructoresUnicos[$claveInstructor])) {
+           continue;
+         }
+         $instructoresUnicos[$claveInstructor] = true;
+         $this->guardarInstructorTentativoUnico($dbc, $instructor, $recordsID);
+       }
+
+       $dbc->endTransaction();
+       $transaccionIniciada = false;
+
        $this->estado = new Exception_Object(10012, 'Se ha grabado correctamente el registro');
        $this->estado->setLastID($recordsID);
       } else {
+       $dbc->cancelTransaction();
+       $transaccionIniciada = false;
        # code...
        $this->estado = new Exception_Object(10012, 'No fue posible guardar el registro');
        $this->estado->setLastID(-2);
@@ -611,6 +658,13 @@ public function insertformato1($filtros) {
    }
 
   } catch (Exception $e) {
+   if ($transaccionIniciada && isset($dbc)) {
+     try {
+       $dbc->cancelTransaction();
+     } catch (Exception $rollbackError) {
+     }
+   }
+   $recordsCount = 0;
    $this->estado = new Exception_Object(60012002, 'ha ocurrido un error grave comuniquese con el admnistrador.');
    $this->estado->setLastID(-1);
   }
@@ -736,7 +790,49 @@ public function insertTemTentativas($filtros) {
 
  
     //////////////////INSERTAR INSTRUCTORES TENTATIVAS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   
+private function guardarInstructorTentativoUnico($dbc, $nombre, $codigoFormato1)
+{
+  $nombre = trim((string) $nombre);
+  $codigoFormato1 = (int) $codigoFormato1;
+  if ($nombre === '' || $codigoFormato1 <= 0) {
+    return 0;
+  }
+
+  $dbc->query("SELECT instructorest_codigo
+    FROM instructores_tentativosf1
+    WHERE instructorest_codigof1 = :codigo_formato1
+      AND LOWER(TRIM(instructorest_nombre)) = LOWER(TRIM(:nombre))
+    ORDER BY instructorest_codigo ASC");
+  $dbc->bind(':codigo_formato1', $codigoFormato1);
+  $dbc->bind(':nombre', $nombre);
+  $existentes = $dbc->resultset();
+
+  if (count($existentes) > 0) {
+    $codigoConservado = (int) $existentes[0]['instructorest_codigo'];
+    for ($i = 1; $i < count($existentes); $i++) {
+      $dbc->query("DELETE FROM instructores_tentativosf1
+        WHERE instructorest_codigo = :instructorest_codigo");
+      $dbc->bind(':instructorest_codigo', (int) $existentes[$i]['instructorest_codigo']);
+      $dbc->execute();
+    }
+
+    $dbc->query("UPDATE instructores_tentativosf1
+      SET instructorest_estado = 'Activo'
+      WHERE instructorest_codigo = :instructorest_codigo");
+    $dbc->bind(':instructorest_codigo', $codigoConservado);
+    $dbc->execute();
+    return $codigoConservado;
+  }
+
+  $dbc->query("INSERT INTO instructores_tentativosf1
+    (instructorest_nombre, instructorest_codigof1, instructorest_estado)
+    VALUES (:nombre, :codigo_formato1, 'Activo')");
+  $dbc->bind(':nombre', $nombre);
+  $dbc->bind(':codigo_formato1', $codigoFormato1);
+  $dbc->execute();
+  return (int) $dbc->lastId();
+}
+
 public function insertInstTentativas($filtros) {
   try
   {
@@ -746,26 +842,17 @@ public function insertInstTentativas($filtros) {
    $dataa->n = 'No registrado';
    $recordsCount = 0;
 
-   $get_Dataa = "INSERT INTO instructores_tentativosf1 
-      (instructorest_nombre,instructorest_codigof1,instructorest_estado) VALUES 
-      (:instructorest_nombre,
-      :instructorest_codigof1,
-      'Activo')";
-
-
    $dbc = $this->getInitDatabase();
 
    if ($dbc->getEstado()->codigo == 0) {
-
-      $dbc->query($get_Dataa);
-      $dbc->bind(":instructorest_nombre",$filtros->finstructorest_nombre);
-      $dbc->bind(":instructorest_codigof1",$filtros->finstructorest_codigof1);
-     $dbc->execute();
-
-    // $tabla = $dbc->getTabla();
-    
-    $recordsID = $dbc->lastId();
-    $recordsCount= $dbc->lastId();
+      $dbc->beginTransaction();
+      $recordsID = $this->guardarInstructorTentativoUnico(
+        $dbc,
+        isset($filtros->finstructorest_nombre) ? $filtros->finstructorest_nombre : '',
+        isset($filtros->finstructorest_codigof1) ? $filtros->finstructorest_codigof1 : 0
+      );
+      $dbc->endTransaction();
+      $recordsCount = $recordsID;
 
      if ($recordsID > 0) {
        $this->estado = new Exception_Object(10012, 'Se ha grabado correctamente el registro');
@@ -782,7 +869,9 @@ public function insertInstTentativas($filtros) {
    }
 
   } catch (Exception $e) {
-   
+   if (isset($dbc) && $dbc->inTransaction()) {
+     $dbc->cancelTransaction();
+   }
    $this->estado = new Exception_Object(60012002, 'ha ocurrido un error grave comuniquese con el admnistrador.');
    $this->estado->setLastID(-1);
   }
@@ -1725,6 +1814,41 @@ public function insertCursoDefinido($filtros) {
 // GUARDAR FORMATO 6
 // =====================================================
 
+private function sincronizarInstructoresTentativosFormato6($dbc, $formato1Codigo, $instructoresTexto)
+{
+    $formato1Codigo = (int) $formato1Codigo;
+    if ($formato1Codigo <= 0) {
+        throw new Exception('No se recibió un Formato 1 válido para guardar los instructores tentativos.');
+    }
+
+    $instructores = preg_split('/[,;\r\n]+/u', (string) $instructoresTexto);
+    $instructoresNormalizados = array();
+    $instructoresUnicos = array();
+
+    foreach ($instructores as $instructor) {
+        $instructor = trim($instructor);
+        if ($instructor === '') {
+            continue;
+        }
+
+        $clave = strtolower($instructor);
+        if (!isset($instructoresUnicos[$clave])) {
+            $instructoresUnicos[$clave] = true;
+            $instructoresNormalizados[] = $instructor;
+        }
+    }
+
+    $dbc->query("UPDATE instructores_tentativosf1
+        SET instructorest_estado = 'Inactivo'
+        WHERE instructorest_codigof1 = :formato1_codigo
+          AND instructorest_estado = 'Activo'");
+    $dbc->bind(':formato1_codigo', $formato1Codigo);
+    $dbc->execute();
+
+    foreach ($instructoresNormalizados as $instructor) {
+        $this->guardarInstructorTentativoUnico($dbc, $instructor, $formato1Codigo);
+    }
+}
 
 
 
@@ -1771,66 +1895,52 @@ public function insertformato6($datos)
             // =====================================================
 
             $dbc->beginTransaction();
+            $dbc->query("SHOW COLUMNS FROM formato6");
+            $columnasFormato6 = array();
+            foreach ($dbc->resultset() as $columnaFormato6) {
+                if (isset($columnaFormato6['Field'])) {
+                    $columnasFormato6[] = $columnaFormato6['Field'];
+                }
+            }
 
 
             // =====================================================
             // INSERTAR DATOS DEL FORMATO 6
             // =====================================================
 
-            $insert = "
-                INSERT INTO formato6 (
-                    formato1_codigo,
-                    formato6_fecha_elaboracion,
-                    formato6_requerimiento,
-                    formato6_unidad_responsable,
-                    formato6_instructores,
-                    formato6_beneficiarios,
-                    formato6_paralelo,
-                    formato6_modalidad,
-                    formato6_area,
-                    formato6_carga_horaria,
-                    inscripcion_matricula_desde,
-                    inscripcion_matricula_hasta,
-                    formato6_lugar,
-                    formato6_prerrequisitos,
-                    formato6_tipo_certificado,
-                    formato6_inversion,
-                    formato6_introduccion,
-                    formato6_justificacion,
-                    formato6_objetivo_general,
-                    formato6_objetivos_especificos,
-                    formato6_metodologia,
-                    formato6_planificacion_contenidos,
-                    formato6_evaluacion,
-                    formato6_acreditacion
-                )
-                VALUES (
-                    :formato1_codigo,
-                    :formato6_fecha_elaboracion,
-                    :formato6_requerimiento,
-                    :formato6_unidad_responsable,
-                    :formato6_instructores,
-                    :formato6_beneficiarios,
-                    :formato6_paralelo,
-                    :formato6_modalidad,
-                    :formato6_area,
-                    :formato6_carga_horaria,
-                    :inscripcion_matricula_desde,
-                    :inscripcion_matricula_hasta,
-                    :formato6_lugar,
-                    :formato6_prerrequisitos,
-                    :formato6_tipo_certificado,
-                    :formato6_inversion,
-                    :formato6_introduccion,
-                    :formato6_justificacion,
-                    :formato6_objetivo_general,
-                    :formato6_objetivos_especificos,
-                    :formato6_metodologia,
-                    :formato6_planificacion_contenidos,
-                    :formato6_evaluacion,
-                    :formato6_acreditacion
-                )
-            ";
+            $columnasInsert = array(
+                'formato1_codigo' => ':formato1_codigo',
+                'formato6_fecha_elaboracion' => ':formato6_fecha_elaboracion',
+                'formato6_unidad_responsable' => ':formato6_unidad_responsable',
+                'formato6_beneficiarios' => ':formato6_beneficiarios',
+                'formato6_paralelo' => ':formato6_paralelo',
+                'formato6_modalidad' => ':formato6_modalidad',
+                'formato6_area' => ':formato6_area',
+                'formato6_carga_horaria' => ':formato6_carga_horaria',
+                'inscripcion_matricula_desde' => ':inscripcion_matricula_desde',
+                'inscripcion_matricula_hasta' => ':inscripcion_matricula_hasta',
+                'formato6_lugar' => ':formato6_lugar',
+                'formato6_prerrequisitos' => ':formato6_prerrequisitos',
+                'formato6_tipo_certificado' => ':formato6_tipo_certificado',
+                'formato6_inversion' => ':formato6_inversion',
+                'formato6_introduccion' => ':formato6_introduccion',
+                'formato6_justificacion' => ':formato6_justificacion',
+                'formato6_objetivo_general' => ':formato6_objetivo_general',
+                'formato6_metodologia' => ':formato6_metodologia',
+                'formato6_evaluacion' => ':formato6_evaluacion',
+                'formato6_acreditacion' => ':formato6_acreditacion'
+            );
+            if (in_array('formato6_requerimiento', $columnasFormato6, true)) {
+                $columnasInsert['formato6_requerimiento'] = ':formato6_requerimiento';
+            }
+            if (in_array('formato6_objetivos_especificos', $columnasFormato6, true)) {
+                $columnasInsert['formato6_objetivos_especificos'] = ':formato6_objetivos_especificos';
+            }
+            if (in_array('formato6_planificacion_contenidos', $columnasFormato6, true)) {
+                $columnasInsert['formato6_planificacion_contenidos'] = ':formato6_planificacion_contenidos';
+            }
+            $insert = "INSERT INTO formato6 (" . implode(', ', array_keys($columnasInsert)) . ")
+                VALUES (" . implode(', ', array_values($columnasInsert)) . ")";
 
             $dbc->query($insert);
 
@@ -1854,19 +1964,16 @@ public function insertformato6($datos)
                 $datos->fechaElaboracion
             );
 
-            $dbc->bind(
-                ":formato6_requerimiento",
-                $datos->requerimiento
-            );
+            if (in_array('formato6_requerimiento', $columnasFormato6, true)) {
+                $dbc->bind(
+                    ":formato6_requerimiento",
+                    $datos->requerimiento
+                );
+            }
 
             $dbc->bind(
                 ":formato6_unidad_responsable",
                 $datos->unidadResponsable
-            );
-
-            $dbc->bind(
-                ":formato6_instructores",
-                $datos->instructores
             );
 
             $dbc->bind(
@@ -1954,25 +2061,29 @@ public function insertformato6($datos)
             );
 
             $dbc->bind(
-                ":formato6_objetivos_especificos",
-                json_encode(
-                    $datos->objetivos->especificos,
-                    JSON_UNESCAPED_UNICODE
-                )
-            );
-
-            $dbc->bind(
                 ":formato6_metodologia",
                 $datos->metodologiaCurso
             );
 
-            $dbc->bind(
-                ":formato6_planificacion_contenidos",
-                json_encode(
-                    $datos->planificacionContenidos,
-                    JSON_UNESCAPED_UNICODE
-                )
-            );
+            if (in_array('formato6_objetivos_especificos', $columnasFormato6, true)) {
+                $dbc->bind(
+                    ":formato6_objetivos_especificos",
+                    json_encode(
+                        $datos->objetivos->especificos,
+                        JSON_UNESCAPED_UNICODE
+                    )
+                );
+            }
+
+            if (in_array('formato6_planificacion_contenidos', $columnasFormato6, true)) {
+                $dbc->bind(
+                    ":formato6_planificacion_contenidos",
+                    json_encode(
+                        $datos->planificacionContenidos,
+                        JSON_UNESCAPED_UNICODE
+                    )
+                );
+            }
 
             $dbc->bind(
                 ":formato6_evaluacion",
@@ -2004,6 +2115,12 @@ public function insertformato6($datos)
                     'No se pudo obtener el código del Formato 6.'
                 );
             }
+
+            $this->sincronizarInstructoresTentativosFormato6(
+                $dbc,
+                $datos->formato1_codigo,
+                isset($datos->instructores) ? $datos->instructores : ''
+            );
 
 
             // =====================================================
@@ -2638,6 +2755,22 @@ public function getformato6PorFormato1($codigo){
 
         $result = array();
 
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('Error no es posible abrir la conexión.');
+        }
+
+        $dbc->query("SHOW COLUMNS FROM formato6");
+        $columnasFormato6 = array();
+        foreach ($dbc->resultset() as $columnaFormato6) {
+            if (isset($columnaFormato6['Field'])) {
+                $columnasFormato6[] = $columnaFormato6['Field'];
+            }
+        }
+        $selectRequerimiento = in_array('formato6_requerimiento', $columnasFormato6, true)
+            ? 'formato6_requerimiento'
+            : "'' AS formato6_requerimiento";
+
         // =====================================================
         // BUSCAR FORMATO 6 DEL FORMATO 1 SELECCIONADO
         // =====================================================
@@ -2653,9 +2786,14 @@ public function getformato6PorFormato1($codigo){
                     LIMIT 1
                 ) AS formato1_modalidad_nombre,
                 formato6_fecha_elaboracion,
-                formato6_requerimiento,
+                {$selectRequerimiento},
                 formato6_unidad_responsable,
-                formato6_instructores,
+                (
+                    SELECT GROUP_CONCAT(it.instructorest_nombre ORDER BY it.instructorest_codigo SEPARATOR ', ')
+                    FROM instructores_tentativosf1 it
+                    WHERE it.instructorest_codigof1 = formato6.formato1_codigo
+                      AND it.instructorest_estado = 'Activo'
+                ) AS formato6_instructores,
                 formato6_beneficiarios,
                 formato6_paralelo,
                 formato6_modalidad,
@@ -2677,8 +2815,6 @@ public function getformato6PorFormato1($codigo){
         // =====================================================
         // CONEXIÓN
         // =====================================================
-
-        $dbc = $this->getInitDatabase();
 
         if ($dbc->getEstado()->codigo == 0) {
 
@@ -2860,6 +2996,24 @@ public function getformato6Reporte($filtros)
             );
         }
 
+        $dbc->query("SHOW COLUMNS FROM formato6");
+        $columnasFormato6 = array();
+        foreach ($dbc->resultset() as $columnaFormato6) {
+            if (isset($columnaFormato6['Field'])) {
+                $columnasFormato6[] = $columnaFormato6['Field'];
+            }
+        }
+        $selectInstructores = "(SELECT GROUP_CONCAT(it.instructorest_nombre ORDER BY it.instructorest_codigo SEPARATOR ', ')
+            FROM instructores_tentativosf1 it
+            WHERE it.instructorest_codigof1 = formato6.formato1_codigo
+              AND it.instructorest_estado = 'Activo') AS formato6_instructores";
+        $selectRequerimiento = in_array('formato6_requerimiento', $columnasFormato6, true)
+            ? 'formato6_requerimiento'
+            : "'' AS formato6_requerimiento";
+        $selectPlanificacion = in_array('formato6_planificacion_contenidos', $columnasFormato6, true)
+            ? 'formato6_planificacion_contenidos'
+            : "'' AS formato6_planificacion_contenidos";
+
 
         // =====================================================
         // CÓDIGO DEL FORMATO 6
@@ -2899,9 +3053,9 @@ public function getformato6Reporte($filtros)
                     LIMIT 1
                 ) AS formato1_modalidad_nombre,
                 formato6_fecha_elaboracion,
-                formato6_requerimiento,
+                {$selectRequerimiento},
                 formato6_unidad_responsable,
-                formato6_instructores,
+                {$selectInstructores},
                 formato6_beneficiarios,
                 formato6_paralelo,
                 formato6_modalidad,
@@ -2918,7 +3072,7 @@ public function getformato6Reporte($filtros)
                 formato6_justificacion,
                 formato6_objetivo_general,
                 formato6_metodologia,
-                formato6_planificacion_contenidos,
+                {$selectPlanificacion},
                 formato6_evaluacion,
                 formato6_acreditacion
             FROM formato6
@@ -3781,51 +3935,53 @@ public function updateformato6($d)
             // =====================================================
 
             $dbc->beginTransaction();
+            $dbc->query("SHOW COLUMNS FROM formato6");
+            $columnasFormato6 = array();
+            foreach ($dbc->resultset() as $columnaFormato6) {
+                if (isset($columnaFormato6['Field'])) {
+                    $columnasFormato6[] = $columnaFormato6['Field'];
+                }
+            }
 
 
             // =====================================================
             // ACTUALIZAR FORMATO 6
             // =====================================================
 
-            $update = "
-                UPDATE formato6
-                SET
-                    formato1_codigo = :formato1_codigo,
-                    formato6_fecha_elaboracion = :fechaElaboracion,
-                    formato6_requerimiento = :requerimiento,
-                    formato6_unidad_responsable = :unidadResponsable,
-                    formato6_instructores = :instructores,
-                    formato6_beneficiarios = :beneficiarios,
-                    formato6_paralelo = :paralelo,
-                    formato6_modalidad = :modalidad,
-                    formato6_area = :area,
-                    formato6_carga_horaria = :cargaHoraria,
-
-                    inscripcion_matricula_desde =
-                        :inscripcion_matricula_desde,
-
-                    inscripcion_matricula_hasta =
-                        :inscripcion_matricula_hasta,
-
-                    formato6_lugar = :lugar,
-                    formato6_prerrequisitos = :prerrequisitos,
-                    formato6_tipo_certificado = :tipoCertificado,
-                    formato6_inversion = :inversion,
-
-                    formato6_introduccion = :formato6_introduccion,
-                    formato6_justificacion = :formato6_justificacion,
-                    formato6_objetivo_general = :formato6_objetivo_general,
-                    formato6_objetivos_especificos =
-                        :formato6_objetivos_especificos,
-                    formato6_metodologia = :formato6_metodologia,
-                    formato6_planificacion_contenidos =
-                        :formato6_planificacion_contenidos,
-                    formato6_evaluacion = :formato6_evaluacion,
-                    formato6_acreditacion = :formato6_acreditacion
-
+            $asignacionesUpdate = array(
+                'formato1_codigo = :formato1_codigo',
+                'formato6_fecha_elaboracion = :fechaElaboracion',
+                'formato6_unidad_responsable = :unidadResponsable',
+                'formato6_beneficiarios = :beneficiarios',
+                'formato6_paralelo = :paralelo',
+                'formato6_modalidad = :modalidad',
+                'formato6_area = :area',
+                'formato6_carga_horaria = :cargaHoraria',
+                'inscripcion_matricula_desde = :inscripcion_matricula_desde',
+                'inscripcion_matricula_hasta = :inscripcion_matricula_hasta',
+                'formato6_lugar = :lugar',
+                'formato6_prerrequisitos = :prerrequisitos',
+                'formato6_tipo_certificado = :tipoCertificado',
+                'formato6_inversion = :inversion',
+                'formato6_introduccion = :formato6_introduccion',
+                'formato6_justificacion = :formato6_justificacion',
+                'formato6_objetivo_general = :formato6_objetivo_general',
+                'formato6_metodologia = :formato6_metodologia',
+                'formato6_evaluacion = :formato6_evaluacion',
+                'formato6_acreditacion = :formato6_acreditacion'
+            );
+            if (in_array('formato6_requerimiento', $columnasFormato6, true)) {
+                $asignacionesUpdate[] = 'formato6_requerimiento = :requerimiento';
+            }
+            if (in_array('formato6_objetivos_especificos', $columnasFormato6, true)) {
+                $asignacionesUpdate[] = 'formato6_objetivos_especificos = :formato6_objetivos_especificos';
+            }
+            if (in_array('formato6_planificacion_contenidos', $columnasFormato6, true)) {
+                $asignacionesUpdate[] = 'formato6_planificacion_contenidos = :formato6_planificacion_contenidos';
+            }
+            $update = "UPDATE formato6 SET " . implode(', ', $asignacionesUpdate) . "
                 WHERE formato6_codigo = :formato6_codigo
-                AND formato6_estado = 'Activo'
-            ";
+                AND formato6_estado = 'Activo'";
 
             $dbc->query($update);
 
@@ -3849,19 +4005,16 @@ public function updateformato6($d)
                 $d->fechaElaboracion
             );
 
-            $dbc->bind(
-                ":requerimiento",
-                $d->requerimiento
-            );
+            if (in_array('formato6_requerimiento', $columnasFormato6, true)) {
+                $dbc->bind(
+                    ":requerimiento",
+                    $d->requerimiento
+                );
+            }
 
             $dbc->bind(
                 ":unidadResponsable",
                 $d->unidadResponsable
-            );
-
-            $dbc->bind(
-                ":instructores",
-                $d->instructores
             );
 
             $dbc->bind(
@@ -3954,22 +4107,26 @@ public function updateformato6($d)
             );
 
             $dbc->bind(
-                ":formato6_objetivos_especificos",
-                json_encode(
-                    $d->objetivos->especificos,
-                    JSON_UNESCAPED_UNICODE
-                )
-            );
-
-            $dbc->bind(
                 ":formato6_metodologia",
                 $d->metodologiaCurso
             );
 
-            $dbc->bind(
-                ":formato6_planificacion_contenidos",
-                $d->planificacionContenidos
-            );
+            if (in_array('formato6_objetivos_especificos', $columnasFormato6, true)) {
+                $dbc->bind(
+                    ":formato6_objetivos_especificos",
+                    json_encode(
+                        $d->objetivos->especificos,
+                        JSON_UNESCAPED_UNICODE
+                    )
+                );
+            }
+
+            if (in_array('formato6_planificacion_contenidos', $columnasFormato6, true)) {
+                $dbc->bind(
+                    ":formato6_planificacion_contenidos",
+                    $d->planificacionContenidos
+                );
+            }
 
             $dbc->bind(
                 ":formato6_evaluacion",
@@ -3987,6 +4144,11 @@ public function updateformato6($d)
             // =====================================================
 
             $dbc->execute();
+            $this->sincronizarInstructoresTentativosFormato6(
+                $dbc,
+                $d->formato1_codigo,
+                isset($d->instructores) ? $d->instructores : ''
+            );
 
 
             // =====================================================
@@ -5817,6 +5979,252 @@ private function getFormato13Legacy()
     $resultados->data->estado = $this->estado->getCode();
     $resultados->data->item = $result;
     $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getFormato32()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT
+                f32.*,
+                f1.formato1_codigo_curso,
+                f1.formato1_curso_definido,
+                f1.formato1_fecha_ejecucion_desde,
+                f1.formato1_fecha_ejecucion_hasta,
+                f6.formato6_fecha_elaboracion,
+                f6.formato6_modalidad,
+                (
+                    SELECT GROUP_CONCAT(
+                        DISTINCT CONCAT('Módulo ', pc.modulo_id)
+                        ORDER BY pc.modulo_id
+                        SEPARATOR ', '
+                    )
+                    FROM planificacion_contenidos_formato6 pc
+                    WHERE pc.formato6_codigo = f32.formato6_codigo
+                ) AS formato6_modulos
+            FROM formato32 f32
+            LEFT JOIN formato6 f6
+                ON f6.formato6_codigo = f32.formato6_codigo
+            LEFT JOIN formato1 f1
+                ON f1.formato1_codigo = f6.formato1_codigo
+            ORDER BY f32.formato32_codigo DESC");
+        $result = $dbc->resultset();
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 32: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function insertFormato32($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $instructorIdentificacion = isset($datos->instructorIdentificacion)
+            ? trim((string) $datos->instructorIdentificacion)
+            : '';
+        $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $notificaciones = isset($datos->notificaciones) && is_array($datos->notificaciones)
+            ? $datos->notificaciones
+            : array($datos);
+        $mediosPermitidos = array('whatsapp', 'email', 'telefono', 'plataforma');
+
+        if ($instructorIdentificacion === '' || $formato6Codigo <= 0 || count($notificaciones) === 0) {
+            throw new Exception('Selecciona un instructor-gestor y un curso y agrega al menos una notificación.');
+        }
+
+        $notificacionesValidadas = array();
+        foreach ($notificaciones as $indice => $notificacion) {
+            $numero = $indice + 1;
+            if (!is_object($notificacion)) {
+                throw new Exception('La notificación ' . $numero . ' no tiene un formato válido.');
+            }
+
+            $fechaNotificacion = isset($notificacion->fechaNotificacion)
+                ? trim((string) $notificacion->fechaNotificacion)
+                : '';
+            $tipoNotificacion = isset($notificacion->tipoNotificacion)
+                ? trim((string) $notificacion->tipoNotificacion)
+                : '';
+            $nombres = isset($notificacion->nombres) ? trim((string) $notificacion->nombres) : '';
+            $apellidos = isset($notificacion->apellidos) ? trim((string) $notificacion->apellidos) : '';
+            $mediosNotificacion = isset($notificacion->mediosNotificacion) && is_array($notificacion->mediosNotificacion)
+                ? $notificacion->mediosNotificacion
+                : array();
+            $detalle = isset($notificacion->detalle) ? trim((string) $notificacion->detalle) : '';
+            $fecha = DateTime::createFromFormat('Y-m-d', $fechaNotificacion);
+
+            if (!$fecha || $fecha->format('Y-m-d') !== $fechaNotificacion) {
+                throw new Exception('Selecciona una fecha válida para la notificación ' . $numero . '.');
+            }
+            if (!in_array($tipoNotificacion, array('individual', 'grupal'), true)) {
+                throw new Exception('Selecciona si la notificación ' . $numero . ' es individual o grupal.');
+            }
+            if (count($mediosNotificacion) === 0) {
+                throw new Exception('Selecciona al menos un medio para la notificación ' . $numero . '.');
+            }
+
+            $mediosNormalizados = array();
+            foreach ($mediosNotificacion as $medio) {
+                if (!is_string($medio) || !in_array(trim($medio), $mediosPermitidos, true)) {
+                    throw new Exception('La notificación ' . $numero . ' contiene un medio no válido.');
+                }
+                $mediosNormalizados[] = trim($medio);
+            }
+            $mediosNotificacion = array_values(array_unique($mediosNormalizados));
+
+            if ($tipoNotificacion === 'individual' && ($nombres === '' || $apellidos === '')) {
+                throw new Exception('Completa los nombres y apellidos de la notificación ' . $numero . '.');
+            }
+            if ($detalle === '') {
+                throw new Exception('Escribe el detalle de la notificación ' . $numero . '.');
+            }
+
+            $notificacionesValidadas[] = array(
+                'fechaNotificacion' => $fechaNotificacion,
+                'tipoNotificacion' => $tipoNotificacion,
+                'nombres' => $tipoNotificacion === 'individual' ? $nombres : '',
+                'apellidos' => $tipoNotificacion === 'individual' ? $apellidos : '',
+                'mediosNotificacion' => $mediosNotificacion,
+                'detalle' => $detalle
+            );
+        }
+
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT USUARIO_IDENTIFICACION, USUARIO_NOMBRES, USUARIO_APELLIDOS
+            FROM usuarios
+            WHERE USUARIO_IDENTIFICACION = :identificacion
+              AND USUARIO_ESTADO = 'ACTIVO'
+            LIMIT 1");
+        $dbc->bind(':identificacion', $instructorIdentificacion);
+        $instructor = $dbc->single();
+        if (!$instructor) {
+            throw new Exception('El instructor-gestor seleccionado no está activo.');
+        }
+
+        $dbc->query("SELECT formato6.formato6_codigo
+            FROM formato6
+            INNER JOIN formato1
+                ON formato1.formato1_codigo = formato6.formato1_codigo
+            WHERE formato6.formato6_codigo = :formato6_codigo
+              AND formato6.formato6_estado = 'Activo'
+              AND formato1.formato1_curso_definido IS NOT NULL
+              AND TRIM(formato1.formato1_curso_definido) <> ''
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if (!$dbc->single()) {
+            throw new Exception('El curso seleccionado no está disponible.');
+        }
+
+        $dbc->beginTransaction();
+        $fechaCreacion = date('Y-m-d H:i:s');
+        foreach ($notificacionesValidadas as $notificacion) {
+            $dbc->query("INSERT INTO formato32 (
+                instructor_identificacion,
+                instructor_nombres,
+                instructor_apellidos,
+                formato6_codigo,
+                fecha_notificacion,
+                tipo_notificacion,
+                nombres_notificado,
+                apellidos_notificado,
+                medio_notificacion,
+                detalle,
+                fecha_creacion
+            ) VALUES (
+                :instructor_identificacion,
+                :instructor_nombres,
+                :instructor_apellidos,
+                :formato6_codigo,
+                :fecha_notificacion,
+                :tipo_notificacion,
+                :nombres_notificado,
+                :apellidos_notificado,
+                :medio_notificacion,
+                :detalle,
+                :fecha_creacion
+            )");
+            $dbc->bind(':instructor_identificacion', $instructor['USUARIO_IDENTIFICACION']);
+            $dbc->bind(':instructor_nombres', $instructor['USUARIO_NOMBRES']);
+            $dbc->bind(':instructor_apellidos', $instructor['USUARIO_APELLIDOS']);
+            $dbc->bind(':formato6_codigo', $formato6Codigo);
+            $dbc->bind(':fecha_notificacion', $notificacion['fechaNotificacion']);
+            $dbc->bind(':tipo_notificacion', $notificacion['tipoNotificacion']);
+            $dbc->bind(':nombres_notificado', $notificacion['nombres'] !== '' ? $notificacion['nombres'] : null);
+            $dbc->bind(':apellidos_notificado', $notificacion['apellidos'] !== '' ? $notificacion['apellidos'] : null);
+            $dbc->bind(':medio_notificacion', implode(', ', $notificacion['mediosNotificacion']));
+            $dbc->bind(':detalle', $notificacion['detalle']);
+            $dbc->bind(':fecha_creacion', $fechaCreacion);
+            $dbc->execute();
+
+            $codigo = (int) $dbc->lastInsertId();
+            if ($codigo <= 0) {
+                throw new Exception('No se pudo obtener el código de una notificación del Formato 32.');
+            }
+            $result[] = array('formato32_codigo' => $codigo);
+        }
+        $dbc->endTransaction();
+
+        $this->estado = new Exception_Object(1, count($result) . ' notificación(es) del Formato 32 guardada(s) correctamente.');
+        $this->estado->setLastID(count($result));
+    } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 32: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
 
     if ($this->isHTML) {
         header('Content-type: application/json');

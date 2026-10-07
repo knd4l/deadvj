@@ -1,0 +1,2 @@
+ALTER TABLE formato32
+  MODIFY COLUMN medio_notificacion VARCHAR(100) NOT NULL;

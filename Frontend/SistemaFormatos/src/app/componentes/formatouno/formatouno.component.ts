@@ -342,9 +342,13 @@ export class FormatounoComponent implements OnInit {
       .filter((t: string) => t && t.trim() !== '')
       .join(', ');
 
-    const instructoresTexto = (f.instructores || [])
-      .filter((i: string) => i && i.trim() !== '')
-      .join(', ');
+    const instructores = Array.from(new Map(
+      (f.instructores || [])
+        .map((instructor: string) => (instructor || '').trim())
+        .filter((instructor: string) => instructor !== '')
+        .map((instructor: string) => [instructor.toLocaleLowerCase(), instructor])
+    ).values());
+    const instructoresTexto = instructores.join(', ');
 
     const data = {
       fx: 'insertformato1',
@@ -363,6 +367,7 @@ export class FormatounoComponent implements OnInit {
         fformato1_modalidad: f.modalidad,
         fformato1_carga_horaria: f.cargahoraria,
         fformato1_instructores_tentativos: instructoresTexto,
+        fformato1_instructores_tentativos_lista: instructores,
         fformato1_fecha_ejecucion_desde: f.fechaEjecucionDesde,
         fformato1_fecha_ejecucion_hasta: f.fechaEjecucionHasta,
         fformato1_inversion: f.inversion,
@@ -371,10 +376,10 @@ export class FormatounoComponent implements OnInit {
         fformato1_consecuencia3:f.consecuencia3,
         fformato1_acta_trabajo:f.actaTrabajoTexto,
         fformato1_anexo_acta_trabajo: f.actaTrabajo ? 'SI' : 'NO',
-        fformato1_acuerdo_calidad: this.archivoguardar,
-        fformato1_acuerdo_calidad_ruta: this.rutaArchivoguardar,
-        fformato1_criterio_calidad: this.archivoguardar_crit,
-        fformato1_criterio_calidad_ruta: this.rutaArchivoguardarCrit
+        fformato1_acuerdo_calidad: f.acuerdoCalidad ? this.archivoguardar : 'NO',
+        fformato1_acuerdo_calidad_ruta: f.acuerdoCalidad ? this.rutaArchivoguardar : '',
+        fformato1_criterio_calidad: f.criterioCalificacion ? this.archivoguardar_crit : 'NO',
+        fformato1_criterio_calidad_ruta: f.criterioCalificacion ? this.rutaArchivoguardarCrit : ''
 
       },
       dpro: 0,
@@ -442,9 +447,7 @@ export class FormatounoComponent implements OnInit {
           console.log('ID del formato insertado:', idInsertado);
 
           forkJoin([
-            this.guardarTematicasTentIngresadas(idInsertado),
-            this.guardarInstructorTentIngresado(idInsertado),
-            this.guardarConsecuenciasIngresadas(idInsertado)
+            this.guardarTematicasTentIngresadas(idInsertado)
           ]).subscribe({
             next: () => {
               console.log('======= TODOS LOS DATOS RELACIONADOS GUARDADOS =======');
@@ -630,50 +633,6 @@ export class FormatounoComponent implements OnInit {
     const requests = instructores.map((inst: string, index: number) => {
       console.log(`Guardando instructor ${index + 1}/${instructores.length}: "${inst}"`);
       return this.guardarInstructorTent(inst, codigoform1);
-    });
-
-    return forkJoin(requests);
-  }
-
-  // Guarda una consecuencia asociada al formato.
-  guardarConsecuenciaTexto(consecuencia: string, codigof1: any) {
-    const data = {
-      fx: 'insertconsecuencia',
-      d: {
-        fconsecuencia_descripcion: consecuencia,
-        fconsecuencia_formato1_codigo: codigof1
-      },
-      dpro: 0,
-      dus: 0,
-      dcx: 1
-    };
-
-    return this.moduloService.insertarConsecuencia(data).pipe(
-      catchError(err => {
-        console.error('Error al guardar consecuencia', err);
-        return of(null);
-      })
-    );
-  }
-
-  // Guarda las consecuencias que tengan contenido.
-  guardarConsecuenciasIngresadas(codigoform1: any) {
-    const consecuencias = [
-      this.formato1Form.get('consecuencia1')?.value,
-      this.formato1Form.get('consecuencia2')?.value,
-      this.formato1Form.get('consecuencia3')?.value
-    ].filter((c: string | null) => c && c.trim() !== '');
-
-    console.log('CONSECUENCIAS A GUARDAR:', consecuencias);
-    console.log('CANTIDAD DE CONSECUENCIAS:', consecuencias.length);
-
-    if (consecuencias.length === 0) {
-      return of([]);
-    }
-
-    const requests = consecuencias.map((consecuencia: string, index: number) => {
-      console.log(`Guardando consecuencia ${index + 1}/${consecuencias.length}: "${consecuencia}"`);
-      return this.guardarConsecuenciaTexto(consecuencia, codigoform1);
     });
 
     return forkJoin(requests);

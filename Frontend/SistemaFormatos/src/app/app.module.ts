@@ -40,6 +40,8 @@ import { FormatotreceComponent } from './componentes/formatotrece/formatotrece.c
 import { FormatotreceverComponent } from './componentes/formatotrecever/formatotrecever.component';
 import { FormatocincoComponent } from './componentes/formatocinco/formatocinco.component';
 import { FormatocincoverComponent } from './componentes/formatocincover/formatocincover.component';
+import { FormatotreintaydosComponent } from './componentes/formatotreintaydos/formatotreintaydos.component';
+import { FormatotreintaydosverComponent } from './componentes/formatotreintaydosver/formatotreintaydosver.component';
 
 
 export const msalInstance = new PublicClientApplication({
@@ -75,7 +77,9 @@ UsuariosistemaComponent,
     FormatotreceComponent,
     FormatotreceverComponent,
     FormatocincoComponent,
-    FormatocincoverComponent
+    FormatocincoverComponent,
+    FormatotreintaydosComponent,
+    FormatotreintaydosverComponent
 
   ],
   imports: [

@@ -1,0 +1,37 @@
+.card-header.bg-institucional {
+  background-color: #6c1313 !important;
+  color: #fff;
+}
+
+.form-control,
+.form-select {
+  min-height: 42px;
+}
+
+.field-label {
+  width: 30%;
+  background-color: #f5f5f5;
+}
+
+.notification-section + .notification-section {
+  margin-top: 1.25rem;
+}
+
+.notification-heading {
+  background-color: #f5f5f5;
+  color: #6c1313;
+}
+
+.btn-institucional,
+.btn-institucional:hover,
+.btn-institucional:focus {
+  background-color: #6c1313;
+  border-color: #6c1313;
+  color: #fff;
+}
+
+@media (max-width: 576px) {
+  .field-label {
+    width: 40%;
+  }
+}

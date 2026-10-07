@@ -208,7 +208,7 @@ export class FormatoseisverComponent implements OnInit {
 
           Swal.fire(
             'Error',
-            'No se encontraron los datos del Formato 6',
+            res?.data?.message || 'No se encontraron los datos del Formato 6',
             'error'
           );
 
