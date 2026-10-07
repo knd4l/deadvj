@@ -160,6 +160,44 @@ export class FormatoseisverComponent implements OnInit {
 
   }
 
+  private construirArbolContenidos(registros: any[]): any[] {
+    const nodos = new Map<number, any>();
+    registros.forEach((registro, indice) => {
+      const id = Number(registro?.contenido_id) || indice + 1;
+      const orden = registro && typeof registro === 'object' && registro.orden !== null
+        ? Number(registro.orden)
+        : indice;
+      nodos.set(id, {
+        id,
+        texto: typeof registro === 'string'
+          ? registro.trim()
+          : String(registro?.contenido ?? registro?.texto ?? '').trim(),
+        padreId: registro && typeof registro === 'object' && registro.contenido_padre_id !== null
+          ? Number(registro.contenido_padre_id)
+          : null,
+        orden: Number.isFinite(orden) ? orden : indice,
+        hijos: []
+      });
+    });
+
+    const raices: any[] = [];
+    nodos.forEach((nodo) => {
+      const padre = nodo.padreId === null ? undefined : nodos.get(nodo.padreId);
+      if (padre) {
+        padre.hijos.push(nodo);
+      } else {
+        raices.push(nodo);
+      }
+    });
+
+    const ordenar = (lista: any[]): void => {
+      lista.sort((a, b) => a.orden - b.orden || a.id - b.id);
+      lista.forEach((nodo) => ordenar(nodo.hijos));
+    };
+    ordenar(raices);
+    return raices;
+  }
+
   // =====================================================
   // VER FORMATO 6
   // =====================================================
@@ -328,6 +366,14 @@ async generarPDFFormato6(formato: any): Promise<void> {
       )
         ? formato.objetivos_especificos
         : [];
+
+    const objetivosEspecificosTexto = objetivosEspecificos
+      .map((item: any) => String(item?.objetivo || '').trim())
+      .filter((objetivo: string) => objetivo !== '')
+      .map((objetivo: string) => ({
+        text: `- ${objetivo}`,
+        margin: [0, 0, 0, 5]
+      }));
 
 
     const contenidos =
@@ -809,16 +855,17 @@ async generarPDFFormato6(formato: any): Promise<void> {
             ? modulo.contenidos
             : [];
 
-        contenidosPorModulo[moduloClave] =
-          contenidosModulo;
+        const arbolContenidos = this.construirArbolContenidos(contenidosModulo);
+        contenidosPorModulo[moduloClave] = arbolContenidos;
 
         nombresModulos[moduloClave] =
+          modulo.modulo_nombre ||
           modulo.nombre ||
           nombresModulos[moduloClave] ||
           `Módulo ${moduloId}`;
 
         hayContenidosEnModulos =
-          hayContenidosEnModulos || contenidosModulo.length > 0;
+          hayContenidosEnModulos || arbolContenidos.length > 0;
 
       }
     );
@@ -826,27 +873,27 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
     if (!hayContenidosEnModulos) {
 
-      contenidos.forEach(
-        (item: any) => {
-
-          const moduloId =
-            item.modulo_id || 1;
-
-          const moduloClave =
-            String(moduloId);
-
-          if (!contenidosPorModulo[moduloClave]) {
-
-            contenidosPorModulo[moduloClave] = [];
-
-          }
-
-          contenidosPorModulo[moduloClave].push(item);
-
+      const contenidosPorModuloPlano = new Map<string, any[]>();
+      contenidos.forEach((item: any) => {
+        const moduloId = item.modulo_id || 1;
+        const moduloClave = String(moduloId);
+        const nombreModulo = String(item.modulo_nombre || '').trim();
+        if (
+          nombreModulo &&
+          (!nombresModulos[moduloClave] || /^Módulo\s+\d+$/i.test(nombresModulos[moduloClave]))
+        ) {
+          nombresModulos[moduloClave] = nombreModulo;
         }
-      );
+        if (!contenidosPorModuloPlano.has(moduloClave)) {
+          contenidosPorModuloPlano.set(moduloClave, []);
+        }
+        contenidosPorModuloPlano.get(moduloClave)?.push(item);
+      });
+      contenidosPorModuloPlano.forEach((filas, moduloClave) => {
+        contenidosPorModulo[moduloClave] = this.construirArbolContenidos(filas);
+      });
 
-      hayContenidosEnModulos = contenidos.length > 0;
+      hayContenidosEnModulos = contenidosPorModuloPlano.size > 0;
 
     }
 
@@ -885,14 +932,14 @@ async generarPDFFormato6(formato: any): Promise<void> {
           const contenidosModulo =
             lineas
               .map((linea: string) =>
-                linea.replace(/^\s*-\s*/, '').trim()
+                linea.replace(/^\s*[-•o]\s*/, '').trim()
               )
               .filter(Boolean);
 
           if (nombreModulo || contenidosModulo.length > 0) {
 
             contenidosPorModulo[moduloId] =
-              contenidosModulo;
+              this.construirArbolContenidos(contenidosModulo);
 
             nombresModulos[moduloId] =
               nombreModulo || `Módulo ${moduloId}`;
@@ -931,16 +978,6 @@ async generarPDFFormato6(formato: any): Promise<void> {
             ? nombreModulo
             : `Módulo ${moduloId}: ${nombreModulo}`;
 
-        const contenidoTexto = lista
-          .map((item: any) =>
-            typeof item === 'string'
-              ? item
-              : item?.contenido || ''
-          )
-          .map((contenido: string) => contenido.trim())
-          .filter(Boolean)
-          .join('\n');
-
         planificacionContenidoPdf.push({
           text: tituloModulo,
           bold: true,
@@ -948,14 +985,20 @@ async generarPDFFormato6(formato: any): Promise<void> {
           margin: [0, 8, 0, 3]
         });
 
-        if (contenidoTexto) {
-          planificacionContenidoPdf.push({
-            text: contenidoTexto,
-            fontSize: 10,
-            lineHeight: 1.3,
-            margin: [12, 0, 0, 8]
+        const agregarNodosPdf = (nodos: any[], nivel: number): void => {
+          nodos.forEach((nodo) => {
+            if (nodo.texto) {
+              planificacionContenidoPdf.push({
+                text: `${nivel === 0 ? '•' : '○'} ${nodo.texto}`,
+                fontSize: 10,
+                lineHeight: 1.3,
+                margin: [12 + nivel * 14, 0, 0, 3]
+              });
+            }
+            agregarNodosPdf(nodo.hijos || [], nivel + 1);
           });
-        }
+        };
+        agregarNodosPdf(lista, 0);
 
       });
 
@@ -1345,9 +1388,6 @@ async generarPDFFormato6(formato: any): Promise<void> {
             fontSize:
               8,
 
-            alignment:
-              'center',
-
             bold:
               true
           }
@@ -1434,19 +1474,19 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
           {
             text: item.partida || '',
-            alignment: 'center'
+            alignment: 'left'
           },
 
 
           {
             text: descripcion,
-            alignment: 'center'
+            alignment: 'left'
           },
 
 
           {
             text: valorParaReporte,
-            alignment: 'center'
+            alignment: 'left'
           },
 
 
@@ -1454,7 +1494,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
             text: String(
                 item.total ?? 0
               ),
-            alignment: 'center'
+            alignment: 'left'
           }
 
         ]);
@@ -1483,7 +1523,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
       {
         text: totalPresupuesto.toFixed(2),
         bold: true,
-        alignment: 'center'
+        alignment: 'left'
       }
     ]);
 
@@ -1617,7 +1657,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_fecha_elaboracion
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1638,7 +1678,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     'Nro: RESOLUCIÓN: CAU-P-613-2024',
 
                   alignment:
-                    'center'
+                    'left'
                 }
 
               ],
@@ -1658,7 +1698,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_requerimiento
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1678,7 +1718,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_unidad_responsable
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1698,7 +1738,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_instructores
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1718,7 +1758,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_beneficiarios
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1738,7 +1778,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_paralelo
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1758,7 +1798,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_modalidad
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1778,7 +1818,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_area
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1798,7 +1838,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_carga_horaria
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1882,7 +1922,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_lugar
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1902,7 +1942,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_prerrequisitos
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1922,7 +1962,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_tipo_certificado
                     || '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ],
@@ -1944,7 +1984,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     formato.formato6_inversion !== ''
                       ? `${formato.formato6_inversion} $`
                       : '',
-                  alignment: 'center'
+                  alignment: 'left'
                 }
 
               ]
@@ -2115,11 +2155,8 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
         {
 
-          ol:
-            objetivosEspecificos.map(
-              (item: any) =>
-                item.objetivo || ''
-            ),
+          stack:
+            objetivosEspecificosTexto,
 
           fontSize:
             10,
@@ -2359,6 +2396,13 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
           fontSize:
             9
+
+        },
+
+        {
+          text: 'NOTA: El valor hora de los Instructor/es de 20,00 USD.',
+          fontSize: 9,
+          margin: [0, 8, 0, 0]
 
         }
 

@@ -11,6 +11,11 @@ interface HorarioModulo{
   horaHasta:string;
 }
 
+interface PlanificacionContenido {
+  texto: string;
+  hijos: PlanificacionContenido[];
+}
+
 @Component({
   selector: 'app-formatoseis',
   templateUrl: './formatoseis.component.html',
@@ -236,7 +241,7 @@ guardarModulo(
       hasta: modulo.hasta,
 
       contenidos: [
-        ...(modulo.contenidos || [])
+        ...this.copiarContenidos(modulo.contenidos || [])
       ],
 
       horario: []
@@ -263,7 +268,7 @@ guardarModulo(
     modulo.hasta;
 
   moduloGuardado.contenidos = [
-    ...(modulo.contenidos || [])
+      ...this.copiarContenidos(modulo.contenidos || [])
   ];
 
 
@@ -590,12 +595,42 @@ convertirNumero(valor: any): number {
 //Agregar inputs y elimnarlos 
 
 agregarContenido(i:number):void{
-  this.modulos[i].contenidos.push('');
+  this.modulos[i].contenidos.push(this.nuevoContenido());
 }
 
-//Elimina el contenido
-eliminarContenido(i: number, j:number): void {
-  this.modulos[i].contenidos.splice(j,1);
+agregarSubcontenido(contenido: PlanificacionContenido): void {
+  contenido.hijos.push(this.nuevoContenido());
+}
+
+eliminarContenido(contenidos: PlanificacionContenido[], indice: number): void {
+  contenidos.splice(indice, 1);
+}
+
+etiquetaContenido(nivel: number): string {
+  return nivel === 0 ? 'Contenido principal' : nivel === 1 ? 'Sección' : 'Subsección';
+}
+
+private nuevoContenido(): PlanificacionContenido {
+  return { texto: '', hijos: [] };
+}
+
+private copiarContenidos(contenidos: PlanificacionContenido[]): PlanificacionContenido[] {
+  return contenidos.map((contenido) => ({
+    texto: contenido.texto,
+    hijos: this.copiarContenidos(contenido.hijos || [])
+  }));
+}
+
+private formatearContenidos(contenidos: PlanificacionContenido[], nivel = 0): string[] {
+  return contenidos.flatMap((contenido) => {
+    const texto = contenido.texto.trim();
+    const prefijo = nivel === 0 ? '• ' : 'o ';
+    const linea = texto ? `${'  '.repeat(nivel)}${prefijo}${texto}` : '';
+    return [
+      ...(linea ? [linea] : []),
+      ...this.formatearContenidos(contenido.hijos || [], nivel + 1)
+    ];
+  });
 }
 
 trackByContenido(index: number, contenido: any): any {
@@ -625,7 +660,7 @@ agregarModulo(): void {
 
     hasta: '',
 
-    contenidos: [''],
+    contenidos: [this.nuevoContenido()],
 
     horario: [
 
@@ -926,16 +961,14 @@ guardarFormato6(): void {
         moduloGuardado.desde = modulo.desde;
         moduloGuardado.hasta = modulo.hasta;
         moduloGuardado.contenidos = [
-          ...(modulo.contenidos || [])
+          ...this.copiarContenidos(modulo.contenidos || [])
         ];
 
       } else {
 
         modulosParaGuardar.push({
           ...modulo,
-          contenidos: [
-            ...(modulo.contenidos || [])
-          ],
+          contenidos: this.copiarContenidos(modulo.contenidos || []),
           horario: []
         });
 
@@ -959,20 +992,7 @@ guardarFormato6(): void {
             ? modulo.nombre
             : `Módulo ${index + 1}`;
 
-        const contenidos =
-          Array.isArray(modulo.contenidos)
-            ? modulo.contenidos
-                .filter(
-                  (contenido: any) =>
-                    contenido &&
-                    contenido.toString().trim() !== ''
-                )
-                .map(
-                  (contenido: any) =>
-                    `- ${contenido}`
-                )
-                .join('\n')
-            : '';
+        const contenidos = this.formatearContenidos(modulo.contenidos || []).join('\n');
 
         return `${nombreModulo}\n${contenidos}`;
 

@@ -1852,6 +1852,71 @@ private function sincronizarInstructoresTentativosFormato6($dbc, $formato1Codigo
 
 
 
+private function guardarContenidosAnidadosFormato6(
+    $dbc,
+    $formato6Codigo,
+    $moduloId,
+    $moduloNombre,
+    $contenidos,
+    $contenidoPadreId = null
+) {
+    foreach (array_values($contenidos) as $orden => $contenido) {
+        if (is_string($contenido)) {
+            $texto = trim($contenido);
+            $hijos = array();
+        } elseif (is_object($contenido)) {
+            $texto = isset($contenido->texto) ? trim((string) $contenido->texto) : '';
+            $hijos = isset($contenido->hijos) && is_array($contenido->hijos)
+                ? $contenido->hijos
+                : array();
+        } else {
+            continue;
+        }
+
+        $nuevoPadreId = $contenidoPadreId;
+        if ($texto !== '') {
+            $dbc->query("INSERT INTO planificacion_contenidos_formato6 (
+                formato6_codigo,
+                modulo_id,
+                modulo_nombre,
+                contenido,
+                contenido_padre_id,
+                orden
+            ) VALUES (
+                :formato6_codigo,
+                :modulo_id,
+                :modulo_nombre,
+                :contenido,
+                :contenido_padre_id,
+                :orden
+            )");
+            $dbc->bind(':formato6_codigo', $formato6Codigo);
+            $dbc->bind(':modulo_id', $moduloId);
+            $dbc->bind(':modulo_nombre', $moduloNombre);
+            $dbc->bind(':contenido', $texto);
+            $dbc->bind(':contenido_padre_id', $contenidoPadreId);
+            $dbc->bind(':orden', $orden);
+            $dbc->execute();
+
+            $nuevoPadreId = (int) $dbc->lastInsertId();
+            if ($nuevoPadreId <= 0) {
+                throw new Exception('No se pudo guardar un elemento de la planificación de contenidos.');
+            }
+        }
+
+        if (count($hijos) > 0) {
+            $this->guardarContenidosAnidadosFormato6(
+                $dbc,
+                $formato6Codigo,
+                $moduloId,
+                $moduloNombre,
+                $hijos,
+                $nuevoPadreId
+            );
+        }
+    }
+}
+
 public function insertformato6($datos)
 {
     try {
@@ -2187,53 +2252,16 @@ public function insertformato6($datos)
                         continue;
                     }
 
-                    foreach ($modulo->contenidos as $contenido) {
-
-                        if (trim($contenido) == '') {
-                            continue;
-                        }
-
-                        $insertContenido = "
-                            INSERT INTO planificacion_contenidos_formato6 (
-                                formato6_codigo,
-                                modulo_id,
-                                modulo_nombre,
-                                contenido
-                            )
-                            VALUES (
-                                :formato6_codigo,
-                                :modulo_id,
-                                :modulo_nombre,
-                                :contenido
-                            )
-                        ";
-
-                        $dbc->query($insertContenido);
-
-                        $dbc->bind(
-                            ":formato6_codigo",
-                            $formato6Codigo
-                        );
-
-                        $dbc->bind(
-                            ":modulo_id",
-                            $moduloId
-                        );
-
-                        $dbc->bind(
-                            ":modulo_nombre",
-                            isset($modulo->nombre) && trim((string) $modulo->nombre) !== ''
-                                ? trim((string) $modulo->nombre)
-                                : 'Módulo ' . $moduloId
-                        );
-
-                        $dbc->bind(
-                            ":contenido",
-                            $contenido
-                        );
-
-                        $dbc->execute();
-                    }
+                    $moduloNombre = isset($modulo->nombre) && trim((string) $modulo->nombre) !== ''
+                        ? trim((string) $modulo->nombre)
+                        : 'Módulo ' . $moduloId;
+                    $this->guardarContenidosAnidadosFormato6(
+                        $dbc,
+                        $formato6Codigo,
+                        $moduloId,
+                        $moduloNombre,
+                        $modulo->contenidos
+                    );
                 }
             }
 
@@ -3187,10 +3215,13 @@ public function getformato6Reporte($filtros)
                     contenido_id,
                     formato6_codigo,
                     modulo_id,
+                    modulo_nombre,
+                    contenido_padre_id,
+                    orden,
                     contenido
                 FROM planificacion_contenidos_formato6
                 WHERE formato6_codigo = :formato6_codigo
-                ORDER BY modulo_id ASC, contenido_id ASC
+                ORDER BY modulo_id ASC, contenido_padre_id ASC, orden ASC, contenido_id ASC
             ";
 
             $dbc->query($sqlContenidos);
@@ -3239,16 +3270,25 @@ public function getformato6Reporte($filtros)
                     $modulos[$moduloId]->id =
                         $moduloId;
 
+                    $moduloNombre = isset($contenido->modulo_nombre)
+                        ? trim((string) $contenido->modulo_nombre)
+                        : '';
                     $modulos[$moduloId]->nombre =
-                        'Módulo ' . $moduloId;
+                        $moduloNombre !== '' ? $moduloNombre : 'Módulo ' . $moduloId;
 
                     $modulos[$moduloId]->contenidos =
                         array();
+                } elseif (
+                    isset($contenido->modulo_nombre) &&
+                    trim((string) $contenido->modulo_nombre) !== '' &&
+                    preg_match('/^Módulo\s+\d+$/i', $modulos[$moduloId]->nombre)
+                ) {
+                    $modulos[$moduloId]->nombre = trim((string) $contenido->modulo_nombre);
                 }
 
 
                 $modulos[$moduloId]->contenidos[] =
-                    $contenido->contenido;
+                    $contenido;
             }
 
 
@@ -4231,57 +4271,16 @@ public function updateformato6($d)
                         continue;
                     }
 
-                    foreach ($modulo->contenidos as $contenido) {
-
-                        // Ignorar contenidos vacíos
-                        if (
-                            $contenido === null ||
-                            trim((string)$contenido) === ''
-                        ) {
-                            continue;
-                        }
-
-                        $insertContenido = "
-                            INSERT INTO planificacion_contenidos_formato6 (
-                                formato6_codigo,
-                                modulo_id,
-                                modulo_nombre,
-                                contenido
-                            )
-                            VALUES (
-                                :formato6_codigo,
-                                :modulo_id,
-                                :modulo_nombre,
-                                :contenido
-                            )
-                        ";
-
-                        $dbc->query($insertContenido);
-
-                        $dbc->bind(
-                            ":formato6_codigo",
-                            $codigo
-                        );
-
-                        $dbc->bind(
-                            ":modulo_id",
-                            $moduloId
-                        );
-
-                        $dbc->bind(
-                            ":modulo_nombre",
-                            isset($modulo->nombre) && trim((string) $modulo->nombre) !== ''
-                                ? trim((string) $modulo->nombre)
-                                : 'Módulo ' . $moduloId
-                        );
-
-                        $dbc->bind(
-                            ":contenido",
-                            trim((string)$contenido)
-                        );
-
-                        $dbc->execute();
-                    }
+                    $moduloNombre = isset($modulo->nombre) && trim((string) $modulo->nombre) !== ''
+                        ? trim((string) $modulo->nombre)
+                        : 'Módulo ' . $moduloId;
+                    $this->guardarContenidosAnidadosFormato6(
+                        $dbc,
+                        $codigo,
+                        $moduloId,
+                        $moduloNombre,
+                        $modulo->contenidos
+                    );
                 }
             }
 

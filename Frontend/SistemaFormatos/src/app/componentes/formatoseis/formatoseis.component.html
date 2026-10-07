@@ -1228,45 +1228,62 @@
                       Módulo {{ i + 1 }}: {{ modulo.nombre }}
                     </label>
 
-                    <!-- CONTENIDOS -->
+                    <ng-template #listaPlanificacion let-contenidos let-ruta="ruta" let-nivel="nivel">
+                      <div
+                        *ngFor="let contenido of contenidos; let j = index; trackBy: trackByIndex"
+                        class="mb-3"
+                        [style.margin-left.rem]="nivel * 1.25">
+                        <label class="form-label">
+                          {{ etiquetaContenido(nivel) }} {{ j + 1 }}
+                        </label>
+                        <div class="d-flex gap-2">
+                          <input
+                            type="text"
+                            class="form-control"
+                            [name]="'contenidoModulo' + i + '_' + ruta + '_' + j"
+                            [(ngModel)]="contenido.texto">
+                          <button
+                            type="button"
+                            class="btn"
+                            style="background-color: #6c1313; color: white;"
+                            (click)="eliminarContenido(contenidos, j)">
+                            Eliminar
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          class="btn btn-sm mt-2"
+                          style="background-color: #6c1313; color: white;"
+                          (click)="agregarSubcontenido(contenido)">
+                          + Agregar {{ nivel === 0 ? 'sección' : 'subsección' }}
+                        </button>
+                        <ng-container *ngIf="contenido.hijos.length">
+                          <ng-container
+                            *ngTemplateOutlet="listaPlanificacion; context: {
+                              $implicit: contenido.hijos,
+                              ruta: ruta + '_' + j,
+                              nivel: nivel + 1
+                            }">
+                          </ng-container>
+                        </ng-container>
+                      </div>
+                    </ng-template>
 
-                    
-                     <div
-                      *ngFor="
-                        let contenido of modulo.contenidos;
-                        let j = index; trackBy: trackByIndex"
-                        class="mb-2">
+                    <ng-container
+                      *ngTemplateOutlet="listaPlanificacion; context: {
+                        $implicit: modulo.contenidos,
+                        ruta: '',
+                        nivel: 0
+                      }">
+                    </ng-container>
 
-                      <label class="form-label">
-                        Contenido {{ j + 1 }}
-                      </label>
-
-                      <input
-                        type="text"
-                        class="form-control"
-                        [name]="'contenidoModulo' + i + '_' + j"
-                        [(ngModel)]="modulos[i].contenidos[j]">  
-                        
-                       <button
-                        type="button"
-                        class="btn mt-2"
-                        style="background-color: #6c1313; color: white;"
-                        (click)="eliminarContenido(i, j)">
-                        Eliminar
-                      </button>
-                  
-                </div>
-                 <!-- BOTÓN AGREGAR -->
                     <button
                       type="button"
                       class="btn mt-2"
                       style="background-color: #6c1313; color:white"
                       (click)="agregarContenido(i)">
-                      + Agregar contenido
+                      + Agregar contenido principal
                     </button>
-
-                    
-                   
 
 
 
