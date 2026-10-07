@@ -20,12 +20,14 @@ interface RegistroFormato32 extends NotificacionFormato32 {
   instructor_nombres: string;
   instructor_apellidos: string;
   formato6_codigo: number;
+  formato32_modulo_id: number | null;
+  formato6_modulos: string | null;
+  observaciones: string | null;
   formato1_codigo_curso: string | null;
   formato1_curso_definido: string | null;
   formato1_fecha_ejecucion_desde: string | null;
   formato1_fecha_ejecucion_hasta: string | null;
   formato6_modalidad: string | null;
-  formato6_modulos: string | null;
   formato6_fecha_elaboracion: string | null;
 }
 
@@ -75,6 +77,7 @@ export class FormatotreintaydosverComponent implements OnInit {
       const clave = [
         registro.instructor_identificacion,
         registro.formato6_codigo,
+        registro.formato32_modulo_id,
         registro.fecha_creacion
       ].join(':');
       const grupo = grupos.get(clave);
@@ -252,7 +255,7 @@ export class FormatotreintaydosverComponent implements OnInit {
                 ],
                 [
                   { text: 'Observaciones', style: 'tableHeader' },
-                  { text: ' ' , colSpan: 5 },
+                  { text: mostrar(formato.observaciones), colSpan: 5 },
                   {},
                   {},
                   {},

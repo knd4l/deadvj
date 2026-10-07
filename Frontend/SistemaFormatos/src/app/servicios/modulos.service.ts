@@ -6,8 +6,8 @@ import { Observable, throwError } from 'rxjs';
   providedIn: 'root'
 })
 export class ModulosService {
- URL = "http://localhost/practicas/Backend/srvformatos/index.php";
- URLfile = "http://localhost/practicas/Backend/srvformatos/DocumentosPostulacion/";
+ URL = "http://localhost/deadvj/Backend/srvformatos/index.php";
+ URLfile = "http://localhost/deadvj/Backend/srvformatos/DocumentosPostulacion/";
 
   constructor(private http: HttpClient) { }
 

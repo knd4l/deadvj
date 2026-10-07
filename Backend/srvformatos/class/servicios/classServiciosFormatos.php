@@ -2197,11 +2197,13 @@ public function insertformato6($datos)
                             INSERT INTO planificacion_contenidos_formato6 (
                                 formato6_codigo,
                                 modulo_id,
+                                modulo_nombre,
                                 contenido
                             )
                             VALUES (
                                 :formato6_codigo,
                                 :modulo_id,
+                                :modulo_nombre,
                                 :contenido
                             )
                         ";
@@ -2216,6 +2218,13 @@ public function insertformato6($datos)
                         $dbc->bind(
                             ":modulo_id",
                             $moduloId
+                        );
+
+                        $dbc->bind(
+                            ":modulo_nombre",
+                            isset($modulo->nombre) && trim((string) $modulo->nombre) !== ''
+                                ? trim((string) $modulo->nombre)
+                                : 'Módulo ' . $moduloId
                         );
 
                         $dbc->bind(
@@ -2669,6 +2678,36 @@ public function getformato6($filtros = null){
 
                     $item->formato6_tipo_certificado =
                         $row['formato6_tipo_certificado'];
+
+                    $dbc->query("SELECT modulo_id, MAX(NULLIF(TRIM(modulo_nombre), '')) AS modulo_nombre
+                        FROM planificacion_contenidos_formato6
+                        WHERE formato6_codigo = :formato6_codigo
+                        GROUP BY modulo_id
+                        ORDER BY modulo_id ASC");
+                    $dbc->bind(':formato6_codigo', $row['formato6_codigo']);
+                    $modulos = $dbc->resultset();
+
+                    $dbc->query("SELECT modulo_nombre
+                        FROM horario_ejecucion
+                        WHERE formato6_codigo = :formato6_codigo
+                          AND TRIM(modulo_nombre) <> ''
+                        GROUP BY modulo_nombre
+                        ORDER BY MIN(horario_ejecucion_id) ASC");
+                    $dbc->bind(':formato6_codigo', $row['formato6_codigo']);
+                    $nombresModulosHorario = $dbc->resultset();
+
+                    $item->modulos = array();
+                    foreach ($modulos as $indice => $modulo) {
+                        $nombre = $modulo['modulo_nombre'];
+                        if (empty($nombre) && isset($nombresModulosHorario[$indice]['modulo_nombre'])) {
+                            $nombre = $nombresModulosHorario[$indice]['modulo_nombre'];
+                        }
+
+                        $item->modulos[] = array(
+                            'id' => (int) $modulo['modulo_id'],
+                            'nombre' => !empty($nombre) ? $nombre : 'Módulo ' . $modulo['modulo_id']
+                        );
+                    }
 
                     $result[] = $item;
                 }
@@ -4206,11 +4245,13 @@ public function updateformato6($d)
                             INSERT INTO planificacion_contenidos_formato6 (
                                 formato6_codigo,
                                 modulo_id,
+                                modulo_nombre,
                                 contenido
                             )
                             VALUES (
                                 :formato6_codigo,
                                 :modulo_id,
+                                :modulo_nombre,
                                 :contenido
                             )
                         ";
@@ -4225,6 +4266,13 @@ public function updateformato6($d)
                         $dbc->bind(
                             ":modulo_id",
                             $moduloId
+                        );
+
+                        $dbc->bind(
+                            ":modulo_nombre",
+                            isset($modulo->nombre) && trim((string) $modulo->nombre) !== ''
+                                ? trim((string) $modulo->nombre)
+                                : 'Módulo ' . $moduloId
                         );
 
                         $dbc->bind(
@@ -4636,13 +4684,14 @@ public function insertFormato5($datos)
 
     try {
         $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $formato6ModuloId = isset($datos->formato6ModuloId) ? (int) $datos->formato6ModuloId : 0;
         $camposNumericos = array('dominioTematica', 'dominioAula', 'habilidadesBlandas');
         $participantes = isset($datos->participantes) && is_array($datos->participantes)
             ? $datos->participantes
             : array($datos);
 
-        if ($formato6Codigo <= 0 || count($participantes) === 0) {
-            throw new Exception('Selecciona el curso y agrega al menos una evaluación.');
+        if ($formato6Codigo <= 0 || $formato6ModuloId <= 0 || count($participantes) === 0) {
+            throw new Exception('Selecciona el curso y módulo y agrega al menos una evaluación.');
         }
 
         $edicionIndividual = false;
@@ -4675,6 +4724,15 @@ public function insertFormato5($datos)
         }
 
         $dbc->beginTransaction();
+        $dbc->query("SELECT formato6_codigo
+            FROM formato6
+            WHERE formato6_codigo = :formato6_codigo
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if (!$dbc->single()) {
+            throw new Exception('El curso seleccionado ya no está disponible.');
+        }
+
         $dbc->query("SELECT f1.formato1_codigo
             FROM formato6 f6
             INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
@@ -4688,13 +4746,18 @@ public function insertFormato5($datos)
             throw new Exception('El curso seleccionado no está disponible.');
         }
 
-        if (!$edicionIndividual) {
-            $dbc->query("DELETE FROM formato5
-                WHERE formato6_codigo = :formato6_codigo");
-            $dbc->bind(':formato6_codigo', $formato6Codigo);
-            $dbc->execute();
+        $dbc->query("SELECT modulo_id
+            FROM planificacion_contenidos_formato6
+            WHERE formato6_codigo = :formato6_codigo
+              AND modulo_id = :modulo_id
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $formato6ModuloId);
+        if (!$dbc->single()) {
+            throw new Exception('El módulo seleccionado no pertenece al curso.');
         }
 
+        $codigosFormato5Conservados = array();
         foreach ($participantes as $participante) {
             $cedula = trim((string) $participante->cedula);
             $dbc->query("SELECT USUARIO_NOMBRES, USUARIO_APELLIDOS
@@ -4716,16 +4779,35 @@ public function insertFormato5($datos)
             ) / 3;
             $formato5Codigo = isset($participante->formato5Codigo) ? (int) $participante->formato5Codigo : 0;
 
+            if ($formato5Codigo <= 0) {
+                $dbc->query("SELECT formato5_codigo
+                    FROM formato5
+                    WHERE formato6_codigo = :formato6_codigo
+                      AND formato5_modulo_id = :modulo_id
+                      AND formato5_cedula = :cedula
+                    ORDER BY formato5_codigo ASC
+                    LIMIT 1");
+                $dbc->bind(':formato6_codigo', $formato6Codigo);
+                $dbc->bind(':modulo_id', $formato6ModuloId);
+                $dbc->bind(':cedula', $cedula);
+                $entrevistaExistente = $dbc->single();
+                if ($entrevistaExistente) {
+                    $formato5Codigo = (int) $entrevistaExistente['formato5_codigo'];
+                }
+            }
+
             if ($formato5Codigo > 0) {
                 $dbc->query("SELECT formato5_codigo
                     FROM formato5
                     WHERE formato5_codigo = :formato5_codigo
                       AND formato6_codigo = :formato6_codigo
+                      AND formato5_modulo_id = :modulo_id
                     LIMIT 1");
                 $dbc->bind(':formato5_codigo', $formato5Codigo);
                 $dbc->bind(':formato6_codigo', $formato6Codigo);
+                $dbc->bind(':modulo_id', $formato6ModuloId);
                 if (!$dbc->single()) {
-                    throw new Exception('La entrevista que intentas editar no existe para el curso seleccionado.');
+                    throw new Exception('La entrevista que intentas editar no existe para el módulo seleccionado.');
                 }
 
                 $dbc->query("UPDATE formato5 SET
@@ -4736,7 +4818,8 @@ public function insertFormato5($datos)
                     formato5_dominio_aula = :dominio_aula,
                     formato5_habilidades_blandas = :habilidades_blandas,
                     formato5_nota_entrevista = :nota_entrevista,
-                    formato5_observaciones = :observaciones
+                    formato5_observaciones = :observaciones,
+                    formato5_modulo_id = :modulo_id
                     WHERE formato5_codigo = :formato5_codigo
                       AND formato6_codigo = :formato6_codigo");
                 $dbc->bind(':formato5_codigo', $formato5Codigo);
@@ -4744,6 +4827,7 @@ public function insertFormato5($datos)
             } else {
                 $dbc->query("INSERT INTO formato5 (
                     formato6_codigo,
+                    formato5_modulo_id,
                     formato5_cedula,
                     formato5_nombres,
                     formato5_apellidos,
@@ -4754,6 +4838,7 @@ public function insertFormato5($datos)
                     formato5_observaciones
                 ) VALUES (
                     :formato6_codigo,
+                    :modulo_id,
                     :cedula,
                     :nombres,
                     :apellidos,
@@ -4766,6 +4851,7 @@ public function insertFormato5($datos)
                 $dbc->bind(':formato6_codigo', $formato6Codigo);
             }
 
+            $dbc->bind(':modulo_id', $formato6ModuloId);
             $dbc->bind(':cedula', $cedula);
             $dbc->bind(':nombres', $usuario['USUARIO_NOMBRES']);
             $dbc->bind(':apellidos', $usuario['USUARIO_APELLIDOS']);
@@ -4782,12 +4868,33 @@ public function insertFormato5($datos)
                     throw new Exception('No se pudo obtener el código de una evaluación del Formato 5.');
                 }
             }
+            $codigosFormato5Conservados[] = $formato5Codigo;
             $result[] = array('formato5_codigo' => $formato5Codigo);
         }
+
+        if (!$edicionIndividual) {
+            $parametrosConservados = array();
+            foreach (array_values(array_unique($codigosFormato5Conservados)) as $indice => $codigoConservado) {
+                $parametro = ':codigo_conservado_' . $indice;
+                $parametrosConservados[] = $parametro;
+            }
+
+            $dbc->query("DELETE FROM formato5
+                WHERE formato6_codigo = :formato6_codigo
+                  AND formato5_modulo_id = :modulo_id
+                  AND formato5_codigo NOT IN (" . implode(', ', $parametrosConservados) . ")");
+            $dbc->bind(':formato6_codigo', $formato6Codigo);
+            $dbc->bind(':modulo_id', $formato6ModuloId);
+            foreach (array_values(array_unique($codigosFormato5Conservados)) as $indice => $codigoConservado) {
+                $dbc->bind(':codigo_conservado_' . $indice, $codigoConservado);
+            }
+            $dbc->execute();
+        }
+
         $dbc->endTransaction();
         $mensaje = $edicionIndividual
             ? 'Entrevista actualizada correctamente.'
-            : 'Las entrevistas anteriores del curso fueron reemplazadas correctamente.';
+            : 'Las entrevistas del módulo fueron actualizadas correctamente.';
         $this->estado = new Exception_Object(1, $mensaje);
         $this->estado->setLastID(count($result));
     } catch (Exception $e) {
@@ -4829,10 +4936,26 @@ public function getFormato5()
         }
 
         $dbc->query("SELECT f5.*,
+                COALESCE(
+                    (
+                        SELECT MAX(NULLIF(TRIM(pc.modulo_nombre), ''))
+                        FROM planificacion_contenidos_formato6 pc
+                        WHERE pc.formato6_codigo = f5.formato6_codigo
+                          AND pc.modulo_id = f5.formato5_modulo_id
+                    ),
+                    (
+                        SELECT GROUP_CONCAT(DISTINCT NULLIF(TRIM(he.modulo_nombre), '') ORDER BY he.modulo_nombre SEPARATOR ', ')
+                        FROM horario_ejecucion he
+                        WHERE he.formato6_codigo = f5.formato6_codigo
+                    ),
+                    CONCAT('Módulo ', f5.formato5_modulo_id),
+                    '—'
+                ) AS formato5_modulo_nombre,
                 (
                     SELECT COUNT(*)
                     FROM formato5 f5_anterior
                     WHERE f5_anterior.formato6_codigo = f5.formato6_codigo
+                      AND f5_anterior.formato5_modulo_id <=> f5.formato5_modulo_id
                       AND f5_anterior.formato5_codigo <= f5.formato5_codigo
                 ) AS formato5_numero_entrevista,
                 f6.formato6_fecha_elaboracion,
@@ -4935,6 +5058,22 @@ public function insertFormato13($datos)
 
         $dbc->beginTransaction();
         $formato6Codigo = $this->valorFormato13($datos, 'formato6Codigo');
+        $formato6ModuloId = (int) $this->valorFormato13($datos, 'formato6ModuloId');
+        if ($formato6Codigo <= 0 || $formato6ModuloId <= 0) {
+            throw new Exception('Selecciona un curso y un módulo del Formato 6.');
+        }
+
+        $dbc->query("SELECT modulo_id
+            FROM planificacion_contenidos_formato6
+            WHERE formato6_codigo = :formato6_codigo
+              AND modulo_id = :modulo_id
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $formato6ModuloId);
+        if (!$dbc->single()) {
+            throw new Exception('El módulo seleccionado no pertenece al curso.');
+        }
+
         $dbc->query("SELECT f1.formato1_codigo_curso
             FROM formato6 f6
             LEFT JOIN formato1 f1
@@ -4950,39 +5089,98 @@ public function insertFormato13($datos)
         $publicacionesAdicionales = $this->normalizarListaPublicacionesFormato13(
             isset($datos->publicacionesRedSocial) ? $datos->publicacionesRedSocial : array()
         );
-        $dbc->query("INSERT INTO formato13 (
-            formato13_linea_grafica_institucional,
-            formato13_alianza_convenio,
-            formato13_identificadores,
-            formato13_aspectos_considerar,
-            formato13_otros,
-            formato6_codigo,
-            formato1_codigo_curso,
-            tipo_medio
-        ) VALUES (
-            :linea_grafica,
-            :alianza_convenio,
-            :identificadores,
-            :aspectos_considerar,
-            :otros,
-            :formato6_codigo,
-            :formato1_codigo_curso,
-            :tipo_medio
-        )");
+        $dbc->query("SELECT formato6_codigo
+            FROM formato6
+            WHERE formato6_codigo = :formato6_codigo
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->single();
+
+        $dbc->query("SELECT formato13_codigo
+            FROM formato13
+            WHERE formato6_codigo = :formato6_codigo
+              AND formato13_modulo_id = :modulo_id
+            ORDER BY formato13_codigo DESC
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $formato6ModuloId);
+        $formatosExistentes = $dbc->resultset();
+        $formato13Codigo = count($formatosExistentes) > 0
+            ? (int) $formatosExistentes[0]['formato13_codigo']
+            : 0;
+
+        if ($formato13Codigo > 0) {
+            foreach (array_slice($formatosExistentes, 1) as $formatoDuplicado) {
+                $codigoDuplicado = (int) $formatoDuplicado['formato13_codigo'];
+                $dbc->query("DELETE FROM formato13_publicacion
+                    WHERE formato13_codigo = :formato13_codigo");
+                $dbc->bind(':formato13_codigo', $codigoDuplicado);
+                $dbc->execute();
+
+                $dbc->query("DELETE FROM formato13
+                    WHERE formato13_codigo = :formato13_codigo");
+                $dbc->bind(':formato13_codigo', $codigoDuplicado);
+                $dbc->execute();
+            }
+
+            $dbc->query("UPDATE formato13 SET
+                formato13_linea_grafica_institucional = :linea_grafica,
+                formato13_alianza_convenio = :alianza_convenio,
+                formato13_identificadores = :identificadores,
+                formato13_aspectos_considerar = :aspectos_considerar,
+                formato13_otros = :otros,
+                formato1_codigo_curso = :formato1_codigo_curso,
+                tipo_medio = :tipo_medio
+                WHERE formato13_codigo = :formato13_codigo");
+            $dbc->bind(':formato13_codigo', $formato13Codigo);
+        } else {
+            $dbc->query("INSERT INTO formato13 (
+                formato13_linea_grafica_institucional,
+                formato13_alianza_convenio,
+                formato13_identificadores,
+                formato13_aspectos_considerar,
+                formato13_otros,
+                formato6_codigo,
+                formato13_modulo_id,
+                formato1_codigo_curso,
+                tipo_medio
+            ) VALUES (
+                :linea_grafica,
+                :alianza_convenio,
+                :identificadores,
+                :aspectos_considerar,
+                :otros,
+                :formato6_codigo,
+                :modulo_id,
+                :formato1_codigo_curso,
+                :tipo_medio
+            )");
+        }
         $dbc->bind(':linea_grafica', $datos->lineaGraficaInstitucional);
         $dbc->bind(':alianza_convenio', $datos->alianzaConvenio);
         $dbc->bind(':identificadores', $this->valorFormato13($datos, 'identificadores'));
         $dbc->bind(':aspectos_considerar', $datos->aspectosConsiderar);
         $dbc->bind(':otros', $this->valorFormato13($datos, 'otros'));
-        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if ($formato13Codigo <= 0) {
+            $dbc->bind(':formato6_codigo', $formato6Codigo);
+            $dbc->bind(':modulo_id', $formato6ModuloId);
+        }
         $dbc->bind(':formato1_codigo_curso', $codigoCurso);
         $dbc->bind(':tipo_medio', $this->valorFormato13($datos, 'tipoMedio'));
         $dbc->execute();
 
-        $formato13Codigo = (int) $dbc->lastInsertId();
+        if ($formato13Codigo <= 0) {
+            $formato13Codigo = (int) $dbc->lastInsertId();
+        }
         if ($formato13Codigo <= 0) {
             throw new Exception('No se pudo obtener el código del Formato 13.');
         }
+
+        $dbc->query("DELETE FROM formato13_publicacion
+            WHERE formato13_codigo = :formato13_codigo");
+        $dbc->bind(':formato13_codigo', $formato13Codigo);
+        $dbc->execute();
+
         $publicacionPrincipal = array(
             'tipoMedio' => $this->valorFormato13($datos, 'tipoMedio'),
             'fechaPublicacion' => $this->valorFormato13($datos, 'fechaPublicacion'),
@@ -5002,7 +5200,12 @@ public function insertFormato13($datos)
 
         $dbc->endTransaction();
         $result[] = array('formato13_codigo' => $formato13Codigo);
-        $this->estado = new Exception_Object(1, 'Formato 13 guardado correctamente.');
+        $this->estado = new Exception_Object(
+            1,
+            count($formatosExistentes) > 0
+                ? 'Formato 13 actualizado correctamente.'
+                : 'Formato 13 guardado correctamente.'
+        );
         $this->estado->setLastID($formato13Codigo);
     } catch (Exception $e) {
         if ($dbc !== null && $dbc->inTransaction()) {
@@ -5619,6 +5822,21 @@ public function getFormato13()
         }
 
         $dbc->query("SELECT formato13.*,
+            COALESCE(
+                (
+                    SELECT MAX(NULLIF(TRIM(pc.modulo_nombre), ''))
+                    FROM planificacion_contenidos_formato6 pc
+                    WHERE pc.formato6_codigo = formato13.formato6_codigo
+                      AND pc.modulo_id = formato13.formato13_modulo_id
+                ),
+                (
+                    SELECT GROUP_CONCAT(DISTINCT NULLIF(TRIM(he.modulo_nombre), '') ORDER BY he.modulo_nombre SEPARATOR ', ')
+                    FROM horario_ejecucion he
+                    WHERE he.formato6_codigo = formato13.formato6_codigo
+                ),
+                CONCAT('Módulo ', formato13.formato13_modulo_id),
+                '—'
+            ) AS formato13_modulo_nombre,
             formato6.formato6_fecha_elaboracion,
             formato6.formato6_requerimiento,
             formato6.formato6_modalidad,
@@ -6007,14 +6225,20 @@ public function getFormato32()
                 f1.formato1_fecha_ejecucion_hasta,
                 f6.formato6_fecha_elaboracion,
                 f6.formato6_modalidad,
-                (
-                    SELECT GROUP_CONCAT(
-                        DISTINCT CONCAT('Módulo ', pc.modulo_id)
-                        ORDER BY pc.modulo_id
-                        SEPARATOR ', '
-                    )
-                    FROM planificacion_contenidos_formato6 pc
-                    WHERE pc.formato6_codigo = f32.formato6_codigo
+                COALESCE(
+                    (
+                        SELECT MAX(NULLIF(TRIM(pc.modulo_nombre), ''))
+                        FROM planificacion_contenidos_formato6 pc
+                        WHERE pc.formato6_codigo = f32.formato6_codigo
+                          AND pc.modulo_id = f32.formato32_modulo_id
+                    ),
+                    (
+                        SELECT GROUP_CONCAT(DISTINCT NULLIF(TRIM(he.modulo_nombre), '') ORDER BY he.modulo_nombre SEPARATOR ', ')
+                        FROM horario_ejecucion he
+                        WHERE he.formato6_codigo = f32.formato6_codigo
+                    ),
+                    CONCAT('Módulo ', f32.formato32_modulo_id),
+                    '—'
                 ) AS formato6_modulos
             FROM formato32 f32
             LEFT JOIN formato6 f6
@@ -6060,13 +6284,15 @@ public function insertFormato32($datos)
             ? trim((string) $datos->instructorIdentificacion)
             : '';
         $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $formato6ModuloId = isset($datos->formato6ModuloId) ? (int) $datos->formato6ModuloId : 0;
+        $observaciones = isset($datos->observaciones) ? trim((string) $datos->observaciones) : '';
         $notificaciones = isset($datos->notificaciones) && is_array($datos->notificaciones)
             ? $datos->notificaciones
             : array($datos);
         $mediosPermitidos = array('whatsapp', 'email', 'telefono', 'plataforma');
 
-        if ($instructorIdentificacion === '' || $formato6Codigo <= 0 || count($notificaciones) === 0) {
-            throw new Exception('Selecciona un instructor-gestor y un curso y agrega al menos una notificación.');
+        if ($instructorIdentificacion === '' || $formato6Codigo <= 0 || $formato6ModuloId <= 0 || count($notificaciones) === 0) {
+            throw new Exception('Selecciona un instructor-gestor, un curso y un módulo y agrega al menos una notificación.');
         }
 
         $notificacionesValidadas = array();
@@ -6131,6 +6357,16 @@ public function insertFormato32($datos)
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
+        $dbc->beginTransaction();
+        $dbc->query("SELECT formato6_codigo
+            FROM formato6
+            WHERE formato6_codigo = :formato6_codigo
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if (!$dbc->single()) {
+            throw new Exception('El curso seleccionado ya no está disponible.');
+        }
+
         $dbc->query("SELECT USUARIO_IDENTIFICACION, USUARIO_NOMBRES, USUARIO_APELLIDOS
             FROM usuarios
             WHERE USUARIO_IDENTIFICACION = :identificacion
@@ -6156,56 +6392,113 @@ public function insertFormato32($datos)
             throw new Exception('El curso seleccionado no está disponible.');
         }
 
-        $dbc->beginTransaction();
+        $dbc->query("SELECT modulo_id
+            FROM planificacion_contenidos_formato6
+            WHERE formato6_codigo = :formato6_codigo
+              AND modulo_id = :modulo_id
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $formato6ModuloId);
+        if (!$dbc->single()) {
+            throw new Exception('El módulo seleccionado no pertenece al curso.');
+        }
+
+        $dbc->query("SELECT formato32_codigo
+            FROM formato32
+            WHERE formato6_codigo = :formato6_codigo
+              AND formato32_modulo_id = :modulo_id
+            ORDER BY formato32_codigo ASC
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $formato6ModuloId);
+        $notificacionesExistentes = $dbc->resultset();
+
         $fechaCreacion = date('Y-m-d H:i:s');
-        foreach ($notificacionesValidadas as $notificacion) {
-            $dbc->query("INSERT INTO formato32 (
-                instructor_identificacion,
-                instructor_nombres,
-                instructor_apellidos,
-                formato6_codigo,
-                fecha_notificacion,
-                tipo_notificacion,
-                nombres_notificado,
-                apellidos_notificado,
-                medio_notificacion,
-                detalle,
-                fecha_creacion
-            ) VALUES (
-                :instructor_identificacion,
-                :instructor_nombres,
-                :instructor_apellidos,
-                :formato6_codigo,
-                :fecha_notificacion,
-                :tipo_notificacion,
-                :nombres_notificado,
-                :apellidos_notificado,
-                :medio_notificacion,
-                :detalle,
-                :fecha_creacion
-            )");
+        foreach ($notificacionesValidadas as $indice => $notificacion) {
+            $codigoExistente = isset($notificacionesExistentes[$indice]['formato32_codigo'])
+                ? (int) $notificacionesExistentes[$indice]['formato32_codigo']
+                : 0;
+            if ($codigoExistente > 0) {
+                $dbc->query("UPDATE formato32 SET
+                    instructor_identificacion = :instructor_identificacion,
+                    instructor_nombres = :instructor_nombres,
+                    instructor_apellidos = :instructor_apellidos,
+                    fecha_notificacion = :fecha_notificacion,
+                    tipo_notificacion = :tipo_notificacion,
+                    nombres_notificado = :nombres_notificado,
+                    apellidos_notificado = :apellidos_notificado,
+                    medio_notificacion = :medio_notificacion,
+                    detalle = :detalle,
+                    observaciones = :observaciones,
+                    fecha_creacion = :fecha_creacion
+                    WHERE formato32_codigo = :formato32_codigo");
+                $dbc->bind(':formato32_codigo', $codigoExistente);
+            } else {
+                $dbc->query("INSERT INTO formato32 (
+                    instructor_identificacion,
+                    instructor_nombres,
+                    instructor_apellidos,
+                    formato6_codigo,
+                    formato32_modulo_id,
+                    fecha_notificacion,
+                    tipo_notificacion,
+                    nombres_notificado,
+                    apellidos_notificado,
+                    medio_notificacion,
+                    detalle,
+                    observaciones,
+                    fecha_creacion
+                ) VALUES (
+                    :instructor_identificacion,
+                    :instructor_nombres,
+                    :instructor_apellidos,
+                    :formato6_codigo,
+                    :modulo_id,
+                    :fecha_notificacion,
+                    :tipo_notificacion,
+                    :nombres_notificado,
+                    :apellidos_notificado,
+                    :medio_notificacion,
+                    :detalle,
+                    :observaciones,
+                    :fecha_creacion
+                )");
+                $dbc->bind(':formato6_codigo', $formato6Codigo);
+                $dbc->bind(':modulo_id', $formato6ModuloId);
+            }
+
             $dbc->bind(':instructor_identificacion', $instructor['USUARIO_IDENTIFICACION']);
             $dbc->bind(':instructor_nombres', $instructor['USUARIO_NOMBRES']);
             $dbc->bind(':instructor_apellidos', $instructor['USUARIO_APELLIDOS']);
-            $dbc->bind(':formato6_codigo', $formato6Codigo);
             $dbc->bind(':fecha_notificacion', $notificacion['fechaNotificacion']);
             $dbc->bind(':tipo_notificacion', $notificacion['tipoNotificacion']);
             $dbc->bind(':nombres_notificado', $notificacion['nombres'] !== '' ? $notificacion['nombres'] : null);
             $dbc->bind(':apellidos_notificado', $notificacion['apellidos'] !== '' ? $notificacion['apellidos'] : null);
             $dbc->bind(':medio_notificacion', implode(', ', $notificacion['mediosNotificacion']));
             $dbc->bind(':detalle', $notificacion['detalle']);
+            $dbc->bind(':observaciones', $observaciones);
             $dbc->bind(':fecha_creacion', $fechaCreacion);
             $dbc->execute();
 
-            $codigo = (int) $dbc->lastInsertId();
+            $codigo = $codigoExistente > 0
+                ? $codigoExistente
+                : (int) $dbc->lastInsertId();
             if ($codigo <= 0) {
                 throw new Exception('No se pudo obtener el código de una notificación del Formato 32.');
             }
             $result[] = array('formato32_codigo' => $codigo);
         }
+
+        foreach (array_slice($notificacionesExistentes, count($notificacionesValidadas)) as $notificacionSobrante) {
+            $dbc->query("DELETE FROM formato32
+                WHERE formato32_codigo = :formato32_codigo");
+            $dbc->bind(':formato32_codigo', (int) $notificacionSobrante['formato32_codigo']);
+            $dbc->execute();
+        }
+
         $dbc->endTransaction();
 
-        $this->estado = new Exception_Object(1, count($result) . ' notificación(es) del Formato 32 guardada(s) correctamente.');
+        $this->estado = new Exception_Object(1, count($result) . ' notificación(es) del Formato 32 actualizada(s) correctamente.');
         $this->estado->setLastID(count($result));
     } catch (Exception $e) {
         if ($dbc !== null && $dbc->inTransaction()) {

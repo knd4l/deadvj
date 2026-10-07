@@ -1,0 +1,15 @@
+.sb-sidenav .sb-sidenav-menu {
+  min-height: 0;
+  overscroll-behavior-y: contain;
+}
+
+.formato-submenu > .nav-link {
+  min-height: 2.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.formato-titulo-separado {
+  margin-top: 0.75rem;
+  position: relative;
+  z-index: 1;
+}

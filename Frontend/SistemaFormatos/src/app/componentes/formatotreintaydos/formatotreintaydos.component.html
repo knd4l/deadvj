@@ -32,6 +32,7 @@
                     id="cursoFormato32"
                     name="formato6Codigo"
                     [(ngModel)]="formato6Codigo"
+                    (ngModelChange)="formato6ModuloId = null"
                     required>
                     <option [ngValue]="null">Seleccionar curso</option>
                     <option *ngFor="let curso of cursos" [ngValue]="curso.formato6_codigo">
@@ -40,8 +41,34 @@
                   </select>
                 </td>
               </tr>
+              <tr>
+                <th scope="row" class="field-label">Módulo</th>
+                <td>
+                  <select
+                    class="form-select"
+                    id="moduloFormato32"
+                    name="formato6ModuloId"
+                    [(ngModel)]="formato6ModuloId"
+                    required>
+                    <option [ngValue]="null">Seleccionar módulo</option>
+                    <option *ngFor="let modulo of modulosDisponibles" [ngValue]="modulo.id">
+                      {{ modulo.nombre }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label field-label" for="observacionesFormato32">Observaciones</label>
+          <textarea
+            class="form-control"
+            id="observacionesFormato32"
+            name="observaciones"
+            [(ngModel)]="observaciones"
+            rows="4"></textarea>
         </div>
 
         <section *ngFor="let notificacion of notificaciones; let i = index" class="table-responsive notification-section">

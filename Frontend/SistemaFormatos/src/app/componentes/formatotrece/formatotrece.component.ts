@@ -110,6 +110,7 @@ export class FormatotreceComponent implements OnInit {
   guardando = false;
   cursosFormato6: any[] = [];
   formato6SeleccionadoCodigo: number | null = null;
+  formato6ModuloId: number | null = null;
   tiposMedio: string[] = [];
   cargandoTiposMedio = false;
   tiposRecurso = ['Video', 'Imagen', 'Texto', 'URL'];
@@ -127,11 +128,15 @@ export class FormatotreceComponent implements OnInit {
     ) || null;
   }
 
+  get modulosDisponibles(): { id: number; nombre: string }[] {
+    return this.cursoSeleccionado?.modulos || [];
+  }
+
   cargarCursosFormato6(): void {
     this.modulosService.obtenerFormato6({ fx: 'getformato6', d: { incluirInactivos: true } }).subscribe({
       next: (respuesta: any) => {
         this.cursosFormato6 = respuesta?.data?.success && Array.isArray(respuesta.data.item)
-          ? respuesta.data.item
+          ? respuesta.data.item.filter((curso: any) => Array.isArray(curso.modulos) && curso.modulos.length > 0)
           : [];
       },
       error: () => {
@@ -353,8 +358,8 @@ export class FormatotreceComponent implements OnInit {
       }
       return;
     }
-    if (!this.formato6SeleccionadoCodigo) {
-      Swal.fire('Dato requerido', 'Selecciona un curso del Formato 6.', 'warning');
+    if (!this.formato6SeleccionadoCodigo || !this.formato6ModuloId) {
+      Swal.fire('Dato requerido', 'Selecciona un curso y un módulo del Formato 6.', 'warning');
       return;
     }
     const publicaciones = [this.formato13, ...this.publicacionesAdicionales];
@@ -399,6 +404,7 @@ export class FormatotreceComponent implements OnInit {
     const datos = {
       ...this.formato13,
       formato6Codigo: this.formato6SeleccionadoCodigo,
+      formato6ModuloId: this.formato6ModuloId,
       tiposMedio: JSON.stringify(this.formato13.tipoMedio ? [this.formato13.tipoMedio] : []),
       tiposRecurso: JSON.stringify(this.formato13.tiposRecurso),
       medioUta: this.formato13.medioUtaSeleccionado ? 'SI' : 'NO',
@@ -429,6 +435,7 @@ export class FormatotreceComponent implements OnInit {
           Swal.fire('Guardado', 'El Formato 13 se guardó correctamente.', 'success');
           formulario.resetForm();
           this.formato6SeleccionadoCodigo = null;
+          this.formato6ModuloId = null;
           this.publicacionesPaginaWebAdicionales = [];
           this.publicacionesRedSocialAdicionales = [];
           this.publicacionesVideoAdicionales = [];

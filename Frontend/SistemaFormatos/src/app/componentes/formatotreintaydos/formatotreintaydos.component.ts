@@ -13,6 +13,7 @@ interface CursoFormato32 {
   formato6_codigo: number;
   formato1_codigo_curso: string | null;
   formato1_curso_definido: string;
+  modulos: { id: number; nombre: string }[];
 }
 
 type TipoNotificacionFormato32 = 'individual' | 'grupal' | '';
@@ -42,6 +43,8 @@ export class FormatotreintaydosComponent implements OnInit {
   cursos: CursoFormato32[] = [];
   instructorIdentificacion = '';
   formato6Codigo: number | null = null;
+  formato6ModuloId: number | null = null;
+  observaciones = '';
   notificaciones: NotificacionFormato32[] = [this.nuevaNotificacion()];
   readonly opcionesMedio: OpcionMedioFormato32[] = [
     { valor: 'whatsapp', etiqueta: 'WhatsApp' },
@@ -70,6 +73,10 @@ export class FormatotreintaydosComponent implements OnInit {
       mediosNotificacion: [],
       detalle: ''
     };
+  }
+
+  get modulosDisponibles(): { id: number; nombre: string }[] {
+    return this.cursos.find((curso) => Number(curso.formato6_codigo) === Number(this.formato6Codigo))?.modulos || [];
   }
 
   agregarNotificacion(): void {
@@ -131,7 +138,8 @@ export class FormatotreintaydosComponent implements OnInit {
     this.modulosService.obtenerFormato6({ fx: 'getformato6', d: {} }).subscribe({
       next: (respuesta: any) => {
         this.cursos = respuesta?.data?.success && Array.isArray(respuesta.data.item)
-          ? respuesta.data.item.filter((curso: CursoFormato32) => !!curso.formato1_curso_definido?.trim())
+          ? respuesta.data.item.filter((curso: CursoFormato32) =>
+            !!curso.formato1_curso_definido?.trim() && Array.isArray(curso.modulos) && curso.modulos.length > 0)
           : [];
         if (this.cursos.length === 0) {
           Swal.fire('Aviso', 'No hay cursos definidos activos disponibles para seleccionar.', 'info');
@@ -149,9 +157,9 @@ export class FormatotreintaydosComponent implements OnInit {
       return;
     }
 
-    if (formulario.invalid) {
+    if (formulario.invalid || !this.formato6ModuloId) {
       formulario.control.markAllAsTouched();
-      Swal.fire('Datos incompletos', 'Completa los campos obligatorios antes de guardar el Formato 32.', 'warning');
+      Swal.fire('Datos incompletos', 'Selecciona el curso y módulo del Formato 6 y completa los campos obligatorios.', 'warning');
       return;
     }
 
@@ -173,6 +181,8 @@ export class FormatotreintaydosComponent implements OnInit {
       d: {
         instructorIdentificacion: this.instructorIdentificacion,
         formato6Codigo: this.formato6Codigo,
+        formato6ModuloId: this.formato6ModuloId,
+        observaciones: this.observaciones.trim(),
         notificaciones: this.notificaciones.map((notificacion) => ({
           ...notificacion,
           nombres: notificacion.tipoNotificacion === 'individual' ? notificacion.nombres.trim() : '',
@@ -188,6 +198,8 @@ export class FormatotreintaydosComponent implements OnInit {
             .then(() => {
               this.instructorIdentificacion = '';
               this.formato6Codigo = null;
+              this.formato6ModuloId = null;
+              this.observaciones = '';
               this.notificaciones = [this.nuevaNotificacion()];
               formulario.resetForm();
             });

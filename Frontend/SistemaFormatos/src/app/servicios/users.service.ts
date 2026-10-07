@@ -10,7 +10,7 @@ import { Observable, throwError } from 'rxjs';
 })
 export class UsersService {
 //URL = "https://deadv.uta.edu.ec/apps/postulaciones/trabajaconnosotros/srvencuestas/index.php";
-URL = "http://localhost/practicas/Backend/srvformatos/index.php";
+URL = "http://localhost/deadvj/Backend/srvformatos/index.php";
  URLmosh = "https://posgrados.uta.edu.ec/posgrados/execmoodle.php";
   constructor(private http: HttpClient, private cookies: CookieService) { }
 

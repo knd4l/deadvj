@@ -41,6 +41,7 @@ export class FormatotreceverComponent implements OnInit {
               : this.leerOpciones(formato.formato13_red_social_tipos_medio),
             tiposRecurso: this.leerOpciones(formato.formato13_red_social_tipos_recurso),
             cursoNombre: formato.formato1_curso_definido || '',
+            moduloNombre: formato.formato13_modulo_nombre || '—',
             publicacionesReporte: this.crearPublicacionesReporte(formato)
           }));
         } else {
@@ -205,6 +206,14 @@ export class FormatotreceverComponent implements OnInit {
                 [
                   { text: 'Curso', style: 'tableHeader' },
                   { text: curso, colSpan: 5 },
+                  {},
+                  {},
+                  {},
+                  {}
+                ],
+                [
+                  { text: 'Módulo', style: 'tableHeader' },
+                  { text: formato.moduloNombre, colSpan: 5 },
                   {},
                   {},
                   {},

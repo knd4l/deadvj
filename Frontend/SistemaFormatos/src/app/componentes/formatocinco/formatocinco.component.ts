@@ -32,6 +32,7 @@ export class FormatocincoComponent implements OnInit {
   guardando = false;
   editando = false;
   formato6Codigo: number | null = null;
+  formato6ModuloId: number | null = null;
   participantes: ParticipanteFormato5[] = [this.nuevoParticipante()];
 
   constructor(
@@ -104,6 +105,7 @@ export class FormatocincoComponent implements OnInit {
 
         this.editando = true;
         this.formato6Codigo = Number(entrevista.formato6_codigo);
+        this.formato6ModuloId = Number(entrevista.formato5_modulo_id) || null;
         this.participantes = [{
           formato5Codigo: Number(entrevista.formato5_codigo),
           cedula: entrevista.formato5_cedula || '',
@@ -155,7 +157,8 @@ export class FormatocincoComponent implements OnInit {
     this.modulosService.obtenerFormato6({ fx: 'getformato6', d: {} }).subscribe({
       next: (respuesta: any) => {
         this.cursos = respuesta?.data?.success && Array.isArray(respuesta.data.item)
-          ? respuesta.data.item.filter((curso: any) => !!curso.formato1_curso_definido?.trim())
+          ? respuesta.data.item.filter((curso: any) =>
+            !!curso.formato1_curso_definido?.trim() && Array.isArray(curso.modulos) && curso.modulos.length > 0)
           : [];
       },
       error: () => {
@@ -163,6 +166,10 @@ export class FormatocincoComponent implements OnInit {
         Swal.fire('Error', 'No se pudieron cargar los cursos definidos.', 'error');
       }
     });
+  }
+
+  get modulosDisponibles(): any[] {
+    return this.cursos.find((curso) => Number(curso.formato6_codigo) === Number(this.formato6Codigo))?.modulos || [];
   }
 
   cargarUsuarios(): void {
@@ -187,9 +194,9 @@ export class FormatocincoComponent implements OnInit {
       return;
     }
 
-    if (formulario.invalid) {
+    if (formulario.invalid || !this.formato6ModuloId) {
       formulario.control.markAllAsTouched();
-      Swal.fire('Datos incompletos', 'Completa los campos obligatorios antes de guardar el Formato 5.', 'warning');
+      Swal.fire('Datos incompletos', 'Selecciona el curso y módulo del Formato 6 y completa los campos obligatorios.', 'warning');
       return;
     }
 
@@ -202,7 +209,11 @@ export class FormatocincoComponent implements OnInit {
     this.guardando = true;
     this.modulosService.insertarFormato5({
       fx: 'insertformato5',
-      d: { formato6Codigo: this.formato6Codigo, participantes: this.participantes }
+      d: {
+        formato6Codigo: this.formato6Codigo,
+        formato6ModuloId: this.formato6ModuloId,
+        participantes: this.participantes
+      }
     }).subscribe({
       next: (respuesta: any) => {
         this.guardando = false;
@@ -212,8 +223,9 @@ export class FormatocincoComponent implements OnInit {
             .then(() => this.router.navigate(['/verformatocinco']));
           return;
         }
-        Swal.fire('Guardado', respuesta.data.message || 'Las entrevistas anteriores del curso se reemplazaron correctamente.', 'success');
+        Swal.fire('Guardado', respuesta.data.message || 'Las entrevistas anteriores del módulo se reemplazaron correctamente.', 'success');
         this.formato6Codigo = null;
+        this.formato6ModuloId = null;
         this.participantes = [this.nuevoParticipante()];
         formulario.resetForm();
         } else {

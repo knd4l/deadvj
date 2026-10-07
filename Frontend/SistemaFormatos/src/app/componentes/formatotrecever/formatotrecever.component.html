@@ -10,8 +10,9 @@
       <div *ngIf="!cargando && formatos.length > 0" class="table-responsive">
         <table class="table table-bordered table-hover table-custom text-center align-middle">
           <colgroup>
-            <col style="width: 23%">
-            <col style="width: 43%">
+            <col style="width: 19%">
+            <col style="width: 34%">
+            <col style="width: 13%">
             <col style="width: 17%">
             <col style="width: 17%">
           </colgroup>
@@ -19,6 +20,7 @@
             <tr>
               <th>Código del curso</th>
               <th>Nombre del curso</th>
+              <th>Módulo</th>
               <th>Publicaciones</th>
               <th>Acciones</th>
             </tr>
@@ -27,6 +29,7 @@
             <tr *ngFor="let formato of formatos">
               <td>{{ formato.formato1_codigo_curso || '—' }}</td>
               <td>{{ formato.formato1_curso_definido || '—' }}</td>
+              <td>{{ formato.moduloNombre }}</td>
               <td class="text-center">{{ formato.publicacionesReporte.length }}</td>
               <td class="text-center">
                 <button class="btn btn-sm btn-institucional" type="button" (click)="generarReporte(formato)" aria-label="Ver reporte PDF" title="Ver reporte PDF">

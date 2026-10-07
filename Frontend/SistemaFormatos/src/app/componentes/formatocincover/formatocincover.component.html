@@ -15,6 +15,7 @@
             <tr>
               <th>Código del curso</th>
               <th>Nombre del curso</th>
+              <th>Módulo</th>
               <th>Entrevistas</th>
               <th>Acciones</th>
             </tr>
@@ -23,6 +24,7 @@
             <tr *ngFor="let formato of formatos">
               <td>{{ formato.formato1_codigo_curso || '—' }}</td>
               <td>{{ formato.formato1_curso_definido || '—' }}</td>
+              <td>{{ formato.formato5_modulo_nombre || '—' }}</td>
               <td>{{ formato.formato5_total_entrevistas }}</td>
               <td>
                 <button class="btn btn-sm btn-institucional" type="button" (click)="verReporte(formato)" aria-label="Ver reporte PDF" title="Ver reporte PDF">

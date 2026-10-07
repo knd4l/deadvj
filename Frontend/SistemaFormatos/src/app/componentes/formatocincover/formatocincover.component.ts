@@ -29,7 +29,7 @@ export class FormatocincoverComponent implements OnInit {
           this.registrosFormato5 = respuesta.data.item;
           const cursos = new Map<string, any>();
           this.registrosFormato5.forEach((registro: any) => {
-            const key = String(registro.formato6_codigo ?? registro.formato5_codigo);
+            const key = `${registro.formato6_codigo ?? registro.formato5_codigo}:${registro.formato5_modulo_id ?? ''}`;
             const curso = cursos.get(key);
             if (curso) {
               curso.formato5_total_entrevistas += 1;
@@ -130,6 +130,7 @@ export class FormatocincoverComponent implements OnInit {
       const entrevistas = this.registrosFormato5
         .filter((registro) =>
           String(registro.formato6_codigo) === String(formato.formato6_codigo)
+          && String(registro.formato5_modulo_id ?? '') === String(formato.formato5_modulo_id ?? '')
         )
         .sort((a, b) => Number(a.formato5_numero_entrevista) - Number(b.formato5_numero_entrevista));
 
@@ -161,6 +162,14 @@ export class FormatocincoverComponent implements OnInit {
                   {}
                 ],
                 [
+                  { text: 'Módulo', style: 'tableHeader' },
+                  { text: formato.formato5_modulo_nombre || '—', colSpan: 5 },
+                  {},
+                  {},
+                  {},
+                  {}
+                ],
+                [
                   { text: 'Modalidad', style: 'tableHeader' },
                   { text: modalidad, colSpan: 2 },
                   {},
@@ -181,6 +190,12 @@ export class FormatocincoverComponent implements OnInit {
                 [
                   { text: 'Entrevista', style: 'tableHeader' },
                   { text: mostrar(entrevista.formato5_numero_entrevista), colSpan: 3 },
+                  {},
+                  {}
+                ],
+                [
+                  { text: 'Módulo', style: 'tableHeader' },
+                  { text: formato.formato5_modulo_nombre || '—', colSpan: 3 },
                   {},
                   {}
                 ],

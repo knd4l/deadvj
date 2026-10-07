@@ -1,0 +1,2 @@
+ALTER TABLE formato32
+  ADD COLUMN IF NOT EXISTS observaciones TEXT NULL AFTER detalle;
