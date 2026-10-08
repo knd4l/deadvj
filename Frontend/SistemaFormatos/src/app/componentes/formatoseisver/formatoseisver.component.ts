@@ -663,9 +663,9 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
     const textoPeriodos =
       [
-        'Inscripciones y matrícula:',
+        'INSCRIPCIONES Y MATRÍCULAS:',
         `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}`,
-        'Ejecución del curso:',
+        'EJECUCIÓN DEL CURSO:',
         `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}`,
         ...periodosModulos
       ].join('\n');
