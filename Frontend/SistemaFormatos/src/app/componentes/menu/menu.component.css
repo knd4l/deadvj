@@ -1,5 +1,7 @@
 .sb-sidenav .sb-sidenav-menu {
+  height: calc(100vh - 56px);
   min-height: 0;
+  overflow-y: auto;
   overscroll-behavior-y: contain;
 }
 
