@@ -342,14 +342,22 @@ async generarPDFFormato6(formato: any): Promise<void> {
     // FUNCIÓN PARA TÍTULOS DE SECCIÓN
     // =====================================================
 
+    const escaparTextoSvg = (texto: string): string =>
+      texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+
     const tituloSeccion = (
       texto: string
     ) => {
 
       return {
-        text: texto,
-        bold: true,
-        fontSize: 12,
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="515" height="30" viewBox="0 0 515 30"><rect x="1" y="1" width="513" height="28" rx="7" fill="none" stroke="#00345e" stroke-width="1.5"/><text x="9" y="20" font-family="Roboto, Arial, sans-serif" font-size="12" font-weight="700" fill="#000000">${escaparTextoSvg(texto)}</text></svg>`,
+        width: 515,
+        height: 30,
         margin: [0, 8, 0, 8]
       };
 
@@ -371,8 +379,8 @@ async generarPDFFormato6(formato: any): Promise<void> {
       .map((item: any) => String(item?.objetivo || '').trim())
       .filter((objetivo: string) => objetivo !== '')
       .map((objetivo: string) => ({
-        text: `- ${objetivo}`,
-        margin: [0, 0, 0, 5]
+        text: `● ${objetivo}`,
+        margin: [36, 0, 0, 5]
       }));
 
 
@@ -657,18 +665,30 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
     const periodosModulos = Array.from(periodosPorModulo.values())
       .sort((a, b) => a.orden - b.orden)
-      .map((modulo) =>
-        `${modulo.nombre}: ${formatearFecha(modulo.desde)} al ${formatearFecha(modulo.hasta)}`
-      );
+      .map((modulo, index) => {
+        const nombre = /^Módulo \d+$/i.test(modulo.nombre)
+          ? ''
+          : ` ${modulo.nombre}`;
+        return {
+          nombre: `Módulo ${index + 1}${nombre}: `,
+          fechas: `${formatearFecha(modulo.desde)} al ${formatearFecha(modulo.hasta)}`
+        };
+      });
 
-    const textoPeriodos =
-      [
-        'INSCRIPCIONES Y MATRÍCULAS:',
-        `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}`,
-        'EJECUCIÓN DEL CURSO:',
-        `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}`,
-        ...periodosModulos
-      ].join('\n');
+    const textoPeriodos = [
+      { text: 'INSCRIPCIONES Y MATRÍCULAS:\n' },
+      { text: `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}\n` },
+      { text: 'EJECUCIÓN DEL CURSO:\n' },
+      {
+        text: `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}\n`,
+        color: '#ab171f'
+      },
+      ...periodosModulos.flatMap((periodo, index) => [
+        ...(index > 0 ? [{ text: '\n' }] : []),
+        { text: periodo.nombre },
+        { text: periodo.fechas, bold: true }
+      ])
+    ];
 
     const modalidadFormato1 =
       String(
@@ -705,39 +725,91 @@ async generarPDFFormato6(formato: any): Promise<void> {
     // 2. HORARIO
     // =====================================================
 
-    const horariosPorModulo = new Map<string, { nombre: string; actividades: string[] }>();
+    const horariosPorActividad = new Map<string, Map<string, string[]>>();
 
-    horariosDebug.forEach((horario: any, index: number) => {
+    horariosDebug.forEach((horario: any) => {
       if (!horario.tipo_actividad) {
         return;
       }
 
-      const nombreOriginal = String(horario.modulo_nombre || '').trim();
-      const moduloId = horario.modulo_id ||
-        nombreOriginal.match(/\d+/)?.[0] ||
-        index + 1;
-      const nombreModulo = nombreOriginal || `Módulo ${moduloId}`;
-      const claveModulo = String(horario.modulo_id || nombreOriginal || moduloId).toLowerCase();
-      let modulo = horariosPorModulo.get(claveModulo);
-
-      if (!modulo) {
-        modulo = { nombre: nombreModulo, actividades: [] };
-        horariosPorModulo.set(claveModulo, modulo);
+      const tipoActividad = String(horario.tipo_actividad).trim();
+      let horariosActividad = horariosPorActividad.get(tipoActividad);
+      if (!horariosActividad) {
+        horariosActividad = new Map();
+        horariosPorActividad.set(tipoActividad, horariosActividad);
       }
 
-      const lineasActividad = [String(horario.tipo_actividad)];
-      obtenerDiasHorarios(horario).forEach((diaHorario: any) => {
-        lineasActividad.push(
-          `${diaHorario.dia || ''}: ${diaHorario.horaDesde || ''} - ${diaHorario.horaHasta || ''}`
-        );
+      const diasHorario = obtenerDiasHorarios(horario);
+      diasHorario.forEach((diaHorario: any) => {
+        const horaDesde = String(diaHorario.horaDesde || '').trim();
+        const horaHasta = String(diaHorario.horaHasta || '').trim();
+        const claveHorario = `${horaDesde}\u0000${horaHasta}`;
+        let dias = horariosActividad?.get(claveHorario);
+        if (!dias) {
+          dias = [];
+          horariosActividad?.set(claveHorario, dias);
+        }
+
+        const dia = String(diaHorario.dia || '').trim();
+        if (dia && !dias.includes(dia)) {
+          dias.push(dia);
+        }
       });
-      modulo.actividades.push(lineasActividad.join('\n'));
+
+      if (diasHorario.length === 0 && !horariosActividad.has('\u0000')) {
+        horariosActividad.set('\u0000', []);
+      }
     });
 
-    const textoHorario = Array.from(horariosPorModulo.values())
-      .map((modulo) => `${modulo.nombre}:\n${modulo.actividades.join('\n\n')}`)
-      .join('\n\n');
+    const ordenDias: { [dia: string]: number } = {
+      domingo: 0,
+      lunes: 1,
+      martes: 2,
+      miércoles: 3,
+      jueves: 4,
+      viernes: 5,
+      sábado: 6
+    };
+    const actividadesHorario = Array.from(horariosPorActividad.entries())
+      .map(([tipo, horarios]) => {
+        const detalles = Array.from(horarios.entries())
+          .map(([horas, dias]) => {
+            const [horaDesde, horaHasta] = horas.split('\u0000');
+            const diasTexto = [...dias]
+              .sort((a, b) =>
+                (ordenDias[a.toLocaleLowerCase('es')] ?? 7) -
+                (ordenDias[b.toLocaleLowerCase('es')] ?? 7)
+              )
+              .map((dia) => dia.toLocaleLowerCase('es'))
+              .join(', ');
+            const horasTexto = horaDesde || horaHasta
+              ? `${horaDesde}${horaDesde && horaHasta ? ' a ' : ''}${horaHasta}`
+              : '';
+            return [diasTexto, horasTexto].filter(Boolean).join(' ');
+          })
+          .filter(Boolean)
+          .join('; ');
+        return { tipo, detalles: `:${detalles ? ` ${detalles}` : ''}` };
+      });
+    const textoHorario = actividadesHorario.flatMap((actividad, index) => [
+      ...(index > 0 ? [{ text: '\n' }] : []),
+      {
+        text: actividad.tipo,
+        bold: /sincr[oó]nico|asincr[oó]nico/i.test(actividad.tipo)
+      },
+      { text: actividad.detalles }
+    ]);
 
+    const requerimientoNormalizado = String(formato.formato6_requerimiento || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const requerimientosSeleccionados = {
+      planBianual: /plan\s*bi\s*anual/.test(requerimientoNormalizado),
+      planCapacitacionContinua: /plan\s*b\s*(?:de\s*)?capacitacion\s*continua/.test(requerimientoNormalizado),
+      capacitacionInterna: /capacitacion\s*interna/.test(requerimientoNormalizado),
+      otros: /\botros?\b/.test(requerimientoNormalizado)
+    };
 
     // =====================================================
     // 3. OBTENER NOMBRES DE LOS MÓDULOS
@@ -982,6 +1054,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
           text: tituloModulo,
           bold: true,
           fontSize: 11,
+          color: '#ab171f',
           margin: [0, 8, 0, 3]
         });
 
@@ -1011,10 +1084,16 @@ async generarPDFFormato6(formato: any): Promise<void> {
       [key: string]: {
         nombre: string;
         horarios: string[];
-        fechas: string[];
+        fechas: { [fecha: string]: { texto: string; horas: number } };
         horasTotales: number;
       }
     } = {};
+    const normalizarNombreModulo = (nombre: string): string =>
+      nombre
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
 
 
     // =====================================================
@@ -1044,30 +1123,25 @@ async generarPDFFormato6(formato: any): Promise<void> {
         // OBTENER ID DEL MÓDULO
         // -------------------------------------------------
 
-        let moduloId =
-          horario.modulo_id;
-
-
-        if (!moduloId) {
-
-          const coincidencia =
-            String(
-              horario.modulo_nombre || ''
-            ).match(/\d+/);
-
-
-          moduloId =
-            coincidencia
-              ? Number(
-                  coincidencia[0]
-                )
-              : 1;
-
-        }
-
-
-        const moduloClave =
-          String(moduloId);
+        const nombreHorario = String(horario.modulo_nombre || '').trim();
+        const nombreGenerico = nombreHorario.match(/^m[oó]dulo\s*(\d+)$/i);
+        const moduloPorNombre = nombreHorario
+          ? modulosFormato.find((modulo: any) =>
+              normalizarNombreModulo(String(modulo?.modulo_nombre || modulo?.nombre || '')) ===
+              normalizarNombreModulo(nombreHorario)
+            )
+          : undefined;
+        const moduloId =
+          horario.modulo_id ||
+          nombreGenerico?.[1] ||
+          moduloPorNombre?.modulo_id ||
+          moduloPorNombre?.id;
+        const nombreEsGenerico = /^m[oó]dulo$/i.test(nombreHorario);
+        const moduloClave = moduloId
+          ? String(moduloId)
+          : nombreHorario && !nombreEsGenerico
+            ? `nombre:${normalizarNombreModulo(nombreHorario)}`
+            : `periodo:${horario.modulo_desde}|${horario.modulo_hasta}`;
 
 
         // -------------------------------------------------
@@ -1085,15 +1159,15 @@ async generarPDFFormato6(formato: any): Promise<void> {
           ] = {
 
             nombre:
-              horario.modulo_nombre ||
+              nombreHorario ||
               nombresModulos[
                 moduloClave
               ] ||
-              `Módulo ${moduloClave}`,
+              `Módulo ${Object.keys(cronogramaPorModulo).length + 1}`,
 
             horarios: [],
 
-            fechas: [],
+            fechas: {},
 
             horasTotales: 0
 
@@ -1204,26 +1278,6 @@ async generarPDFFormato6(formato: any): Promise<void> {
                 fechaISO
               )}`;
 
-
-            // Evitar duplicados
-
-            if (
-              !cronogramaPorModulo[
-                moduloClave
-              ].fechas.includes(
-                fechaTexto
-              )
-            ) {
-
-              cronogramaPorModulo[
-                moduloClave
-              ].fechas.push(
-                fechaTexto
-              );
-
-            }
-
-
             // ---------------------------------------------
             // HORAS
             // ---------------------------------------------
@@ -1234,6 +1288,15 @@ async generarPDFFormato6(formato: any): Promise<void> {
                 configuracionDia.horaHasta
               );
 
+            const fechasModulo =
+              cronogramaPorModulo[moduloClave].fechas;
+            if (!fechasModulo[fechaISO]) {
+              fechasModulo[fechaISO] = {
+                texto: fechaTexto,
+                horas: 0
+              };
+            }
+            fechasModulo[fechaISO].horas += horas;
 
             cronogramaPorModulo[
               moduloClave
@@ -1263,139 +1326,50 @@ async generarPDFFormato6(formato: any): Promise<void> {
     // TABLA DEL CRONOGRAMA
     // =====================================================
 
-    const tablaCronograma: any[] = [
-
+    const tablaCronograma: any[][] = [
       [
-
-        {
-          text:
-            'Horario',
-
-          bold:
-            true,
-
-          alignment:
-            'center'
-        },
-
-
-        {
-          text:
-            'Fechas',
-
-          bold:
-            true,
-
-          alignment:
-            'center'
-        },
-
-
-        {
-          text:
-            'Horas totales',
-
-          bold:
-            true,
-
-          alignment:
-            'center'
-        }
-
+        { text: 'Horario', bold: true, alignment: 'center' },
+        { text: 'Fechas', bold: true, alignment: 'center' },
+        { text: 'Horas totales', bold: true, alignment: 'center' }
       ]
-
     ];
 
-
-    // =====================================================
-    // UNA FILA POR CADA MÓDULO
-    // =====================================================
-
-    Object.keys(
-      cronogramaPorModulo
-    ).forEach(
-      (
-        moduloId: string
-      ) => {
-
-        const modulo =
-          cronogramaPorModulo[
-            moduloId
-          ];
-
-
-        // -----------------------------------------------
-        // HORARIO
-        // -----------------------------------------------
-
-        let textoHorarioModulo =
-          modulo.nombre;
-
-
-        textoHorarioModulo +=
-          '\n';
-
-
-        textoHorarioModulo +=
-          modulo.horarios.join(
-            '\n\n'
-          );
-
-
-        // -----------------------------------------------
-        // FECHAS
-        // -----------------------------------------------
-
-        const textoFechas =
-          modulo.fechas.join(
-            '\n'
-          );
-
-
-        // -----------------------------------------------
-        // HORAS TOTALES
-        // -----------------------------------------------
-
+    Object.keys(cronogramaPorModulo)
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach((moduloId) => {
+        const modulo = cronogramaPorModulo[moduloId];
+        const textoHorarioModulo = modulo.horarios.join('\n\n');
+        const textoFechas = Object.values(modulo.fechas)
+          .map((fecha) => {
+            const horas = Number(fecha.horas.toFixed(2));
+            const horasTexto = Number.isInteger(horas)
+              ? String(horas)
+              : String(horas).replace('.', ',');
+            return `${fecha.texto} (${horasTexto}h)`;
+          })
+          .join('\n');
         const textoHoras =
           `${modulo.horasTotales} horas / ` +
           `${formato.formato6_carga_horaria || 0} horas`;
-
+        const nombreModulo = String(modulo.nombre || '').trim();
+        const tituloModulo = new RegExp(`^Módulo\\s+${moduloId}(?:\\s*:|$)`, 'i')
+          .test(nombreModulo)
+          ? nombreModulo
+          : `Módulo ${moduloId}: ${nombreModulo}`;
 
         tablaCronograma.push([
-
           {
-            text:
-              textoHorarioModulo,
-
-            fontSize:
-              8
+            text: [
+              { text: `${tituloModulo}\n`, bold: true },
+              { text: textoHorarioModulo }
+            ],
+            fontSize: 8,
+            alignment: 'left'
           },
-
-
-          {
-            text:
-              textoFechas,
-
-            fontSize:
-              8
-          },
-
-
-          {
-            text:
-              textoHoras,
-
-            fontSize:
-              8,
-
-            bold:
-              true
-          }
-
+          { text: textoFechas, fontSize: 8 },
+          { text: textoHoras, fontSize: 8, bold: true }
         ]);
-
-      }
-    );
+      });
 
 
     // =====================================================
@@ -1607,28 +1581,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
         // 1. DATOS INFORMATIVOS
         // =================================================
 
-        {
-
-          text:
-            '1. DATOS INFORMATIVOS',
-
-          bold:
-            true,
-
-          fontSize:
-            14,
-            
-          alignment:
-            'left',
-
-          margin: [
-            0,
-            15,
-            0,
-            15
-          ]
-
-        },
+        tituloSeccion('1. DATOS INFORMATIVOS'),
 
 
         {
@@ -1637,7 +1590,8 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
             widths: [
               '35%',
-              '65%'
+              '32.5%',
+              '32.5%'
             ],
 
 
@@ -1657,29 +1611,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_fecha_elaboracion
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
-
-              ],
-
-
-              [
-
-                {
-                  text:
-                    'Resolución',
-
-                  bold:
-                    true
                 },
-
-                {
-                  text:
-                    'Nro: RESOLUCIÓN: CAU-P-613-2024',
-
-                  alignment:
-                    'left'
-                }
+                {}
 
               ],
 
@@ -1691,56 +1626,91 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     'Requerimiento',
 
                   bold:
-                    true
+                    true,
+                  rowSpan: 3
                 },
 
                 {
-                  text:
-                    formato.formato6_requerimiento
-                    || '',
+                  text: 'Nro: CAU-P-613-2024',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
-
               [
-
+                {},
                 {
-                  text:
-                    'Unidad responsable',
-
-                  bold:
-                    true
+                  columns: [
+                    { text: 'Plan bi anual de educación', width: '*' },
+                    {
+                      text: requerimientosSeleccionados.planBianual ? 'X' : '',
+                      width: 12,
+                      alignment: 'right'
+                    }
+                  ]
                 },
-
                 {
-                  text:
-                    formato.formato6_unidad_responsable
-                    || '',
-                  alignment: 'left'
+                  columns: [
+                    { text: 'Plan B de capacitación continua', width: '*' },
+                    {
+                      text: requerimientosSeleccionados.planCapacitacionContinua ? 'X' : '',
+                      width: 12,
+                      alignment: 'right'
+                    }
+                  ]
                 }
-
               ],
 
+              [
+                {},
+                {
+                  columns: [
+                    { text: 'Capacitación interna', width: '*' },
+                    {
+                      text: requerimientosSeleccionados.capacitacionInterna ? 'X' : '',
+                      width: 12,
+                      alignment: 'right'
+                    }
+                  ]
+                },
+                {
+                  columns: [
+                    { text: 'Otros', width: '*' },
+                    {
+                      text: requerimientosSeleccionados.otros ? 'X' : '',
+                      width: 12,
+                      alignment: 'right'
+                    }
+                  ]
+                }
+              ],
 
               [
-
                 {
-                  text:
-                    'Instructores',
-
-                  bold:
-                    true
+                  text: 'Unidad responsable',
+                  bold: true
                 },
-
                 {
-                  text:
-                    formato.formato6_instructores
-                    || '',
+                  text: formato.formato6_unidad_responsable || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
+              ],
 
+              [
+                {
+                  text: 'Instructores',
+                  bold: true
+                },
+                {
+                  text: formato.formato6_instructores || '',
+                  colSpan: 2,
+                  alignment: 'left'
+                },
+                {}
               ],
 
 
@@ -1758,8 +1728,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_beneficiarios
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1778,8 +1750,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_paralelo
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1798,8 +1772,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_modalidad
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1818,8 +1794,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_area
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1838,8 +1816,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_carga_horaria
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1862,16 +1842,12 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     textoPeriodos,
 
-                  fontSize:
-                    9,
-
-                  lineHeight:
-                    1.3,
-
+                  colSpan: 2,
                   alignment:
                     'left'
 
-                }
+                },
+                {}
 
               ],
 
@@ -1894,16 +1870,12 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     textoHorario || '',
 
-                  fontSize:
-                    9,
-
-                  lineHeight:
-                    1.3,
-
+                  colSpan: 2,
                   alignment:
                     'left'
 
-                }
+                },
+                {}
 
               ],
 
@@ -1922,8 +1894,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_lugar
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1942,8 +1916,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_prerrequisitos
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1962,8 +1938,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                   text:
                     formato.formato6_tipo_certificado
                     || '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ],
 
@@ -1984,8 +1962,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
                     formato.formato6_inversion !== ''
                       ? `${formato.formato6_inversion} $`
                       : '',
+                  colSpan: 2,
                   alignment: 'left'
-                }
+                },
+                {}
 
               ]
 
@@ -2092,7 +2072,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
         {
 
           text:
-            'Objetivo general',
+            'A. Objetivo general',
 
           bold:
             true,
@@ -2101,7 +2081,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
             11,
 
           margin: [
-            0,
+            18,
             0,
             0,
             5
@@ -2123,7 +2103,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
             10,
 
           margin: [
-            0,
+            36,
             0,
             0,
             10
@@ -2135,7 +2115,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
         {
 
           text:
-            'Objetivos específicos',
+            'B. Objetivos específicos',
 
           bold:
             true,
@@ -2144,7 +2124,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
             11,
 
           margin: [
-            0,
+            18,
             0,
             0,
             5
@@ -2162,7 +2142,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
             10,
 
           margin: [
-            0,
+            18,
             0,
             0,
             15
@@ -2327,29 +2307,13 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
 
         {
-
           table: {
-
-            headerRows:
-              1,
-
-            widths: [
-              '45%',
-              '40%',
-              '15%'
-            ],
-
-            body:
-              tablaCronograma
-
+            headerRows: 1,
+            widths: ['45%', '40%', '15%'],
+            body: tablaCronograma
           },
-
-          layout:
-            layoutTablaCuadriculada,
-
-          fontSize:
-            8
-
+          layout: layoutTablaCuadriculada,
+          fontSize: 8
         },
 
 
