@@ -1503,25 +1503,8 @@
               *ngIf="i === 0"
               class="d-flex align-items-center gap-2">
 
-              <input
-                type="number"
-                class="form-control"
-                style="max-width: 100px;"
-                name="instructores{{i}}"
-                [(ngModel)]="fila.numeroInstructores"
-                (ngModelChange)="calcularTotalPresupuesto(i)"
-                min="1">
-
-              <span>
-                instructores ×
-              </span>
-
               <span class="fw-bold">
-                {{ formato6.cargaHoraria }}
-              </span>
-
-              <span>
-                horas
+                {{ formato6.cargaHoraria }} horas
               </span>
 
             </div>

@@ -1418,10 +1418,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
     const tablaPresupuesto: any[] = [
       [
         {
-          text: 'DOCENCIA UNIVERSITARIA:',
+          text: `DOCENCIA UNIVERSITARIA: ${nombresModulosParaIngresos.join(' Y ')}`.toLocaleUpperCase('es'),
           colSpan: 4,
           bold: true,
-          alignment: 'left'
+          alignment: 'center'
         },
         {},
         {},
@@ -1446,7 +1446,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
       ],
       [
         { text: numeroParticipantesTexto, alignment: 'center' },
-        { text: nombresModulosParaIngresos.join(', '), alignment: 'left' },
+        { text: 'Inscripción', alignment: 'left' },
         { text: inversionTexto ? `${inversion.toFixed(2)} $` : '', alignment: 'right' },
         { text: inversionTexto ? `${totalIngresos.toFixed(2)} $` : '', alignment: 'right' }
       ],

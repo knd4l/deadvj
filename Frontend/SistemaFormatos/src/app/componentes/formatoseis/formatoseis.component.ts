@@ -50,7 +50,6 @@ export class FormatoseisComponent implements OnInit {
       presupuesto: any = [
         {
           partida: 1,
-          numeroInstructores: 1,
           valor: 0,
           total: 0,
           descripcion: ''
@@ -487,7 +486,6 @@ cargarFormatos1Definidos(): void {
     this.modulosGuardados = [];
     this.presupuesto = [{
       partida: 1,
-      numeroInstructores: 1,
       valor: 0,
       total: 0,
       descripcion: ''
@@ -515,8 +513,7 @@ calcularTotalPresupuesto(indice: number): void {
   if (indice === 0) { 
     const valor = this.convertirNumero(fila.valor);
     const horas = this.convertirNumero(this.formato6.cargaHoraria);
-    const instructores = this.convertirNumero(fila.numeroInstructores) || 1;
-    fila.total = valor * horas * instructores;
+    fila.total = valor * horas;
   }
 
   this.calcularTotalGeneral();
@@ -570,21 +567,12 @@ convertirNumero(valor: any): number {
           return { ...fila };
         }
 
-        const numeroInstructores =
-          Number(fila.numeroInstructores) || 0;
-
         const cargaHoraria =
           Number(this.formato6.cargaHoraria) || 0;
 
-        const etiquetaInstructores =
-          numeroInstructores === 1
-            ? 'instructor'
-            : 'instructores';
-
         return {
           ...fila,
-          descripcion:
-            `${numeroInstructores} ${etiquetaInstructores} × ${cargaHoraria} horas`
+          descripcion: `${cargaHoraria} horas`
         };
 
       }
