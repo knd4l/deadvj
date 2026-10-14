@@ -1,0 +1,17 @@
+.card-header.bg-institucional {
+  background-color: #6c1313 !important;
+  color: #fff;
+}
+
+.btn-institucional,
+.btn-institucional:hover,
+.btn-institucional:focus {
+  background-color: #6c1313;
+  border-color: #6c1313;
+  color: #fff;
+}
+
+th,
+td {
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,84 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional text-center">
+      <h4 class="mb-0"><b>FORMATO 9</b></h4>
+    </div>
+
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label fw-bold" for="cursoFormato9">Curso definido</label>
+        <select
+          class="form-select"
+          id="cursoFormato9"
+          name="cursoFormato9"
+          [(ngModel)]="formato6SeleccionadoCodigo"
+          (ngModelChange)="seleccionarCurso()"
+          [disabled]="cargandoCursos || cursosFormato6.length === 0">
+          <option [ngValue]="null">
+            {{ cargandoCursos ? 'Cargando cursos...' : 'Seleccionar curso' }}
+          </option>
+          <option *ngFor="let curso of cursosFormato6" [ngValue]="curso.formato6_codigo">
+            {{ curso.formato1_codigo_curso || 'Sin código' }} - {{ curso.formato1_curso_definido || 'Curso sin nombre' }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold" for="moduloFormato9">Módulo</label>
+        <select
+          class="form-select"
+          id="moduloFormato9"
+          name="moduloFormato9"
+          [(ngModel)]="formato6ModuloId"
+          [disabled]="!cursoSeleccionado">
+          <option [ngValue]="null">Seleccionar módulo</option>
+          <option *ngFor="let modulo of modulosDisponibles" [ngValue]="modulo.id">
+            {{ modulo.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <section class="contract-clauses mt-4" aria-labelledby="contratoFormato9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 id="contratoFormato9" class="fw-bold mb-0">Contrato</h5>
+          <button class="btn btn-institucional" type="button" (click)="agregarTextoContrato()">
+            + Agregar texto
+          </button>
+        </div>
+
+        <div *ngFor="let texto of textosContrato; let i = index; trackBy: trackByTextoContrato" class="contract-entry mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label fw-bold mb-0" [for]="'textoContratoFormato9' + texto.id">
+              Texto {{ i + 1 }}
+            </label>
+            <button
+              class="btn btn-outline-danger btn-sm"
+              type="button"
+              (click)="eliminarTextoContrato(texto.id)"
+              [attr.aria-label]="'Eliminar texto ' + (i + 1)">
+              Eliminar
+            </button>
+          </div>
+          <textarea
+            class="form-control"
+            [id]="'textoContratoFormato9' + texto.id"
+            [name]="'textoContratoFormato9' + texto.id"
+            [(ngModel)]="texto.texto"
+            rows="12"
+            [attr.aria-label]="'Texto de contrato ' + (i + 1)">
+          </textarea>
+        </div>
+      </section>
+
+      <div class="d-flex justify-content-end mt-4">
+        <button
+          class="btn btn-institucional"
+          type="button"
+          (click)="guardarFormato9()"
+          [disabled]="guardando">
+          {{ guardando ? 'Guardando...' : 'Guardar formulario' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</main>

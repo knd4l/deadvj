@@ -42,6 +42,8 @@ import { FormatocincoComponent } from './componentes/formatocinco/formatocinco.c
 import { FormatocincoverComponent } from './componentes/formatocincover/formatocincover.component';
 import { FormatotreintaydosComponent } from './componentes/formatotreintaydos/formatotreintaydos.component';
 import { FormatotreintaydosverComponent } from './componentes/formatotreintaydosver/formatotreintaydosver.component';
+import { FormatonueveComponent } from './componentes/formatonueve/formatonueve.component';
+import { FormatonueveverComponent } from './componentes/formatonuevever/formatonuevever.component';
 
 
 export const msalInstance = new PublicClientApplication({
@@ -79,7 +81,9 @@ UsuariosistemaComponent,
     FormatocincoComponent,
     FormatocincoverComponent,
     FormatotreintaydosComponent,
-    FormatotreintaydosverComponent
+    FormatotreintaydosverComponent,
+    FormatonueveComponent,
+    FormatonueveverComponent
 
   ],
   imports: [

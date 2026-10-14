@@ -19,6 +19,8 @@ import { FormatocincoComponent } from './componentes/formatocinco/formatocinco.c
 import { FormatocincoverComponent } from './componentes/formatocincover/formatocincover.component';
 import { FormatotreintaydosComponent } from './componentes/formatotreintaydos/formatotreintaydos.component';
 import { FormatotreintaydosverComponent } from './componentes/formatotreintaydosver/formatotreintaydosver.component';
+import { FormatonueveComponent } from './componentes/formatonueve/formatonueve.component';
+import { FormatonueveverComponent } from './componentes/formatonuevever/formatonuevever.component';
 
 const routes: Routes = [
 {path:'',pathMatch:'full', redirectTo:'login'},
@@ -40,7 +42,9 @@ const routes: Routes = [
 {path: 'formatocinco', component: FormatocincoComponent, canActivate: [VigilanteGuard]},
 {path: 'verformatocinco', component: FormatocincoverComponent, canActivate: [VigilanteGuard]},
 {path: 'formatotreintaydos', component: FormatotreintaydosComponent, canActivate: [VigilanteGuard]},
-{path: 'verformatotreintaydos', component: FormatotreintaydosverComponent, canActivate: [VigilanteGuard]}
+{path: 'verformatotreintaydos', component: FormatotreintaydosverComponent, canActivate: [VigilanteGuard]},
+{path: 'formatonueve', component: FormatonueveComponent, canActivate: [VigilanteGuard]},
+{path: 'verformatonueve', component: FormatonueveverComponent, canActivate: [VigilanteGuard]}
 ];
 
 

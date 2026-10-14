@@ -97,6 +97,16 @@ case 'updateformato6':
     $clsCursos->updateformato6($jdata->d);
     break;
 
+case 'insertformato9':
+    $clsCursos = new classServiciosFormatos();
+    $clsCursos->insertFormato9($jdata->d);
+    break;
+
+case 'getformato9':
+    $clsCursos = new classServiciosFormatos();
+    $clsCursos->getFormato9();
+    break;
+
 case 'insertformato13':
 	$clsCursos = new classServiciosFormatos();
 	$clsCursos->insertFormato13($jdata->d);

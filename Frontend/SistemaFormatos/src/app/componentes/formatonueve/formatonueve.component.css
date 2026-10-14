@@ -1,0 +1,27 @@
+.card-header.bg-institucional {
+  background-color: #6c1313 !important;
+  color: #fff;
+}
+
+.form-select {
+  min-height: 42px;
+}
+
+.contract-clauses textarea {
+  min-height: 280px;
+  resize: vertical;
+}
+
+.btn-institucional,
+.btn-institucional:hover,
+.btn-institucional:focus {
+  background-color: #6c1313;
+  border-color: #6c1313;
+  color: #fff;
+}
+
+.contract-entry {
+  padding: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}

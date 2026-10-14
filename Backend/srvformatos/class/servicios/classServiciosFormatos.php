@@ -5049,6 +5049,179 @@ public function getUsuariosFormato5()
     }
 }
 
+public function insertFormato9($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $moduloId = isset($datos->formato6ModuloId) ? (int) $datos->formato6ModuloId : 0;
+        $textos = isset($datos->textos) && is_array($datos->textos) ? $datos->textos : array();
+        $textos = array_map(function ($texto) {
+            return is_string($texto) ? $texto : '';
+        }, $textos);
+
+        if ($formato6Codigo <= 0 || $moduloId <= 0) {
+            throw new Exception('Selecciona un curso y un módulo del Formato 6.');
+        }
+        if (count($textos) === 0 || count(array_filter($textos, function ($texto) {
+            return trim($texto) !== '';
+        })) === 0) {
+            throw new Exception('Escribe el contenido del contrato antes de guardar.');
+        }
+
+        $textosJson = json_encode(array_values($textos), JSON_UNESCAPED_UNICODE);
+        if ($textosJson === false) {
+            throw new Exception('No se pudo preparar el texto del contrato para guardarlo.');
+        }
+
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->beginTransaction();
+        $dbc->query("SELECT f6.formato6_codigo
+            FROM formato6 f6
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
+            WHERE f6.formato6_codigo = :formato6_codigo
+              AND f1.formato1_curso_definido IS NOT NULL
+              AND TRIM(f1.formato1_curso_definido) <> ''
+            LIMIT 1
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if (!$dbc->single()) {
+            throw new Exception('El curso seleccionado no está disponible.');
+        }
+
+        $dbc->query("SELECT modulo_id
+            FROM planificacion_contenidos_formato6
+            WHERE formato6_codigo = :formato6_codigo
+              AND modulo_id = :modulo_id
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $moduloId);
+        if (!$dbc->single()) {
+            throw new Exception('El módulo seleccionado no pertenece al curso.');
+        }
+
+        $dbc->query("INSERT INTO formato9 (
+            formato6_codigo,
+            formato9_modulo_id,
+            formato9_textos
+        ) VALUES (
+            :formato6_codigo,
+            :modulo_id,
+            :textos
+        )");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':modulo_id', $moduloId);
+        $dbc->bind(':textos', $textosJson);
+        $dbc->execute();
+        $formato9Codigo = (int) $dbc->lastInsertId();
+        $dbc->endTransaction();
+
+        $result[] = array('formato9_codigo' => $formato9Codigo);
+        $this->estado = new Exception_Object(1, 'Formato 9 guardado correctamente.');
+        $this->estado->setLastID($formato9Codigo);
+    } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 9: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getFormato9()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT f9.formato9_codigo,
+                f9.formato6_codigo,
+                f9.formato9_modulo_id,
+                f9.formato9_textos,
+                f9.formato9_fecha_creacion,
+                f1.formato1_codigo_curso,
+                f1.formato1_curso_definido,
+                COALESCE(
+                    (
+                        SELECT MAX(NULLIF(TRIM(pc.modulo_nombre), ''))
+                        FROM planificacion_contenidos_formato6 pc
+                        WHERE pc.formato6_codigo = f9.formato6_codigo
+                          AND pc.modulo_id = f9.formato9_modulo_id
+                    ),
+                    CONCAT('Módulo ', f9.formato9_modulo_id)
+                ) AS formato9_modulo_nombre
+            FROM formato9 f9
+            INNER JOIN formato6 f6 ON f6.formato6_codigo = f9.formato6_codigo
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
+            ORDER BY f9.formato9_codigo DESC");
+        $filas = $dbc->resultset();
+
+        foreach ($filas as $fila) {
+            $textos = json_decode($fila['formato9_textos'], true);
+            if (!is_array($textos)) {
+                throw new Exception('Hay un contrato guardado con contenido inválido.');
+            }
+
+            $fila['formato9_textos'] = $textos;
+            $result[] = $fila;
+        }
+
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 9: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
 public function insertFormato13($datos)
 {
     $dbc = null;
