@@ -3811,6 +3811,8 @@ public function getformato1CursoDefinido($d){
 
             f1.formato1_curso_definido,
 
+            f1.formato1_codigo_curso,
+
             f1.formato1_curso_definido_fecha
 
         FROM formato1 f1
@@ -3855,6 +3857,9 @@ public function getformato1CursoDefinido($d){
 
                     $item->formato1_curso_definido =
                         $row['formato1_curso_definido'];
+
+                    $item->formato1_codigo_curso =
+                        $row['formato1_codigo_curso'];
 
                     $item->formato1_curso_definido_fecha =
                         $row['formato1_curso_definido_fecha'];

@@ -677,10 +677,10 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
     const textoPeriodos = [
       { text: 'INSCRIPCIONES Y MATRÍCULAS:\n' },
-      { text: `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}\n` },
+      { text: `${formatearFecha(inscripcionDesde)} al ${formatearFecha(inscripcionHasta)}\n\n` },
       { text: 'EJECUCIÓN DEL CURSO:\n' },
       {
-        text: `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}\n`,
+        text: `${formatearFecha(ejecucionDesde)} al ${formatearFecha(ejecucionHasta)}\n\n`,
         color: '#ab171f'
       },
       ...periodosModulos.flatMap((periodo, index) => [
@@ -1084,7 +1084,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
       [key: string]: {
         nombre: string;
         horarios: string[];
-        fechas: { [fecha: string]: { texto: string; horas: number } };
+        fechas: { [fecha: string]: { texto: string; dia: string; horas: number; sincronico: boolean } };
         horasTotales: number;
       }
     } = {};
@@ -1277,6 +1277,13 @@ async generarPDFFormato6(formato: any): Promise<void> {
               `${formatearFecha(
                 fechaISO
               )}`;
+            const tipoActividadNormalizado = String(horario.tipo_actividad || '')
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .toLowerCase();
+            const esSincronico =
+              /\bsincronico\b/.test(tipoActividadNormalizado) ||
+              tipoActividadNormalizado.includes('clases en vivo');
 
             // ---------------------------------------------
             // HORAS
@@ -1293,10 +1300,15 @@ async generarPDFFormato6(formato: any): Promise<void> {
             if (!fechasModulo[fechaISO]) {
               fechasModulo[fechaISO] = {
                 texto: fechaTexto,
-                horas: 0
+                dia: nombreDia,
+                horas: 0,
+                sincronico: false
               };
             }
             fechasModulo[fechaISO].horas += horas;
+            if (esSincronico) {
+              fechasModulo[fechaISO].sincronico = true;
+            }
 
             cronogramaPorModulo[
               moduloClave
@@ -1339,18 +1351,30 @@ async generarPDFFormato6(formato: any): Promise<void> {
       .forEach((moduloId) => {
         const modulo = cronogramaPorModulo[moduloId];
         const textoHorarioModulo = modulo.horarios.join('\n\n');
-        const textoFechas = Object.values(modulo.fechas)
-          .map((fecha) => {
+        const fechasOrdenadas = Object.keys(modulo.fechas)
+          .sort()
+          .map((fechaISO) => modulo.fechas[fechaISO]);
+        const textoFechas = fechasOrdenadas
+          .flatMap((fecha, index) => {
             const horas = Number(fecha.horas.toFixed(2));
             const horasTexto = Number.isInteger(horas)
               ? String(horas)
               : String(horas).replace('.', ',');
-            return `${fecha.texto} (${horasTexto}h)`;
-          })
-          .join('\n');
-        const textoHoras =
-          `${modulo.horasTotales} horas / ` +
-          `${formato.formato6_carga_horaria || 0} horas`;
+            const restoFecha = fecha.texto.slice(fecha.dia.length);
+            return [
+              ...(index > 0 ? [{ text: '\n' }] : []),
+              {
+                text: `${fecha.dia}${restoFecha}`,
+                bold: fecha.sincronico
+              },
+              { text: ` (${horasTexto}h)` }
+            ];
+          });
+        const horasTotales = Number(modulo.horasTotales.toFixed(2));
+        const textoHorasValor = Number.isInteger(horasTotales)
+          ? String(horasTotales)
+          : String(horasTotales).replace('.', ',');
+        const textoHoras = `${textoHorasValor} horas`;
         const nombreModulo = String(modulo.nombre || '').trim();
         const tituloModulo = new RegExp(`^Módulo\\s+${moduloId}(?:\\s*:|$)`, 'i')
           .test(nombreModulo)
@@ -1364,7 +1388,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
               { text: textoHorarioModulo }
             ],
             fontSize: 8,
-            alignment: 'left'
+            alignment: 'center'
           },
           { text: textoFechas, fontSize: 8 },
           { text: textoHoras, fontSize: 8, bold: true }
@@ -1376,7 +1400,71 @@ async generarPDFFormato6(formato: any): Promise<void> {
     // 6. TABLA DE PRESUPUESTO
     // =====================================================
 
+    const modulosParaIngresos = Object.values(cronogramaPorModulo)
+      .map((modulo) => String(modulo.nombre || '').trim())
+      .filter(Boolean);
+    const nombresModulosParaIngresos = modulosParaIngresos.length > 0
+      ? Array.from(new Set(modulosParaIngresos))
+      : modulosFormato.map((modulo: any, index: number) =>
+          String(modulo?.modulo_nombre || modulo?.nombre || `Módulo ${index + 1}`).trim()
+        );
+    const numeroParticipantesTexto = String(formato?.formato6_paralelo ?? '').trim();
+    const numeroParticipantes = Number(numeroParticipantesTexto.replace(',', '.')) || 0;
+    const inversionTexto = String(formato?.formato6_inversion ?? '').trim();
+    const inversion = Number(
+      inversionTexto.replace(/\$/g, '').replace(/\s/g, '').replace(',', '.')
+    ) || 0;
+    const totalIngresos = numeroParticipantes * inversion;
     const tablaPresupuesto: any[] = [
+      [
+        {
+          text: 'DOCENCIA UNIVERSITARIA:',
+          colSpan: 4,
+          bold: true,
+          alignment: 'left'
+        },
+        {},
+        {},
+        {}
+      ],
+      [
+        {
+          text: `INGRESOS (${numeroParticipantesTexto || '0'} participantes)`,
+          colSpan: 4,
+          bold: true,
+          alignment: 'left'
+        },
+        {},
+        {},
+        {}
+      ],
+      [
+        { text: 'N', bold: true, alignment: 'center' },
+        { text: 'Descripción', bold: true, alignment: 'center' },
+        { text: 'Valor', bold: true, alignment: 'center' },
+        { text: 'Total', bold: true, alignment: 'center' }
+      ],
+      [
+        { text: numeroParticipantesTexto, alignment: 'center' },
+        { text: nombresModulosParaIngresos.join(', '), alignment: 'left' },
+        { text: inversionTexto ? `${inversion.toFixed(2)} $` : '', alignment: 'right' },
+        { text: inversionTexto ? `${totalIngresos.toFixed(2)} $` : '', alignment: 'right' }
+      ],
+      [
+        {
+          text: 'TOTAL INGRESOS',
+          colSpan: 3,
+          bold: true,
+          alignment: 'right'
+        },
+        {},
+        {},
+        {
+          text: inversionTexto ? `${totalIngresos.toFixed(2)} $` : '',
+          bold: true,
+          alignment: 'right'
+        }
+      ],
 
       [
 
@@ -1514,7 +1602,7 @@ async generarPDFFormato6(formato: any): Promise<void> {
 
       pageMargins: [
         40,
-        80,
+        100,
         40,
         80
       ],
@@ -1575,6 +1663,17 @@ async generarPDFFormato6(formato: any): Promise<void> {
       // ===================================================
 
       content: [
+
+
+        {
+          text: [
+            { text: 'PROYECTO: ', bold: true },
+            { text: formato.formato1_curso_definido || '', bold: true }
+          ],
+          alignment: 'center',
+          fontSize: 12,
+          margin: [0, 0, 0, 8]
+        },
 
 
         // =================================================
@@ -2164,25 +2263,19 @@ async generarPDFFormato6(formato: any): Promise<void> {
           text: [
             {
               text: 'Curso: ',
-              bold: true
+              bold: true,
+              fontSize: 11
             },
             {
-              text: formato.formato1_curso_definido || ''
+              text: formato.formato1_curso_definido || '',
+              fontSize: 11
+            },
+            {
+              text: formato.formato6_metodologia
+                ? ` ${String(formato.formato6_metodologia).trimStart()}`
+                : ''
             }
           ],
-
-          fontSize: 11,
-
-          margin: [0, 0, 0, 8]
-
-        },
-
-
-        {
-
-          text:
-            formato.formato6_metodologia
-            || '',
 
           alignment:
             'justify',
@@ -2339,9 +2432,6 @@ async generarPDFFormato6(formato: any): Promise<void> {
         {
 
           table: {
-
-            headerRows:
-              1,
 
             widths: [
               '15%',
