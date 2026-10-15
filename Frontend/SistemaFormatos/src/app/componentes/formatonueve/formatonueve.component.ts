@@ -9,6 +9,30 @@ interface CursoFormato6 {
   modulos: { id: number; nombre: string }[];
 }
 
+interface Formato9Guardado {
+  formato9_codigo: number;
+  formato6_codigo: number;
+  formato9_modulo_id: number;
+}
+
+interface CronogramaItem {
+  modulo: string;
+  desde: string;
+  hasta: string;
+  actividad: string;
+  dias: string;
+  horario: string;
+  horas_totales: number;
+}
+
+interface DatosNovena {
+  nombreCurso: string;
+  nombreModulo: string;
+  diasContratacion: string;
+  diasTrabajo: string;
+  horarioTrabajo: string;
+}
+
 @Component({
   selector: 'app-formatonueve',
   templateUrl: './formatonueve.component.html',
@@ -16,10 +40,14 @@ interface CursoFormato6 {
 })
 export class FormatonueveComponent implements OnInit {
   cursosFormato6: CursoFormato6[] = [];
+  formatos9Guardados: Formato9Guardado[] = [];
   formato6SeleccionadoCodigo: number | null = null;
   formato6ModuloId: number | null = null;
+  yaExiste = false;
   cargandoCursos = false;
+  cargandoNovena = false;
   guardando = false;
+  datosNovena: DatosNovena | null = null;
   textosContrato = [{
     id: 1,
     texto: 'En la ciudad de Ambato, a los ** días del mes de ** de 20**, comparecen por una parte la ****, en calidad de **** de la Universidad Técnica de Ambato, debidamente facultado mediante Resolución Administrativa Nro. **** del ** de **** de 20**, a quién en adelante y para efectos del presente contrato se le podrá llamar El Contratante; o, simplemente “La Universidad”; y, por otra parte el *****, quienes: por los derechos que se representa y por el suyo propio, respectivamente, libre y voluntariamente tienen a bien celebrar el presente Contrato de Prestación de Servicios Profesionales de conformidad a lo previsto en el inciso 2do de la Disposición General Primera del Reglamento de Aplicación del Mandato Constituyente No 8 reformado, mediante Decreto Ejecutivo Nº 1121 del 2008, reformado por el Art. 5 del Decreto Ejecutivo. 1313, en concordancia con lo estipulado en los Art. 149 y 153 de la Ley Orgánica de Educación Superior, al tenor de las siguientes cláusulas y estipulaciones que se señalan a continuación; así: '
@@ -64,27 +92,31 @@ export class FormatonueveComponent implements OnInit {
   },
   {
     id:10,
+    texto: 'NOVENA. - El “Profesional”, desempeñará las actividades inherentes a las de Instructor del Curso: “DOCENCIA UNIVERSITARIA: INNOVACIÓN PEDAGÓGICA Y DISEÑO DE CONTENIDOS DIGITALES CON INTELIGENCIA ARTIFICIAL GENERATIVA” Módulo 1, materia del presente contrato, en la ciudad de Ambato con el siguiente horario, como se detalla en el cuadro:  '
+  },
+  {
+    id:11,
     texto: 'DECIMA. - NATURALEZA JURÍDICA DEL CONTRATO. - El presente contrato es de naturaleza Civil y no se encuentra sujeto a la Ley Orgánica de Servicio Público y su Reglamento.'
   },
    {
-    id:11,
+    id:12,
     texto: 'DÉCIMA PRIMERA. - Se aclara que la Universidad Técnica de Ambato no reconoce gastos de movilización alimentación, hospedaje o cualquier otro gasto que realice el Profesional.'
   },
   {
-    id:12,
+    id:13,
     texto: 'DÉCIMA SEGUNDA. - En caso de que el profesional contratado labore en otra institución pública declara bajo juramento; que a más de desempeñar las actividades justificadas con los horarios certificados que se incorporan al presente contrato, no tiene vigente otro Contrato por servicios profesionales de Docencia en fechas simultáneas en otra unidad académica perteneciente a la Universidad Técnica de Ambato, ni labora en otra institución pública; información de la cual se constituye el único responsable.'+'\n\n'+'Por otra parte, el profesional declara bajo juramento no estar comprendido dentro de las prohibiciones señaladas en el Art. 230 de la Constitución de la República del Ecuador, por lo que está totalmente habilitado para suscribir el presente contrato.'
   },
   {
-    id:13,
+    id:14,
     texto: 'DÉCIMA TERCERA. - Salvo circunstancias de fuerza mayor o caso fortuito debidamente comprobado por parte del Profesional Contratado, que determinen el retraso o incumplimiento de las obligaciones contractuales, se compromete a pagar a la Universidad Técnica de Ambato los daños y perjuicios ocasionados o que llegare a ocasionar a ésta por manifiesto incumplimiento de obligaciones por causas que no tengan justificación alguna.'
   },
 
   {
-    id:14,
+    id:15,
     texto: 'DÉCIMA CUARTA. - CONTROVERSIAS.- Para el evento de suscitarse divergencias o controversias de la falta del cumplimiento del presente contrato que determinen retraso o incumplimiento de las obligaciones contractuales, éstas tratarán de llegar a un acuerdo que solucione el problema; y, en el caso de no obtenerse el acuerdo de las partes del asunto controvertido, podrán someterlo, libre y voluntariamente, a los procesos de mediación en el Centro de Arbitraje y Mediación de la Procuraduría General del Estado, de conformidad con lo establecido en la Ley de Arbitraje y Mediación sin que este involucre un perjuicio a la Universidad. En última instancia, se demandará ante los jueces civiles de este cantón, para lo cual renuncian al fuero y domicilio preferente. '
   },
   {
-    id:15,
+    id:16,
     texto: 'DÉCIMA QUINTA: ACEPTACIÓN DE LAS PARTES. - Libre y voluntariamente, previo el cumplimiento de los requisitos exigidos por las leyes de la materia, las partes declaran su aceptación a todo lo convenido en el presente Contrato, a cuyas estipulaciones se someten.'+'\n\n'+'Para constancia, las partes suscriben el presente contrato en un original.'
   },
 
@@ -96,6 +128,7 @@ export class FormatonueveComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarCursosFormato6();
+    this.cargarFormatos9();
   }
 
   get cursoSeleccionado(): CursoFormato6 | null {
@@ -110,6 +143,107 @@ export class FormatonueveComponent implements OnInit {
 
   seleccionarCurso(): void {
     this.formato6ModuloId = null;
+    this.yaExiste = false;
+    this.datosNovena = null;
+  }
+
+  seleccionarModulo(): void {
+    this.yaExiste = this.formatos9Guardados.some(
+      (f) =>
+        Number(f.formato6_codigo) === Number(this.formato6SeleccionadoCodigo) &&
+        Number(f.formato9_modulo_id) === Number(this.formato6ModuloId)
+    );
+    this.cargarDatosNovena();
+  }
+
+  cargarDatosNovena(): void {
+    if (!this.formato6SeleccionadoCodigo || !this.formato6ModuloId) {
+      this.datosNovena = null;
+      return;
+    }
+    const curso = this.cursoSeleccionado;
+    const modulo = this.modulosDisponibles.find((m) => Number(m.id) === Number(this.formato6ModuloId));
+    if (!curso || !modulo) {
+      this.datosNovena = null;
+      return;
+    }
+
+    this.cargandoNovena = true;
+    this.modulosService.obtenerFormato6Reporte({
+      fx: 'getformato6Reporte',
+      d: { formato6_codigo: this.formato6SeleccionadoCodigo },
+      dpro: 0, dus: 0, dcx: 1
+    }).subscribe({
+      next: (res: any) => {
+        this.cargandoNovena = false;
+        const formato = res?.data?.item?.[0];
+        if (!formato) { this.datosNovena = null; return; }
+
+        const cronograma: CronogramaItem[] = Array.isArray(formato.cronograma) ? formato.cronograma : [];
+        const nombreModuloNorm = modulo.nombre.trim().toLowerCase();
+
+        // Filtrar items del cronograma que pertenecen al módulo seleccionado
+        const itemsModulo = cronograma.filter((c) =>
+          c.modulo?.trim().toLowerCase() === nombreModuloNorm
+        );
+
+        // Días de contratación: fechas formateadas del campo "desde/hasta" del módulo
+        const primerItem = itemsModulo[0];
+        let diasContratacion = '—';
+        if (primerItem?.desde && primerItem?.hasta) {
+          diasContratacion = `${this.formatearFecha(primerItem.desde)} al ${this.formatearFecha(primerItem.hasta)}`;
+        }
+
+        // Días de trabajo: combinar los días de todas las actividades del módulo
+        const diasSet = new Set<string>();
+        itemsModulo.forEach((c) => {
+          if (c.dias) {
+            c.dias.split(',').map((d) => d.trim()).filter(Boolean).forEach((d) => diasSet.add(d));
+          }
+        });
+        const diasTrabajo = diasSet.size > 0 ? Array.from(diasSet).join(', ') : '—';
+
+        // Horario de trabajo: por tipo de actividad
+        const horarioTrabajo = itemsModulo.length > 0
+          ? itemsModulo.map((c) => `${c.actividad}: ${c.horario || '—'}`).join('\n')
+          : '—';
+
+        this.datosNovena = {
+          nombreCurso: curso.formato1_curso_definido || '—',
+          nombreModulo: modulo.nombre,
+          diasContratacion,
+          diasTrabajo,
+          horarioTrabajo
+        };
+      },
+      error: () => {
+        this.cargandoNovena = false;
+        this.datosNovena = null;
+      }
+    });
+  }
+
+  private formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    const partes = fecha.split('-');
+    if (partes.length !== 3) return fecha;
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const dia = parseInt(partes[2], 10);
+    const mes = meses[parseInt(partes[1], 10) - 1];
+    const anio = partes[0];
+    return `${dia} de ${mes} de ${anio}`;
+  }
+
+  cargarFormatos9(): void {
+    this.modulosService.obtenerFormatos9({ fx: 'getformato9', d: {} }).subscribe({
+      next: (respuesta: any) => {
+        if (Array.isArray(respuesta?.data?.item)) {
+          this.formatos9Guardados = respuesta.data.item;
+          this.seleccionarModulo();
+        }
+      },
+      error: () => {}
+    });
   }
 
   agregarTextoContrato(): void {
@@ -153,7 +287,22 @@ export class FormatonueveComponent implements OnInit {
           Swal.fire('Error', respuesta?.data?.message || 'No se pudo guardar el Formato 9.', 'error');
           return;
         }
-        Swal.fire('Guardado', respuesta.data.message || 'El Formato 9 se guardó correctamente.', 'success');
+        // Marcar como existente para que el botón cambie a "Actualizar"
+        const yaRegistrado = this.formatos9Guardados.some(
+          (f) =>
+            Number(f.formato6_codigo) === Number(this.formato6SeleccionadoCodigo) &&
+            Number(f.formato9_modulo_id) === Number(this.formato6ModuloId)
+        );
+        if (!yaRegistrado && this.formato6SeleccionadoCodigo && this.formato6ModuloId) {
+          this.formatos9Guardados.push({
+            formato9_codigo: respuesta.data.item?.[0]?.formato9_codigo ?? 0,
+            formato6_codigo: this.formato6SeleccionadoCodigo,
+            formato9_modulo_id: this.formato6ModuloId
+          });
+        }
+        this.yaExiste = true;
+        const titulo = (respuesta.data.message || '').toLowerCase().includes('actualiz') ? 'Actualizado' : 'Guardado';
+        Swal.fire(titulo, respuesta.data.message || 'El Formato 9 se guardó correctamente.', 'success');
       },
       error: (error: any) => {
         this.guardando = false;

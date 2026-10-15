@@ -30,6 +30,7 @@
           id="moduloFormato9"
           name="moduloFormato9"
           [(ngModel)]="formato6ModuloId"
+          (ngModelChange)="seleccionarModulo()"
           [disabled]="!cursoSeleccionado">
           <option [ngValue]="null">Seleccionar módulo</option>
           <option *ngFor="let modulo of modulosDisponibles" [ngValue]="modulo.id">
@@ -67,6 +68,44 @@
             rows="12"
             [attr.aria-label]="'Texto de contrato ' + (i + 1)">
           </textarea>
+
+          <!-- Tabla NOVENA: se muestra solo después del texto 10 -->
+          <div *ngIf="texto.id === 10" class="mt-3">
+            <div *ngIf="cargandoNovena" class="text-muted small py-2">
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              Cargando datos del cronograma...
+            </div>
+            <div *ngIf="!cargandoNovena && !datosNovena && formato6ModuloId" class="text-muted small py-2">
+              No se encontraron datos del cronograma para este módulo.
+            </div>
+            <div *ngIf="datosNovena && !cargandoNovena" class="table-responsive">
+              <table class="table table-bordered table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                <thead>
+                  <tr class="text-white text-center" style="background-color: #00345e;">
+                    <th>Evento</th>
+                    <th>Ciudad</th>
+                    <th>Instalaciones</th>
+                    <th>Días de Contratación</th>
+                    <th>Días de Trabajo / Horas Efectivamente Laboradas</th>
+                    <th>Horario de Trabajo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="fw-semibold">{{ datosNovena.nombreCurso }}</div>
+                      <div class="text-muted" style="font-size:0.8rem;">{{ datosNovena.nombreModulo }}</div>
+                    </td>
+                    <td class="text-center">Ambato</td>
+                    <td class="text-center">Plataforma Educativa UTA</td>
+                    <td class="text-center">{{ datosNovena.diasContratacion }}</td>
+                    <td class="text-center">{{ datosNovena.diasTrabajo }}</td>
+                    <td style="white-space: pre-line;">{{ datosNovena.horarioTrabajo }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -76,7 +115,7 @@
           type="button"
           (click)="guardarFormato9()"
           [disabled]="guardando">
-          {{ guardando ? 'Guardando...' : 'Guardar formulario' }}
+          {{ guardando ? (yaExiste ? 'Actualizando...' : 'Guardando...') : (yaExiste ? 'Actualizar formulario' : 'Guardar formulario') }}
         </button>
       </div>
     </div>

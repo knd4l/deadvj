@@ -5106,25 +5106,53 @@ public function insertFormato9($datos)
             throw new Exception('El módulo seleccionado no pertenece al curso.');
         }
 
-        $dbc->query("INSERT INTO formato9 (
-            formato6_codigo,
-            formato9_modulo_id,
-            formato9_textos
-        ) VALUES (
-            :formato6_codigo,
-            :modulo_id,
-            :textos
-        )");
+        // Verificar si ya existe un registro para este curso+módulo
+        $dbc->query("SELECT formato9_codigo
+            FROM formato9
+            WHERE formato6_codigo = :formato6_codigo
+              AND formato9_modulo_id = :modulo_id
+            LIMIT 1
+            FOR UPDATE");
         $dbc->bind(':formato6_codigo', $formato6Codigo);
         $dbc->bind(':modulo_id', $moduloId);
-        $dbc->bind(':textos', $textosJson);
-        $dbc->execute();
-        $formato9Codigo = (int) $dbc->lastInsertId();
-        $dbc->endTransaction();
+        $existente = $dbc->single();
 
-        $result[] = array('formato9_codigo' => $formato9Codigo);
-        $this->estado = new Exception_Object(1, 'Formato 9 guardado correctamente.');
-        $this->estado->setLastID($formato9Codigo);
+        if ($existente) {
+            // Ya existe: actualizar
+            $formato9Codigo = (int) $existente['formato9_codigo'];
+            $dbc->query("UPDATE formato9
+                SET formato9_textos = :textos
+                WHERE formato9_codigo = :formato9_codigo");
+            $dbc->bind(':textos', $textosJson);
+            $dbc->bind(':formato9_codigo', $formato9Codigo);
+            $dbc->execute();
+            $dbc->endTransaction();
+
+            $result[] = array('formato9_codigo' => $formato9Codigo);
+            $this->estado = new Exception_Object(1, 'Formato 9 actualizado correctamente.');
+            $this->estado->setLastID($formato9Codigo);
+        } else {
+            // No existe: insertar
+            $dbc->query("INSERT INTO formato9 (
+                formato6_codigo,
+                formato9_modulo_id,
+                formato9_textos
+            ) VALUES (
+                :formato6_codigo,
+                :modulo_id,
+                :textos
+            )");
+            $dbc->bind(':formato6_codigo', $formato6Codigo);
+            $dbc->bind(':modulo_id', $moduloId);
+            $dbc->bind(':textos', $textosJson);
+            $dbc->execute();
+            $formato9Codigo = (int) $dbc->lastInsertId();
+            $dbc->endTransaction();
+
+            $result[] = array('formato9_codigo' => $formato9Codigo);
+            $this->estado = new Exception_Object(1, 'Formato 9 guardado correctamente.');
+            $this->estado->setLastID($formato9Codigo);
+        }
     } catch (Exception $e) {
         if ($dbc !== null && $dbc->inTransaction()) {
             $dbc->cancelTransaction();
@@ -5178,7 +5206,29 @@ public function getFormato9()
                           AND pc.modulo_id = f9.formato9_modulo_id
                     ),
                     CONCAT('Módulo ', f9.formato9_modulo_id)
-                ) AS formato9_modulo_nombre
+                ) AS formato9_modulo_nombre,
+                (
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'modulo_nombre', he.modulo_nombre,
+                            'modulo_desde',  he.modulo_desde,
+                            'modulo_hasta',  he.modulo_hasta,
+                            'tipo_actividad', he.tipo_actividad,
+                            'dias_horarios', he.dias_horarios
+                        )
+                    )
+                    FROM horario_ejecucion he
+                    WHERE he.formato6_codigo = f9.formato6_codigo
+                      AND TRIM(he.modulo_nombre) = COALESCE(
+                          (
+                              SELECT MAX(NULLIF(TRIM(pc2.modulo_nombre), ''))
+                              FROM planificacion_contenidos_formato6 pc2
+                              WHERE pc2.formato6_codigo = f9.formato6_codigo
+                                AND pc2.modulo_id = f9.formato9_modulo_id
+                          ),
+                          ''
+                      )
+                ) AS formato9_cronograma_json
             FROM formato9 f9
             INNER JOIN formato6 f6 ON f6.formato6_codigo = f9.formato6_codigo
             INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
@@ -5192,6 +5242,9 @@ public function getFormato9()
             }
 
             $fila['formato9_textos'] = $textos;
+            $cronograma = json_decode($fila['formato9_cronograma_json'] ?? 'null', true);
+            $fila['formato9_cronograma'] = is_array($cronograma) ? $cronograma : [];
+            unset($fila['formato9_cronograma_json']);
             $result[] = $fila;
         }
 
