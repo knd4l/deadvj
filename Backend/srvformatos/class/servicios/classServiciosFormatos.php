@@ -5198,6 +5198,7 @@ public function getFormato9()
                 f9.formato9_fecha_creacion,
                 f1.formato1_codigo_curso,
                 f1.formato1_curso_definido,
+                f6.formato6_modalidad,
                 COALESCE(
                     (
                         SELECT MAX(NULLIF(TRIM(pc.modulo_nombre), ''))
@@ -5208,27 +5209,11 @@ public function getFormato9()
                     CONCAT('Módulo ', f9.formato9_modulo_id)
                 ) AS formato9_modulo_nombre,
                 (
-                    SELECT JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'modulo_nombre', he.modulo_nombre,
-                            'modulo_desde',  he.modulo_desde,
-                            'modulo_hasta',  he.modulo_hasta,
-                            'tipo_actividad', he.tipo_actividad,
-                            'dias_horarios', he.dias_horarios
-                        )
-                    )
-                    FROM horario_ejecucion he
-                    WHERE he.formato6_codigo = f9.formato6_codigo
-                      AND TRIM(he.modulo_nombre) = COALESCE(
-                          (
-                              SELECT MAX(NULLIF(TRIM(pc2.modulo_nombre), ''))
-                              FROM planificacion_contenidos_formato6 pc2
-                              WHERE pc2.formato6_codigo = f9.formato6_codigo
-                                AND pc2.modulo_id = f9.formato9_modulo_id
-                          ),
-                          ''
-                      )
-                ) AS formato9_cronograma_json
+                    SELECT MAX(NULLIF(TRIM(pc2.modulo_nombre), ''))
+                    FROM planificacion_contenidos_formato6 pc2
+                    WHERE pc2.formato6_codigo = f9.formato6_codigo
+                      AND pc2.modulo_id = f9.formato9_modulo_id
+                ) AS formato9_nombre_modulo_horario
             FROM formato9 f9
             INNER JOIN formato6 f6 ON f6.formato6_codigo = f9.formato6_codigo
             INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
@@ -5240,11 +5225,35 @@ public function getFormato9()
             if (!is_array($textos)) {
                 throw new Exception('Hay un contrato guardado con contenido inválido.');
             }
-
             $fila['formato9_textos'] = $textos;
-            $cronograma = json_decode($fila['formato9_cronograma_json'] ?? 'null', true);
-            $fila['formato9_cronograma'] = is_array($cronograma) ? $cronograma : [];
-            unset($fila['formato9_cronograma_json']);
+
+            // Obtener nombre del módulo para filtrar horarios
+            $nombreModulo = isset($fila['formato9_nombre_modulo_horario']) ? $fila['formato9_nombre_modulo_horario'] : null;
+            unset($fila['formato9_nombre_modulo_horario']);
+
+            $cronograma = [];
+            if ($nombreModulo !== null && $nombreModulo !== '') {
+                $dbc->query("SELECT modulo_nombre, modulo_desde, modulo_hasta, tipo_actividad, dias_horarios
+                    FROM horario_ejecucion
+                    WHERE formato6_codigo = :f6
+                      AND TRIM(modulo_nombre) = :modulo_nombre
+                    ORDER BY horario_ejecucion_id");
+                $dbc->bind(':f6', (int) $fila['formato6_codigo']);
+                $dbc->bind(':modulo_nombre', trim($nombreModulo));
+                $filasCronograma = $dbc->resultset();
+                foreach ($filasCronograma as $hfila) {
+                    $diasDecoded = json_decode($hfila['dias_horarios'] ?? '[]', true);
+                    $cronograma[] = [
+                        'modulo_nombre'  => $hfila['modulo_nombre'],
+                        'modulo_desde'   => $hfila['modulo_desde'],
+                        'modulo_hasta'   => $hfila['modulo_hasta'],
+                        'tipo_actividad' => $hfila['tipo_actividad'],
+                        'dias_horarios'  => is_array($diasDecoded) ? $diasDecoded : []
+                    ];
+                }
+            }
+
+            $fila['formato9_cronograma'] = $cronograma;
             $result[] = $fila;
         }
 

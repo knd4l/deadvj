@@ -27,6 +27,7 @@ interface Formato9 {
   formato9_fecha_creacion: string;
   formato1_codigo_curso: string | null;
   formato1_curso_definido: string;
+  formato6_modalidad: string | null;
   formato9_cronograma?: CronogramaModulo[];
 }
 
@@ -105,43 +106,27 @@ export class FormatonueveverComponent implements OnInit {
 
       const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-      const parsearFechaISO = (iso: string): { num: number; mes: string; anio: number } | null => {
-        const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (!m) return null;
-        return { num: parseInt(m[3], 10), mes: meses[parseInt(m[2], 10) - 1], anio: parseInt(m[1], 10) };
-      };
-
-      const agruparFechasPorMesAnio = (dias: DiaHorario[]): string => {
-        const grupos = new Map<string, number[]>();
-        for (const d of dias) {
-          const p = parsearFechaISO(d.dia);
-          if (!p) continue;
-          const clave = `${p.mes}|${p.anio}`;
-          if (!grupos.has(clave)) grupos.set(clave, []);
-          grupos.get(clave)!.push(p.num);
-        }
-        return Array.from(grupos.entries())
-          .map(([clave, nums]) => {
-            const [mes, anio] = clave.split('|');
-            return `${nums.join(', ')} de ${mes} de ${anio}`;
-          }).join('; ') || '—';
-      };
-
-      const nombreDiaSemana = (iso: string): string => {
-        const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-        const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (!m) return iso || '';
-        const d = new Date(Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10)));
-        return dias[d.getUTCDay()];
-      };
-
       // --- Construir items del PDF ---
-      const items: any[] = formato.formato9_textos.map((texto) => ({
+      const modalidad = formato.formato6_modalidad?.trim().toLocaleUpperCase('es-EC') || '—';
+      const items: any[] = [{
+        text: [
+          'UNIVERSIDAD TÉCNICA DE AMBATO',
+          'DIRECCIÓN DE EDUCACIÓN CONTINUA, A DISTANCIA Y VIRTUAL \n',
+          'CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES',
+          'UTA-DEADV-C-2026-006\n',
+          'CURSO DE EDUCACIÓN CONTINUA',
+          `MODALIDAD: ${modalidad}`
+        ].join('\n'),
+        bold: true,
+        alignment: 'center',
+        fontSize: 10,
+        margin: [0, 0, 0, 14]
+      }, ...formato.formato9_textos.map((texto) => ({
         text: texto,
         style: 'contractText',
         alignment: 'justify',
         margin: [0, 0, 0, 10]
-      }));
+      }))];
 
       // Detectar índice del párrafo NOVENA
       const idxNovena = formato.formato9_textos.findIndex((t) =>
@@ -152,25 +137,81 @@ export class FormatonueveverComponent implements OnInit {
         const cronograma: CronogramaModulo[] = Array.isArray(formato.formato9_cronograma)
           ? formato.formato9_cronograma : [];
 
-        const todosLosDias: DiaHorario[] = cronograma.flatMap((c) => parsearDias(c.dias_horarios));
+        // Construir las fechas de clase siguiendo el cronograma del Formato 6.
+        const nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const nombresMeses = meses;
+        const fechasTrabajo = new Map<string, { texto: string; horas: number; sincronico: boolean }>();
+        cronograma.forEach((item) => {
+          const diasSeleccionados = parsearDias(item.dias_horarios);
+          const diasSemana = new Set(diasSeleccionados.map((dia) =>
+            String(dia.dia || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+          ));
+          const inicio = item.modulo_desde?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          const fin = item.modulo_hasta?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (!inicio || !fin) return;
 
-        // Días de contratación: fechas agrupadas
-        const diasContratacion = agruparFechasPorMesAnio(todosLosDias);
+          const fechaInicio = Date.UTC(Number(inicio[1]), Number(inicio[2]) - 1, Number(inicio[3]));
+          const fechaFin = Date.UTC(Number(fin[1]), Number(fin[2]) - 1, Number(fin[3]));
+          const actividad = String(item.tipo_actividad || '').normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '').toLowerCase();
+          const esSincronico = /\bsincronico\b/.test(actividad) || actividad.includes('clases en vivo');
+          for (let fecha = fechaInicio; fecha <= fechaFin; fecha += 24 * 60 * 60 * 1000) {
+            const fechaActual = new Date(fecha);
+            const nombreDia = nombresDias[fechaActual.getUTCDay()];
+            if (!diasSemana.has(nombreDia.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())) continue;
 
-        // Días de trabajo: día de semana + rango horario sin duplicados
-        const diasTrabajo = todosLosDias.length > 0
-          ? [...new Map(todosLosDias.map((d) => {
-              const k = `${nombreDiaSemana(d.dia)} ${d.horaDesde}-${d.horaHasta}`;
-              return [k, k];
-            })).values()].join('\n')
-          : '—';
+            const fechaISO = fechaActual.toISOString().slice(0, 10);
+            const [, mes, dia] = fechaISO.split('-');
+            const nombreDiaTexto = nombreDia.toLowerCase();
+            const clave = fechaISO;
+            const horasPorDia = (horario: DiaHorario): number => {
+              if (!horario.horaDesde || !horario.horaHasta) return 0;
+              const [horaDesde, minutoDesde] = horario.horaDesde.split(':').map(Number);
+              const [horaHasta, minutoHasta] = horario.horaHasta.split(':').map(Number);
+              const minutosDesde = horaDesde * 60 + minutoDesde;
+              const minutosHasta = horaHasta * 60 + minutoHasta;
+              let diferencia = minutosHasta - minutosDesde;
+              if (diferencia < 0) diferencia += 1440;
+              return diferencia / 60;
+            };
+            const horas = diasSeleccionados
+              .filter((horario) => String(horario.dia || '').normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '').trim().toLowerCase() ===
+                nombreDia.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())
+              .reduce((total, horario) => total + horasPorDia(horario), 0);
+            const registro = fechasTrabajo.get(clave) || {
+              texto: `${nombreDiaTexto} ${Number(dia)} ${nombresMeses[Number(mes) - 1]}`,
+              horas: 0,
+              sincronico: false
+            };
+            registro.horas += horas;
+            registro.sincronico = registro.sincronico || esSincronico;
+            fechasTrabajo.set(clave, registro);
+          }
+        });
 
-        // Horario de trabajo: por tipo de actividad
+        const fechasOrdenadas = [...fechasTrabajo.entries()]
+          .sort(([fechaA], [fechaB]) => fechaA.localeCompare(fechaB))
+          .map(([, fecha]) => fecha);
+        const diasTrabajo: any[] = fechasOrdenadas.length > 0
+          ? fechasOrdenadas.flatMap((fecha, index) => {
+              const horas = Number(fecha.horas.toFixed(2));
+              const horasTexto = Number.isInteger(horas) ? String(horas) : String(horas).replace('.', ',');
+              return [
+                ...(index > 0 ? [{ text: '\n' }] : []),
+                { text: fecha.texto, bold: fecha.sincronico },
+                { text: ` (${horasTexto}h)` }
+              ];
+            })
+          : [{ text: '—' }];
+
+        // Horario de trabajo: tipo de actividad + días únicos + rango horario
         const horarioTexto = cronograma.length > 0
           ? cronograma.map((c) => {
               const dias = parsearDias(c.dias_horarios);
+              const diasUnicos = [...new Set(dias.map((d) => d.dia))].join(', ');
               const rango = dias.length > 0 ? `${dias[0].horaDesde} - ${dias[dias.length - 1].horaHasta}` : '';
-              return `${c.tipo_actividad}${rango ? ': ' + rango : ''}`;
+              return `${c.tipo_actividad}: ${diasUnicos}${rango ? ' ' + rango : ''}`;
             }).join('\n')
           : '—';
 
@@ -190,37 +231,40 @@ export class FormatonueveverComponent implements OnInit {
         ];
 
         const headerCell = (texto: string): any => ({
-          text: texto, bold: true, color: 'white', fillColor: '#00345e',
-          fontSize: 9, alignment: 'center', margin: [2, 4, 2, 4]
+          text: texto, bold: true,
+          fontSize: 8, alignment: 'center', margin: [2, 4, 2, 4]
         });
         const dataCell = (texto: string, align: string = 'left'): any => ({
-          text: texto, fontSize: 9, alignment: align, margin: [3, 3, 3, 3]
+          text: texto, fontSize: 8, alignment: align, margin: [2, 3, 2, 3]
         });
 
         const tablaNovena: any = {
           table: {
-            widths: ['*', 48, 88, 80, 82, 82],
+            widths: [140, 40, 65, 120, 130],
             headerRows: 1,
             body: [
               [
                 headerCell('Evento'),
                 headerCell('Ciudad'),
                 headerCell('Instalaciones'),
-                headerCell('Días de\nContratación'),
                 headerCell('Días de Trabajo /\nHoras Efectivamente\nLaboradas'),
                 headerCell('Horario de\nTrabajo')
               ],
               [
-                { text: eventoContent, fontSize: 9, margin: [3, 3, 3, 3] },
+                { stack: eventoContent, fontSize: 8, margin: [2, 3, 2, 3] },
                 dataCell('Ambato', 'center'),
                 dataCell('Plataforma Educativa UTA', 'center'),
-                dataCell(diasContratacion, 'center'),
-                dataCell(diasTrabajo, 'center'),
-                dataCell(horarioTexto)
+                { text: diasTrabajo, fontSize: 8, alignment: 'left', margin: [2, 3, 2, 3] },
+                dataCell(horarioTexto, 'center')
               ]
             ]
           },
-          layout: { hLineWidth: () => 0.7, vLineWidth: () => 0.7 },
+          layout: {
+            hLineWidth: () => 0.7,
+            vLineWidth: () => 0.7,
+            paddingLeft: () => 2,
+            paddingRight: () => 2
+          },
           margin: [0, 0, 0, 10]
         };
 
