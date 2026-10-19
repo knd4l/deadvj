@@ -3,6 +3,7 @@ import { ModulosService } from '../../servicios/modulos.service';
 import Swal from 'sweetalert2';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import { firstValueFrom } from 'rxjs';
 
 interface DiaHorario {
   dia: string;
@@ -16,6 +17,34 @@ interface CronogramaModulo {
   modulo_hasta: string;
   tipo_actividad: string;
   dias_horarios: DiaHorario[] | string;
+}
+
+interface DatosDirector {
+  tit_dir?: string | null;
+  nom_dir?: string | null;
+  ape_dir?: string | null;
+  cedula?: string | number | null;
+}
+
+interface DatosAutoridad {
+  titulo?: string | null;
+  nom_aut?: string | null;
+  ape_aut?: string | null;
+  cedula?: string | number | null;
+}
+
+interface RespuestaFirmante<T> {
+  data?: {
+    success?: boolean;
+    message?: string;
+    item?: T[];
+  };
+}
+
+interface Firmante {
+  nombre: string;
+  cargo: string;
+  cedula: string;
 }
 
 interface Formato9 {
@@ -71,6 +100,49 @@ export class FormatonueveverComponent implements OnInit {
     return formato.formato9_codigo;
   }
 
+  private formatearTextoContrato(texto: string, nombreCurso: string, indiceTexto: number): any[] {
+    const coincidencias: { inicio: number; fin: number }[] = [];
+    const agregarCoincidencias = (expresion: RegExp): void => {
+      let coincidencia: RegExpExecArray | null;
+      while ((coincidencia = expresion.exec(texto)) !== null) {
+        coincidencias.push({
+          inicio: coincidencia.index,
+          fin: coincidencia.index + coincidencia[0].length
+        });
+      }
+    };
+    const ordinal = /^D[ÉE]CIMA\s+(?:QUINTA|CUARTA|TERCERA|SEGUNDA|PRIMERA)|^D[ÉE]CIMA|^NOVENA|^OCTAVA|^S[ÉE]PTIMA|^SEXTA|^QUINTA|^CUARTA|^TERCERA|^SEGUNDA|^PRIMERA/gi;
+
+    agregarCoincidencias(ordinal);
+    agregarCoincidencias(/\bCL[ÁA]USULA\s+TERCERA\b/gi);
+    if (nombreCurso.trim()) {
+      const cursoEscapado = nombreCurso.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      agregarCoincidencias(new RegExp(cursoEscapado, 'gi'));
+    }
+    if (indiceTexto === 4) {
+      agregarCoincidencias(/\bUSD\s*\d+(?:[.,]\d{2})?\b/gi);
+      agregarCoincidencias(/\b\d+(?:[.,]\d+)?\s+horas?\b/gi);
+    }
+
+    coincidencias.sort((a, b) => a.inicio - b.inicio || b.fin - a.fin);
+    const fragmentos: any[] = [];
+    let cursor = 0;
+    coincidencias.forEach(({ inicio, fin }) => {
+      if (inicio < cursor) {
+        return;
+      }
+      if (inicio > cursor) {
+        fragmentos.push({ text: texto.slice(cursor, inicio) });
+      }
+      fragmentos.push({ text: texto.slice(inicio, fin), bold: true });
+      cursor = fin;
+    });
+    if (cursor < texto.length) {
+      fragmentos.push({ text: texto.slice(cursor) });
+    }
+    return fragmentos.length ? fragmentos : [{ text: texto }];
+  }
+
   private convertirImagenBase64(ruta: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const imagen = new Image();
@@ -91,10 +163,82 @@ export class FormatonueveverComponent implements OnInit {
     });
   }
 
+  private obtenerRegistroFirmante<T>(respuesta: RespuestaFirmante<T>, entidad: string): T {
+    if (!respuesta.data?.success) {
+      throw new Error(respuesta.data?.message || `No se pudieron consultar los datos de ${entidad}.`);
+    }
+    const registro = respuesta.data.item?.[0];
+    if (!registro) {
+      throw new Error(`No se encontró ${entidad} para las firmas del contrato.`);
+    }
+    return registro;
+  }
+
+  private crearFirmante(nombrePartes: Array<string | null | undefined>, cargo: string, cedulaValor: string | number | null | undefined, entidad: string): Firmante {
+    const nombre = nombrePartes.map((parte) => parte?.trim()).filter(Boolean).join(' ');
+    const cedula = cedulaValor === null || cedulaValor === undefined ? '' : String(cedulaValor).trim();
+    if (!nombre || !cedula) {
+      throw new Error(`Falta el nombre o la C.I. de ${entidad} en la base de datos.`);
+    }
+    return { nombre, cargo, cedula };
+  }
+
+  private crearBloqueFirmas(director: Firmante, profesional: Firmante): any {
+    const celdaFirma = (firmante: Firmante): any => ({
+      stack: [
+        { text: firmante.nombre, alignment: 'center', margin: [0, 65, 0, 0] },
+        { text: firmante.cargo, alignment: 'center', margin: [0, 2, 0, 0] },
+        { text: `C.I. ${firmante.cedula}`, alignment: 'center', margin: [0, 2, 0, 0] }
+      ],
+      fontSize: 9,
+      margin: [8, 0, 8, 0]
+    });
+
+    return {
+      unbreakable: true,
+      stack: [
+        {
+          table: {
+            widths: ['*', '*'],
+            body: [[celdaFirma(director), celdaFirma(profesional)]]
+          },
+          layout: 'noBorders'
+        },
+        {
+          text: [
+            { text: 'NIVEL DE SENSIBILIZACIÓN DE INFORMACIÓN: ' },
+            { text: 'ALTO', bold: true }
+          ],
+          fontSize: 8,
+          margin: [0, 24, 0, 0]
+        }
+      ],
+      margin: [0, 36, 0, 0]
+    };
+  }
+
   async verReporte(formato: Formato9): Promise<void> {
     try {
-      const encabezado = await this.convertirImagenBase64('assets/img/encabezado.jpg');
-      const pie = await this.convertirImagenBase64('assets/img/footer.jpeg');
+      const [encabezado, pie, respuestaDirectores, respuestaAutoridades] = await Promise.all([
+        this.convertirImagenBase64('assets/img/encabezado.jpg'),
+        this.convertirImagenBase64('assets/img/footer.jpeg'),
+        firstValueFrom(this.modulosService.obtenerDirectores({ fx: 'getdirectores', d: {} })),
+        firstValueFrom(this.modulosService.obtenerAutoridades({ fx: 'getautoridades', d: {} }))
+      ]);
+      const registroDirector = this.obtenerRegistroFirmante<DatosDirector>(respuestaDirectores, 'el director');
+      const registroAutoridad = this.obtenerRegistroFirmante<DatosAutoridad>(respuestaAutoridades, 'la autoridad');
+      const director = this.crearFirmante(
+        [registroDirector.tit_dir, registroDirector.nom_dir, registroDirector.ape_dir],
+        'Directora de Educación Continua a Distancia y Virtual',
+        registroDirector.cedula,
+        'el director'
+      );
+      const profesional = this.crearFirmante(
+        [registroAutoridad.titulo, registroAutoridad.nom_aut, registroAutoridad.ape_aut],
+        'PROFESIONAL',
+        registroAutoridad.cedula,
+        'la autoridad'
+      );
       const fuentes = pdfFonts as any;
       (pdfMake as any).vfs = fuentes.pdfMake?.vfs || fuentes.vfs;
 
@@ -121,8 +265,8 @@ export class FormatonueveverComponent implements OnInit {
         alignment: 'center',
         fontSize: 10,
         margin: [0, 0, 0, 14]
-      }, ...formato.formato9_textos.map((texto) => ({
-        text: texto,
+      }, ...formato.formato9_textos.map((texto, indice) => ({
+        text: this.formatearTextoContrato(texto, formato.formato1_curso_definido || '', indice),
         style: 'contractText',
         alignment: 'justify',
         margin: [0, 0, 0, 10]
@@ -222,14 +366,25 @@ export class FormatonueveverComponent implements OnInit {
           : [{ text: '—' }];
 
         // Horario de trabajo: tipo de actividad + días únicos + rango horario
-        const horarioTexto = cronograma.length > 0
-          ? cronograma.map((c) => {
+        const horarioContenido: any[] = [
+          { text: 'Conexión Virtual\n', bold: true },
+          ...(cronograma.length > 0
+            ? cronograma.flatMap((c, index) => {
               const dias = parsearDias(c.dias_horarios);
               const diasUnicos = [...new Set(dias.map((d) => d.dia))].join(', ');
               const rango = dias.length > 0 ? `${dias[0].horaDesde} - ${dias[dias.length - 1].horaHasta}` : '';
-              return `${c.tipo_actividad}: ${diasUnicos}${rango ? ' ' + rango : ''}`;
-            }).join('\n')
-          : '—';
+              const tipoActividad = String(c.tipo_actividad || '');
+              const tipoNormalizado = tipoActividad.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+              const destacarTipo = /clases?\s+en\s+vivo|sincron/.test(tipoNormalizado)
+                || /trabajo\s+autonomo|asincron/.test(tipoNormalizado);
+              return [
+                ...(index > 0 ? [{ text: '\n' }] : []),
+                { text: tipoActividad, bold: destacarTipo },
+                { text: `: ${diasUnicos}${rango ? ' ' + rango : ''}` }
+              ];
+            })
+            : [{ text: '—' }])
+        ];
 
         // Evento: "Módulo N\nTítulo del módulo" separado del nombre del curso
         const numModulo = formato.formato9_modulo_id ?? '';
@@ -240,10 +395,17 @@ export class FormatonueveverComponent implements OnInit {
           ? tituloModulo.trim()
           : `Módulo ${numModulo}: ${tituloModulo}`;
 
+        const coincidenciaModulo = /^(M[oó]dulo\s+\d+)/i.exec(lineaModulo);
+        const moduloNumero = coincidenciaModulo?.[0] || `Módulo ${numModulo}`;
+        const moduloEspecifico = lineaModulo.slice(moduloNumero.length);
+        const moduloContent: any[] = [
+          { text: moduloNumero, bold: true },
+          { text: moduloEspecifico }
+        ];
         const eventoContent: any[] = [
-          { text: (formato.formato1_curso_definido || '—') + '\n', bold: false },
+          { text: (formato.formato1_curso_definido || '—') + '\n', bold: true },
           { text: '\n' },
-          { text: lineaModulo, bold: true }
+          { text: moduloContent }
         ];
 
         const headerCell = (texto: string): any => ({
@@ -273,7 +435,7 @@ export class FormatonueveverComponent implements OnInit {
                 dataCell('Plataforma Educativa UTA', 'center'),
                 dataCell(diasContratacion, 'center'),
                 { text: diasTrabajo, fontSize: 8, alignment: 'left', margin: [2, 3, 2, 3] },
-                dataCell(horarioTexto, 'center')
+                { text: horarioContenido, fontSize: 8, alignment: 'center', margin: [2, 3, 2, 3] }
               ]
             ]
           },
@@ -289,9 +451,11 @@ export class FormatonueveverComponent implements OnInit {
         items.splice(idxNovena + 1, 0, tablaNovena);
       }
 
+      items.push(this.crearBloqueFirmas(director, profesional));
+
       const documento = {
         pageSize: 'A4',
-        pageMargins: [40, 132, 40, 78],
+        pageMargins: [40, 85, 40, 78],
         header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
         footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
         content: items,
@@ -304,7 +468,11 @@ export class FormatonueveverComponent implements OnInit {
       (pdfMake as any).createPdf(documento).open();
     } catch (error) {
       console.error('No se pudo generar el reporte del Formato 9:', error);
-      Swal.fire('Error', 'No se pudo generar el reporte PDF del Formato 9.', 'error');
+      Swal.fire(
+        'Error',
+        error instanceof Error ? error.message : 'No se pudo generar el reporte PDF del Formato 9.',
+        'error'
+      );
     }
   }
 }

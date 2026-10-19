@@ -86,6 +86,45 @@ class classServiciosFormatos
         );
     }
 
+    private function obtenerIdentificacion($fila)
+    {
+        $camposPreferidos = array(
+                'cedula',
+                'ci',
+                'identificacion',
+                'ced_dir',
+                'ced_aut',
+                'cedula_dir',
+                'cedula_aut',
+                'ci_dir',
+                'ci_aut',
+                'identificacion_dir',
+                'identificacion_aut'
+        );
+        $camposNormalizados = array();
+
+        foreach ($fila as $campo => $valor) {
+                $nombreNormalizado = strtolower(str_replace(array('_', '-', ' '), '', $campo));
+                $camposNormalizados[$nombreNormalizado] = $valor;
+        }
+
+        foreach ($camposPreferidos as $campo) {
+                $campoNormalizado = strtolower(str_replace(array('_', '-', ' '), '', $campo));
+                if (isset($camposNormalizados[$campoNormalizado]) && trim((string) $camposNormalizados[$campoNormalizado]) !== '') {
+                    return $camposNormalizados[$campoNormalizado];
+                }
+        }
+
+        foreach ($camposNormalizados as $campo => $valor) {
+                if ((strpos($campo, 'ced') !== false || strpos($campo, 'identificacion') !== false || preg_match('/^ci(dir|aut|director|autoridad)?$/', $campo))
+                    && trim((string) $valor) !== '') {
+                    return $valor;
+                }
+        }
+
+        return '';
+    }
+
 
 
     public function getInitDatabase()
@@ -5299,7 +5338,7 @@ public function getDirectores()
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
-        $dbc->query("SELECT tit_dir, nom_dir, ape_dir
+        $dbc->query("SELECT *
             FROM directores
             LIMIT 1");
         $director = $dbc->single();
@@ -5310,7 +5349,8 @@ public function getDirectores()
         $result[] = array(
             'tit_dir' => $director['tit_dir'],
             'nom_dir' => $director['nom_dir'],
-            'ape_dir' => $director['ape_dir']
+            'ape_dir' => $director['ape_dir'],
+            'cedula' => $this->obtenerIdentificacion($director)
         );
         $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
         $this->estado->setLastID(1);
@@ -5350,7 +5390,7 @@ public function getAutoridades()
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
-        $dbc->query("SELECT titulo, nom_aut, ape_aut
+        $dbc->query("SELECT *
             FROM autoridades
             LIMIT 1");
         $autoridad = $dbc->single();
@@ -5361,7 +5401,8 @@ public function getAutoridades()
         $result[] = array(
             'titulo' => $autoridad['titulo'],
             'nom_aut' => $autoridad['nom_aut'],
-            'ape_aut' => $autoridad['ape_aut']
+            'ape_aut' => $autoridad['ape_aut'],
+            'cedula' => $this->obtenerIdentificacion($autoridad)
         );
         $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
         $this->estado->setLastID(1);
