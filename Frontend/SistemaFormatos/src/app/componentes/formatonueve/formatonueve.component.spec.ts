@@ -255,6 +255,9 @@ describe('FormatonueveComponent', () => {
     expect(componente.textosContrato[3].texto).toContain(
       'regirá a las partes días 14, 15, 16, 17, 21, 22, 23, 24, 28, 29, 30, 31 de octubre de 2026.'
     );
+    expect(componente.datosNovena?.diasEjecucion).toBe(
+      '14, 15, 16, 17, 21, 22, 23, 24, 28, 29, 30, 31 de octubre de 2026'
+    );
   });
 
   it('inserts the authority title, name, and surname after the hiring phrase in text 2', () => {

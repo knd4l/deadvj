@@ -25,3 +25,42 @@
   border: 1px solid #dee2e6;
   border-radius: 4px;
 }
+
+.schedule-report-table {
+  width: 100%;
+  table-layout: fixed;
+  font-size: 0.8rem;
+}
+
+.schedule-report-table th,
+.schedule-report-table td {
+  overflow-wrap: anywhere;
+}
+
+.schedule-report-table .event-column {
+  width: 13%;
+}
+
+.schedule-report-table .city-column {
+  width: 8%;
+}
+
+.schedule-report-table .facilities-column {
+  width: 13%;
+}
+
+.schedule-report-table .contract-period-column {
+  width: 14%;
+}
+
+.schedule-report-table .contract-days-column {
+  width: 17%;
+}
+
+.schedule-report-table .work-days-column {
+  width: 19%;
+}
+
+.schedule-report-table .work-schedule-column {
+  width: 16%;
+}

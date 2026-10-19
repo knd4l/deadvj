@@ -79,12 +79,22 @@
               No se encontraron datos del cronograma para este módulo.
             </div>
             <div *ngIf="datosNovena && !cargandoNovena" class="table-responsive">
-              <table class="table table-bordered table-sm align-middle mb-0" style="font-size: 0.85rem;">
+              <table class="table table-bordered table-sm align-middle mb-0 schedule-report-table">
+                <colgroup>
+                  <col class="event-column">
+                  <col class="city-column">
+                  <col class="facilities-column">
+                  <col class="contract-period-column">
+                  <col class="contract-days-column">
+                  <col class="work-days-column">
+                  <col class="work-schedule-column">
+                </colgroup>
                 <thead>
                   <tr class="text-white text-center" style="background-color: #00345e;">
                     <th>Evento</th>
                     <th>Ciudad</th>
                     <th>Instalaciones</th>
+                    <th>Período de Contratación</th>
                     <th>Días de Contratación</th>
                     <th>Días de Trabajo / Horas Efectivamente Laboradas</th>
                     <th>Horario de Trabajo</th>
@@ -99,6 +109,7 @@
                     <td class="text-center">Ambato</td>
                     <td class="text-center">Plataforma Educativa UTA</td>
                     <td class="text-center">{{ datosNovena.diasContratacion }}</td>
+                    <td class="text-center">{{ datosNovena.diasEjecucion }}</td>
                     <td class="text-center">{{ datosNovena.diasTrabajo }}</td>
                     <td style="white-space: pre-line;">{{ datosNovena.horarioTrabajo }}</td>
                   </tr>

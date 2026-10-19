@@ -33,6 +33,7 @@ interface DatosNovena {
   nombreCurso: string;
   nombreModulo: string;
   diasContratacion: string;
+  diasEjecucion: string;
   diasTrabajo: string;
   horarioTrabajo: string;
 }
@@ -244,7 +245,7 @@ export class FormatonueveComponent implements OnInit {
     }
   }
 
-  private actualizarFechasEjecucionEnTexto3(itemsModulo: CronogramaItem[]): void {
+  private actualizarFechasEjecucionEnTexto3(itemsModulo: CronogramaItem[]): string {
     const fechasPorMes = new Map<string, Set<number>>();
     const numeroDiaSemana: { [dia: string]: number } = {
       domingo: 0,
@@ -309,6 +310,8 @@ export class FormatonueveComponent implements OnInit {
         `días ${fechasTexto}`
       );
     }
+
+    return fechasTexto;
   }
 
   cargarDirector(): void {
@@ -411,7 +414,7 @@ export class FormatonueveComponent implements OnInit {
           ? formato.presupuesto
           : [];
         this.actualizarDatosEjecucionEnTexto2(itemsModulo, presupuesto[0]?.valor);
-        this.actualizarFechasEjecucionEnTexto3(itemsModulo);
+        const diasEjecucion = this.actualizarFechasEjecucionEnTexto3(itemsModulo);
 
         // Días de contratación: fechas formateadas del campo "desde/hasta" del módulo
         const primerItem = itemsModulo[0];
@@ -438,6 +441,7 @@ export class FormatonueveComponent implements OnInit {
           nombreCurso: curso.formato1_curso_definido || '—',
           nombreModulo: modulo.nombre,
           diasContratacion,
+          diasEjecucion,
           diasTrabajo,
           horarioTrabajo
         };

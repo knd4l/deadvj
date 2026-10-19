@@ -193,6 +193,22 @@ export class FormatonueveverComponent implements OnInit {
         const fechasOrdenadas = [...fechasTrabajo.entries()]
           .sort(([fechaA], [fechaB]) => fechaA.localeCompare(fechaB))
           .map(([, fecha]) => fecha);
+        const diasContratacionPorMes = new Map<string, Set<number>>();
+        fechasTrabajo.forEach((_fecha, fechaISO) => {
+          const [anio, mes, dia] = fechaISO.split('-').map(Number);
+          const claveMes = `${anio}-${String(mes).padStart(2, '0')}`;
+          if (!diasContratacionPorMes.has(claveMes)) {
+            diasContratacionPorMes.set(claveMes, new Set<number>());
+          }
+          diasContratacionPorMes.get(claveMes)?.add(dia);
+        });
+        const diasContratacion = [...diasContratacionPorMes.entries()]
+          .sort(([mesA], [mesB]) => mesA.localeCompare(mesB))
+          .map(([claveMes, dias]) => {
+            const [anio, mes] = claveMes.split('-').map(Number);
+            return `${[...dias].sort((a, b) => a - b).join(', ')} de ${meses[mes - 1]} de ${anio}`;
+          })
+          .join('; ') || '—';
         const diasTrabajo: any[] = fechasOrdenadas.length > 0
           ? fechasOrdenadas.flatMap((fecha, index) => {
               const horas = Number(fecha.horas.toFixed(2));
@@ -240,13 +256,14 @@ export class FormatonueveverComponent implements OnInit {
 
         const tablaNovena: any = {
           table: {
-            widths: [140, 40, 65, 120, 130],
+            widths: [110, 35, 55, 100, 105, 80],
             headerRows: 1,
             body: [
               [
                 headerCell('Evento'),
                 headerCell('Ciudad'),
                 headerCell('Instalaciones'),
+                headerCell('Días de Contratación'),
                 headerCell('Días de Trabajo /\nHoras Efectivamente\nLaboradas'),
                 headerCell('Horario de\nTrabajo')
               ],
@@ -254,6 +271,7 @@ export class FormatonueveverComponent implements OnInit {
                 { stack: eventoContent, fontSize: 8, margin: [2, 3, 2, 3] },
                 dataCell('Ambato', 'center'),
                 dataCell('Plataforma Educativa UTA', 'center'),
+                dataCell(diasContratacion, 'center'),
                 { text: diasTrabajo, fontSize: 8, alignment: 'left', margin: [2, 3, 2, 3] },
                 dataCell(horarioTexto, 'center')
               ]
