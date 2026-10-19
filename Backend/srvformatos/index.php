@@ -98,6 +98,8 @@ if ($view == "no identificado" || $view == "none") {
 		'updateformato6'=>true,
 		'insertformato9'=>true,
 		'getformato9'=>true,
+		'getdirectores'=>true,
+		'getautoridades'=>true,
 		'insertformato13'=>true,
 		'getformato13'=>true,
 		'gettiposmedioformato13'=>true,

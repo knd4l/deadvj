@@ -25,12 +25,28 @@ interface CronogramaItem {
   horas_totales: number;
 }
 
+interface PresupuestoFormato6 {
+  valor: string | number | null;
+}
+
 interface DatosNovena {
   nombreCurso: string;
   nombreModulo: string;
   diasContratacion: string;
   diasTrabajo: string;
   horarioTrabajo: string;
+}
+
+interface DirectorFormato9 {
+  tit_dir: string | null;
+  nom_dir: string | null;
+  ape_dir: string | null;
+}
+
+interface AutoridadFormato9 {
+  titulo: string | null;
+  nom_aut: string | null;
+  ape_aut: string | null;
 }
 
 @Component({
@@ -48,20 +64,21 @@ export class FormatonueveComponent implements OnInit {
   cargandoNovena = false;
   guardando = false;
   datosNovena: DatosNovena | null = null;
+  private nombreAutoridadFormato9 = '****';
   textosContrato = [{
     id: 1,
-    texto: 'En la ciudad de Ambato, a los ** días del mes de ** de 20**, comparecen por una parte la ****, en calidad de **** de la Universidad Técnica de Ambato, debidamente facultado mediante Resolución Administrativa Nro. **** del ** de **** de 20**, a quién en adelante y para efectos del presente contrato se le podrá llamar El Contratante; o, simplemente “La Universidad”; y, por otra parte el *****, quienes: por los derechos que se representa y por el suyo propio, respectivamente, libre y voluntariamente tienen a bien celebrar el presente Contrato de Prestación de Servicios Profesionales de conformidad a lo previsto en el inciso 2do de la Disposición General Primera del Reglamento de Aplicación del Mandato Constituyente No 8 reformado, mediante Decreto Ejecutivo Nº 1121 del 2008, reformado por el Art. 5 del Decreto Ejecutivo. 1313, en concordancia con lo estipulado en los Art. 149 y 153 de la Ley Orgánica de Educación Superior, al tenor de las siguientes cláusulas y estipulaciones que se señalan a continuación; así: '
+    texto: 'En la ciudad de Ambato, a los ** días del mes de ** de 20**, comparecen por una parte la ****, en calidad de Directora de Educación Continua, a Distancia y Virtual de la Universidad Técnica de Ambato, debidamente facultado mediante Resolución Administrativa Nro. **** del ** de **** de 20**, a quién en adelante y para efectos del presente contrato se le podrá llamar El Contratante; o, simplemente “La Universidad”; y, por otra parte el *****, quienes: por los derechos que se representa y por el suyo propio, respectivamente, libre y voluntariamente tienen a bien celebrar el presente Contrato de Prestación de Servicios Profesionales de conformidad a lo previsto en el inciso 2do de la Disposición General Primera del Reglamento de Aplicación del Mandato Constituyente No 8 reformado, mediante Decreto Ejecutivo Nº 1121 del 2008, reformado por el Art. 5 del Decreto Ejecutivo. 1313, en concordancia con lo estipulado en los Art. 149 y 153 de la Ley Orgánica de Educación Superior, al tenor de las siguientes cláusulas y estipulaciones que se señalan a continuación; así: '
   },
   {
     id: 2,
     texto: 'PRIMERA.- ANTECEDENTES.- 1) En el Art. 10  del  Estatuto de la Universidad Técnica de Ambato, constan como objetivos y estrategias  fundamentales: literal a) Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país; y para cuyo efecto el ya referido Estatuto Universitario en su art. 16, literal m) indica, como una de las atribuciones y deberes del H. Consejo Universitario, el de autorizar la contratación de profesores/as e investigadores/as, en los casos que considere necesario.'+'\n\n'+
     
     
-    '2) La suscripción del presente contrato procede vista las Resoluciones **** de fecha ** de **** del 20** emitida por el Consejo Académico Universitario mediante el cual se aprueba el Curso “*****"; y Resolución: **** de fecha ** de **** de 20** emitida por H. Consejo Universitario de la Institución mediante la cual se autoriza a la señora Rectora o su delegado, la suscripción del contrato de la Instructora del curso en mención; evento planificado por la Dirección de Educación Continua, a Distancia y Virtual y dirigido a profesores universitarios y público en general, y ante la delegación ******, ******, en calidad de Instructor del Curso: “*****” Módulo **, del ** al ** de **** del 20** con una duración de ** horas, así como también, autorizar el pago de USD **** la hora clase respectivamente; la misma que se formaliza en acatamiento a lo previsto en el Inciso 2do de la Disposición General Primera del Reglamento de Aplicación del Mandato Nro. 8 reformado, bajo la Modalidad de Contratación de Servicios Profesionales sin relación de dependencia laboral y sujeto a las disposiciones legales que se hallan contenidas en el Código Civil. '
+    '2) La suscripción del presente contrato procede vista las Resoluciones **** de fecha ** de **** del 20** emitida por el Consejo Académico Universitario mediante el cual se aprueba el Curso “*****"; y Resolución: **** de fecha ** de **** de 20** emitida por H. Consejo Universitario de la Institución mediante la cual se autoriza a la señora Rectora o su delegado, la suscripción del contrato de la Instructora del curso en mención; evento planificado por la Dirección de Educación Continua, a Distancia y Virtual y dirigido a profesores universitarios y público en general, y ante la delegación  de la señora Rectora antes señalada, la  Directora de Educación Continua, a Distancia y Virtual, tiene a bien efectuar, la Contratación del ****  en calidad de Instructor del Curso: “*****” Módulo **, del ** al ** de **** del 20** con una duración de ** horas, así como también, autorizar el pago de USD **** la hora clase respectivamente; la misma que se formaliza en acatamiento a lo previsto en el Inciso 2do de la Disposición General Primera del Reglamento de Aplicación del Mandato Nro. 8 reformado, bajo la Modalidad de Contratación de Servicios Profesionales sin relación de dependencia laboral y sujeto a las disposiciones legales que se hallan contenidas en el Código Civil.'
   },
   {
     id: 3,
-    texto: 'SEGUNDA.- Por los antecedentes que quedan expuestos, y vistas las Resoluciones señaladas en el numeral 2 de la CLAUSULA PRIMERA de los antecedentes, la Mg. Wilma Lorena Gavilanes López, en calidad de Directora de Educación Continua a Distancia y Virtual de la Universidad Técnica de Ambato, por Delegación de la Rectora Dra. Sara Camacho Estrada PhD., conforme queda señalado en líneas anteriores, tiene a bien Página 1 de 4 contratar los servicios lícitos y personales que prestará el ****, en calidad de Instructor del Curso: “*****”, en modalidad ****, las clases en modalidad virtual los días **,**,** de **** 20**, evento organizado por la Dirección de Educación Continua, a Distancia y Virtual de la UTA y dirigido a profesores universitarios y público en general.  '
+    texto: 'SEGUNDA.- Por los antecedentes que quedan expuestos, y vistas las Resoluciones señaladas en el numeral 2 de la CLAUSULA PRIMERA de los antecedentes, la Mg. Wilma Lorena Gavilanes López, en calidad de Directora de Educación Continua a Distancia y Virtual de la Universidad Técnica de Ambato, por Delegación de la Rectora Dra. Sara Camacho Estrada PhD., conforme queda señalado en líneas anteriores, tiene a bien Página 1 de 4 contratar los servicios lícitos y personales que prestará el ****, en calidad de Instructor del Curso: “*****”, en modalidad ****, las clases en modalidad virtual los días **,**,** de **** 20**, evento organizado por la Dirección de Educación Continua, a Distancia y Virtual de la UTA y dirigido a profesores universitarios y público en general.'
   },
   {
     id: 4,
@@ -70,7 +87,7 @@ export class FormatonueveComponent implements OnInit {
 
   {
     id: 5,
-    texto: 'CUARTA. - La Unidad de Vinculación con la Sociedad y Prestación de Servicios de la Universidad Técnica de Ambato por su parte, pagará al profesional *****, por concepto de honorarios profesionales por los servicios que prestará, la suma total de **** DÓLARES DE LOS ESTADOS UNIDOS DE NORTEAMÉRICA (USD ****); a razón de USD *** la hora clase, por las 60 horas dictadas en el referido curso. Pago que se lo efectuará a la finalización del presente contrato descrito en la CLÁUSULA TERCERA, previo informe de la Dirección de Educación Continua, a Distancia y Virtual, así como también previa presentación de la correspondiente factura, la misma que deberá cumplir con los requisitos señalados en el reglamento de facturación expedido por el SRI. El egreso se aplicará con cargo a la partida presupuestaria No. ***** Honorarios por Contratos Civiles de Servicios de conformidad a la certificación presupuestaria No. ** de fecha ** de *** de 20**. '
+    texto: 'CUARTA. - La Unidad de Vinculación con la Sociedad y Prestación de Servicios de la Universidad Técnica de Ambato por su parte, pagará al profesional *****, por concepto de honorarios profesionales por los servicios que prestará, la suma total de **** DÓLARES DE LOS ESTADOS UNIDOS DE NORTEAMÉRICA (USD ****); a razón de USD *** la hora clase, por las ** horas dictadas en el referido curso. Pago que se lo efectuará a la finalización del presente contrato descrito en la CLÁUSULA TERCERA, previo informe de la Dirección de Educación Continua, a Distancia y Virtual, así como también previa presentación de la correspondiente factura, la misma que deberá cumplir con los requisitos señalados en el reglamento de facturación expedido por el SRI. El egreso se aplicará con cargo a la partida presupuestaria No. ***** Honorarios por Contratos Civiles de Servicios de conformidad a la certificación presupuestaria No. ** de fecha ** de *** de 20**. '
   },
   {
     id: 6,
@@ -116,7 +133,7 @@ export class FormatonueveComponent implements OnInit {
     texto: 'DÉCIMA CUARTA. - CONTROVERSIAS.- Para el evento de suscitarse divergencias o controversias de la falta del cumplimiento del presente contrato que determinen retraso o incumplimiento de las obligaciones contractuales, éstas tratarán de llegar a un acuerdo que solucione el problema; y, en el caso de no obtenerse el acuerdo de las partes del asunto controvertido, podrán someterlo, libre y voluntariamente, a los procesos de mediación en el Centro de Arbitraje y Mediación de la Procuraduría General del Estado, de conformidad con lo establecido en la Ley de Arbitraje y Mediación sin que este involucre un perjuicio a la Universidad. En última instancia, se demandará ante los jueces civiles de este cantón, para lo cual renuncian al fuero y domicilio preferente. '
   },
   {
-    id:16,
+    id:16                        ,
     texto: 'DÉCIMA QUINTA: ACEPTACIÓN DE LAS PARTES. - Libre y voluntariamente, previo el cumplimiento de los requisitos exigidos por las leyes de la materia, las partes declaran su aceptación a todo lo convenido en el presente Contrato, a cuyas estipulaciones se someten.'+'\n\n'+'Para constancia, las partes suscriben el presente contrato en un original.'
   },
 
@@ -129,6 +146,202 @@ export class FormatonueveComponent implements OnInit {
   ngOnInit(): void {
     this.cargarCursosFormato6();
     this.cargarFormatos9();
+    this.cargarDirector();
+    this.cargarAutoridad();
+  }
+
+  cargarAutoridad(): void {
+    this.modulosService.obtenerAutoridades({ fx: 'getautoridades', d: {} }).subscribe({
+      next: (respuesta: any) => {
+        const autoridad: AutoridadFormato9 | undefined = respuesta?.data?.item?.[0];
+        if (!respuesta?.data?.success || !autoridad) {
+          Swal.fire('Error', respuesta?.data?.message || 'No se encontró la autoridad para el Texto 2.', 'error');
+          return;
+        }
+
+        const nombreAutoridad = [autoridad.titulo, autoridad.nom_aut, autoridad.ape_aut]
+          .map((parte) => parte?.trim())
+          .filter((parte): parte is string => Boolean(parte))
+          .join(' ');
+        if (!nombreAutoridad) {
+          Swal.fire('Error', 'Los datos de la autoridad no contienen título, nombre ni apellido.', 'error');
+          return;
+        }
+
+        this.nombreAutoridadFormato9 = nombreAutoridad;
+        const textoAntecedentes = this.textosContrato.find((texto) => texto.id === 2);
+        if (textoAntecedentes) {
+          textoAntecedentes.texto = textoAntecedentes.texto.replace(
+            /(la Contratación del )\*{4}/,
+            (_coincidencia, prefijo: string) => `${prefijo}${nombreAutoridad}`
+          );
+        }
+        this.actualizarAutoridadEnTexto3();
+      },
+      error: (error: any) => {
+        console.error('Error al cargar la autoridad para el Formato 9:', error);
+        Swal.fire('Error', 'No se pudo cargar la autoridad para el Texto 2.', 'error');
+      }
+    });
+  }
+
+  private actualizarCursoDefinidoEnTexto2(): void {
+    const nombreCurso = this.cursoSeleccionado?.formato1_curso_definido?.trim() || '*****';
+    const modulo = this.modulosDisponibles.find(
+      (item) => Number(item.id) === Number(this.formato6ModuloId)
+    );
+    const nombreModulo = modulo?.nombre?.trim() || '**';
+    const textoAntecedentes = this.textosContrato.find((texto) => texto.id === 2);
+    if (textoAntecedentes) {
+      textoAntecedentes.texto = textoAntecedentes.texto.replace(
+        /(se aprueba el Curso “).*?(";\s*y Resolución)/,
+        (_coincidencia, prefijo: string, sufijo: string) => `${prefijo}${nombreCurso}${sufijo}`
+      );
+      textoAntecedentes.texto = textoAntecedentes.texto.replace(
+        /(en calidad de Instructor del Curso: “).*?(” Módulo )[^,]*(?=, del)/,
+        (_coincidencia, prefijo: string, separador: string) =>
+          `${prefijo}${nombreCurso}${separador}${nombreModulo}`
+      );
+    }
+
+    const textoSegundaClausula = this.textosContrato.find((texto) => texto.id === 3);
+    if (textoSegundaClausula) {
+      textoSegundaClausula.texto = textoSegundaClausula.texto.replace(
+        /(en calidad de Instructor del Curso: “).*?(”)/,
+        (_coincidencia, prefijo: string, sufijo: string) => `${prefijo}${nombreCurso}${sufijo}`
+      );
+    }
+  }
+
+  private actualizarAutoridadEnTexto3(): void {
+    const textoSegundaClausula = this.textosContrato.find((texto) => texto.id === 3);
+    if (textoSegundaClausula) {
+      textoSegundaClausula.texto = textoSegundaClausula.texto.replace(
+        /(prestará el ).*?(, en calidad de Instructor)/,
+        (_coincidencia, prefijo: string, sufijo: string) =>
+          `${prefijo}${this.nombreAutoridadFormato9}${sufijo}`
+      );
+    }
+
+    const textoCuartaClausula = this.textosContrato.find((texto) => texto.id === 5);
+    if (textoCuartaClausula) {
+      textoCuartaClausula.texto = textoCuartaClausula.texto.replace(
+        /(pagará al profesional ).*?(, por concepto de honorarios)/,
+        (_coincidencia, prefijo: string, sufijo: string) =>
+          `${prefijo}${this.nombreAutoridadFormato9}${sufijo}`
+      );
+    }
+  }
+
+  private actualizarModalidadEnTexto3(modalidad: string | null | undefined): void {
+    const textoSegundaClausula = this.textosContrato.find((texto) => texto.id === 3);
+    if (textoSegundaClausula) {
+      const modalidadTexto = modalidad?.trim() || '****';
+      textoSegundaClausula.texto = textoSegundaClausula.texto.replace(
+        /(en modalidad ).*?(, las clases en modalidad virtual)/,
+        (_coincidencia, prefijo: string, sufijo: string) => `${prefijo}${modalidadTexto}${sufijo}`
+      );
+    }
+  }
+
+  private actualizarFechasEjecucionEnTexto3(itemsModulo: CronogramaItem[]): void {
+    const fechasPorMes = new Map<string, Set<number>>();
+    const numeroDiaSemana: { [dia: string]: number } = {
+      domingo: 0,
+      lunes: 1,
+      martes: 2,
+      miercoles: 3,
+      jueves: 4,
+      viernes: 5,
+      sabado: 6
+    };
+
+    itemsModulo.forEach((item) => {
+      if (!item.desde || !item.hasta) {
+        return;
+      }
+      const diasProgramados = new Set(
+        (item.dias || '').split(',').map((dia) =>
+          dia.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+        ).filter(Boolean)
+      );
+      const inicio = new Date(`${item.desde.slice(0, 10)}T00:00:00`);
+      const fin = new Date(`${item.hasta.slice(0, 10)}T00:00:00`);
+      if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) {
+        return;
+      }
+
+      for (const fecha = new Date(inicio); fecha <= fin; fecha.setDate(fecha.getDate() + 1)) {
+        const dia = Object.keys(numeroDiaSemana).find((nombre) => numeroDiaSemana[nombre] === fecha.getDay());
+        if (!dia || !diasProgramados.has(dia)) {
+          continue;
+        }
+        const claveMes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+        if (!fechasPorMes.has(claveMes)) {
+          fechasPorMes.set(claveMes, new Set<number>());
+        }
+        fechasPorMes.get(claveMes)?.add(fecha.getDate());
+      }
+    });
+
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const fechasTexto = Array.from(fechasPorMes.entries())
+      .sort(([mesA], [mesB]) => mesA.localeCompare(mesB))
+      .map(([claveMes, dias]) => {
+        const [anio, mes] = claveMes.split('-').map(Number);
+        const listaDias = Array.from(dias).sort((a, b) => a - b).join(', ');
+        return `${listaDias} de ${meses[mes - 1]} de ${anio}`;
+      })
+      .join('; ') || '**,**,** de **** 20**';
+
+    const textoSegundaClausula = this.textosContrato.find((texto) => texto.id === 3);
+    if (textoSegundaClausula) {
+      textoSegundaClausula.texto = textoSegundaClausula.texto.replace(
+        /(las clases en modalidad virtual los días ).*?(?=, evento organizado)/,
+        (_coincidencia, prefijo: string) => `${prefijo}${fechasTexto}`
+      );
+    }
+
+    const textoTerceraClausula = this.textosContrato.find((texto) => texto.id === 4);
+    if (textoTerceraClausula) {
+      textoTerceraClausula.texto = textoTerceraClausula.texto.replace(
+        /días .*?20\*\*/,
+        `días ${fechasTexto}`
+      );
+    }
+  }
+
+  cargarDirector(): void {
+    this.modulosService.obtenerDirectores({ fx: 'getdirectores', d: {} }).subscribe({
+      next: (respuesta: any) => {
+        const director: DirectorFormato9 | undefined = respuesta?.data?.item?.[0];
+        if (!respuesta?.data?.success || !director) {
+          Swal.fire('Error', respuesta?.data?.message || 'No se encontró el director para el Texto 1.', 'error');
+          return;
+        }
+
+        const nombreDirector = [director.tit_dir, director.nom_dir, director.ape_dir]
+          .map((parte) => parte?.trim())
+          .filter((parte): parte is string => Boolean(parte))
+          .join(' ');
+        if (!nombreDirector) {
+          Swal.fire('Error', 'Los datos del director no contienen título, nombre ni apellido.', 'error');
+          return;
+        }
+
+        const textoInicial = this.textosContrato.find((texto) => texto.id === 1);
+        if (textoInicial) {
+          textoInicial.texto = textoInicial.texto.replace(
+            'comparecen por una parte la ****,',
+            `comparecen por una parte la ${nombreDirector},`
+          );
+        }
+      },
+      error: (error: any) => {
+        console.error('Error al cargar el director para el Formato 9:', error);
+        Swal.fire('Error', 'No se pudo cargar el director para el Texto 1.', 'error');
+      }
+    });
   }
 
   get cursoSeleccionado(): CursoFormato6 | null {
@@ -145,6 +358,10 @@ export class FormatonueveComponent implements OnInit {
     this.formato6ModuloId = null;
     this.yaExiste = false;
     this.datosNovena = null;
+    this.actualizarCursoDefinidoEnTexto2();
+    this.actualizarModalidadEnTexto3(undefined);
+    this.actualizarDatosEjecucionEnTexto2([], undefined);
+    this.actualizarFechasEjecucionEnTexto3([]);
   }
 
   seleccionarModulo(): void {
@@ -153,6 +370,9 @@ export class FormatonueveComponent implements OnInit {
         Number(f.formato6_codigo) === Number(this.formato6SeleccionadoCodigo) &&
         Number(f.formato9_modulo_id) === Number(this.formato6ModuloId)
     );
+    this.actualizarCursoDefinidoEnTexto2();
+    this.actualizarDatosEjecucionEnTexto2([], undefined);
+    this.actualizarFechasEjecucionEnTexto3([]);
     this.cargarDatosNovena();
   }
 
@@ -178,6 +398,7 @@ export class FormatonueveComponent implements OnInit {
         this.cargandoNovena = false;
         const formato = res?.data?.item?.[0];
         if (!formato) { this.datosNovena = null; return; }
+        this.actualizarModalidadEnTexto3(formato.formato1_modalidad_nombre || formato.formato6_modalidad);
 
         const cronograma: CronogramaItem[] = Array.isArray(formato.cronograma) ? formato.cronograma : [];
         const nombreModuloNorm = modulo.nombre.trim().toLowerCase();
@@ -186,6 +407,11 @@ export class FormatonueveComponent implements OnInit {
         const itemsModulo = cronograma.filter((c) =>
           c.modulo?.trim().toLowerCase() === nombreModuloNorm
         );
+        const presupuesto: PresupuestoFormato6[] = Array.isArray(formato.presupuesto)
+          ? formato.presupuesto
+          : [];
+        this.actualizarDatosEjecucionEnTexto2(itemsModulo, presupuesto[0]?.valor);
+        this.actualizarFechasEjecucionEnTexto3(itemsModulo);
 
         // Días de contratación: fechas formateadas del campo "desde/hasta" del módulo
         const primerItem = itemsModulo[0];
@@ -221,6 +447,48 @@ export class FormatonueveComponent implements OnInit {
         this.datosNovena = null;
       }
     });
+  }
+
+  private actualizarDatosEjecucionEnTexto2(
+    itemsModulo: CronogramaItem[],
+    valorPrimeraFila: string | number | null | undefined
+  ): void {
+    const textoAntecedentes = this.textosContrato.find((texto) => texto.id === 2);
+    if (!textoAntecedentes) {
+      return;
+    }
+
+    const primerItemConFechas = itemsModulo.find((item) => item.desde && item.hasta);
+    const fechasEjecucion = primerItemConFechas
+      ? `del ${this.formatearFecha(primerItemConFechas.desde)} al ${this.formatearFecha(primerItemConFechas.hasta)}`
+      : 'del ** al ** de **** del 20**';
+    const horasTotales = itemsModulo.reduce((total, item) => {
+      const horas = Number(item.horas_totales);
+      return total + (Number.isFinite(horas) ? horas : 0);
+    }, 0);
+    const duracion = itemsModulo.length > 0 ? String(horasTotales) : '**';
+    const precio = valorPrimeraFila !== null && valorPrimeraFila !== undefined && String(valorPrimeraFila).trim() !== ''
+      ? String(valorPrimeraFila).trim()
+      : '****';
+
+    textoAntecedentes.texto = textoAntecedentes.texto.replace(
+      /(Módulo )[^,]*(, )del .*?( con una duración de ).*?( horas, así como también, autorizar el pago de USD ).*?( la hora clase respectivamente;)/,
+      (_coincidencia, prefijoModulo: string, separador: string, prefijoDuracion: string, separadorPago: string, sufijo: string) =>
+        `${prefijoModulo}${this.modulosDisponibles.find((modulo) => Number(modulo.id) === Number(this.formato6ModuloId))?.nombre || '**'}${separador}${fechasEjecucion}${prefijoDuracion}${duracion}${separadorPago}${precio}${sufijo}`
+    );
+
+    const textoCuartaClausula = this.textosContrato.find((texto) => texto.id === 5);
+    if (textoCuartaClausula) {
+      textoCuartaClausula.texto = textoCuartaClausula.texto
+        .replace(
+          /(a razón de USD ).*?( la hora clase)/,
+          (_coincidencia, prefijo: string, sufijo: string) => `${prefijo}${precio}${sufijo}`
+        )
+        .replace(
+          /(por las ).*?( horas dictadas en el referido curso)/,
+          (_coincidencia, prefijo: string, sufijo: string) => `${prefijo}${duracion}${sufijo}`
+        );
+    }
   }
 
   private formatearFecha(fecha: string): string {

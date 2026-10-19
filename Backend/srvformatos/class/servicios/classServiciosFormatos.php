@@ -3553,43 +3553,47 @@ public function getformato6Reporte($filtros)
             // ---------------------------------------------
 
             $horasTotales = 0;
+            $diasSemana = array(
+                1 => 'lunes',
+                2 => 'martes',
+                3 => 'miércoles',
+                4 => 'jueves',
+                5 => 'viernes',
+                6 => 'sábado',
+                7 => 'domingo'
+            );
+            $fechaInicio = DateTimeImmutable::createFromFormat(
+                '!Y-m-d',
+                substr((string) $horario->modulo_desde, 0, 10)
+            );
+            $fechaFin = DateTimeImmutable::createFromFormat(
+                '!Y-m-d',
+                substr((string) $horario->modulo_hasta, 0, 10)
+            );
 
-            foreach ($dias as $dia) {
-
-                $horaDesde =
-                    isset($dia['horaDesde'])
-                    ? $dia['horaDesde']
-                    : '';
-
-                $horaHasta =
-                    isset($dia['horaHasta'])
-                    ? $dia['horaHasta']
-                    : '';
-
-                if (
-                    $horaDesde != '' &&
-                    $horaHasta != ''
-                ) {
-
-                    $inicio =
-                        strtotime($horaDesde);
-
-                    $fin =
-                        strtotime($horaHasta);
-
-                    if (
-                        $inicio !== false &&
-                        $fin !== false
-                    ) {
-
-                        $diferencia =
-                            ($fin - $inicio) / 3600;
-
-                        if ($diferencia > 0) {
-
-                            $horasTotales +=
-                                $diferencia;
+            // Match the Formato 6 report by counting each scheduled session in the date range.
+            if ($fechaInicio && $fechaFin && $fechaInicio <= $fechaFin) {
+                for ($fechaActual = $fechaInicio; $fechaActual <= $fechaFin; $fechaActual = $fechaActual->modify('+1 day')) {
+                    $nombreDia = $diasSemana[(int) $fechaActual->format('N')];
+                    foreach ($dias as $dia) {
+                        if (
+                            strtolower(trim(isset($dia['dia']) ? (string) $dia['dia'] : '')) !== $nombreDia ||
+                            empty($dia['horaDesde']) ||
+                            empty($dia['horaHasta'])
+                        ) {
+                            continue;
                         }
+
+                        $inicio = strtotime($dia['horaDesde']);
+                        $fin = strtotime($dia['horaHasta']);
+                        if ($inicio !== false && $fin !== false) {
+                            $diferencia = ($fin - $inicio) / 3600;
+                            if ($diferencia < 0) {
+                                $diferencia += 24;
+                            }
+                            $horasTotales += $diferencia;
+                        }
+                        break;
                     }
                 }
             }
@@ -5261,6 +5265,108 @@ public function getFormato9()
         $this->estado->setLastID(1);
     } catch (Exception $e) {
         $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 9: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getDirectores()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT tit_dir, nom_dir, ape_dir
+            FROM directores
+            LIMIT 1");
+        $director = $dbc->single();
+        if (!$director) {
+            throw new Exception('No se encontró un director en la tabla directores.');
+        }
+
+        $result[] = array(
+            'tit_dir' => $director['tit_dir'],
+            'nom_dir' => $director['nom_dir'],
+            'ape_dir' => $director['ape_dir']
+        );
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudo consultar el director: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getAutoridades()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT titulo, nom_aut, ape_aut
+            FROM autoridades
+            LIMIT 1");
+        $autoridad = $dbc->single();
+        if (!$autoridad) {
+            throw new Exception('No se encontró una autoridad en la tabla autoridades.');
+        }
+
+        $result[] = array(
+            'titulo' => $autoridad['titulo'],
+            'nom_aut' => $autoridad['nom_aut'],
+            'ape_aut' => $autoridad['ape_aut']
+        );
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudo consultar la autoridad: ' . $e->getMessage());
         $this->estado->setLastID(-1);
     }
 

@@ -107,6 +107,16 @@ case 'getformato9':
     $clsCursos->getFormato9();
     break;
 
+case 'getdirectores':
+    $clsCursos = new classServiciosFormatos();
+    $clsCursos->getDirectores();
+    break;
+
+case 'getautoridades':
+    $clsCursos = new classServiciosFormatos();
+    $clsCursos->getAutoridades();
+    break;
+
 case 'insertformato13':
 	$clsCursos = new classServiciosFormatos();
 	$clsCursos->insertFormato13($jdata->d);

@@ -95,6 +95,14 @@ obtenerFormatos9(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
+obtenerDirectores(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
+obtenerAutoridades(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
 obtenerTiposMedioFormato13(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
