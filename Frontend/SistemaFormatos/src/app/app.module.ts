@@ -44,6 +44,7 @@ import { FormatotreintaydosComponent } from './componentes/formatotreintaydos/fo
 import { FormatotreintaydosverComponent } from './componentes/formatotreintaydosver/formatotreintaydosver.component';
 import { FormatonueveComponent } from './componentes/formatonueve/formatonueve.component';
 import { FormatonueveverComponent } from './componentes/formatonuevever/formatonuevever.component';
+import { FormatodiezComponent } from './componentes/formatodiez/formatodiez.component';
 
 
 export const msalInstance = new PublicClientApplication({
@@ -83,7 +84,8 @@ UsuariosistemaComponent,
     FormatotreintaydosComponent,
     FormatotreintaydosverComponent,
     FormatonueveComponent,
-    FormatonueveverComponent
+    FormatonueveverComponent,
+    FormatodiezComponent
 
   ],
   imports: [

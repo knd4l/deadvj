@@ -6,6 +6,21 @@
 
     <div class="card-body">
       <div class="mb-3">
+        <label class="form-label fw-bold" for="codigoReporteFormato9">Código del reporte</label>
+        <input
+          id="codigoReporteFormato9"
+          name="codigoReporteFormato9"
+          class="form-control"
+          type="text"
+          [(ngModel)]="codigoReporte"
+          (ngModelChange)="guardarCodigoReporte()"
+          aria-describedby="codigoReporteFormato9Ayuda">
+        <small id="codigoReporteFormato9Ayuda" class="form-text text-muted">
+          El número final aumentará automáticamente al generar cada reporte.
+        </small>
+      </div>
+
+      <div class="mb-3">
         <label class="form-label fw-bold" for="cursoFormato9">Curso definido</label>
         <select
           class="form-select"

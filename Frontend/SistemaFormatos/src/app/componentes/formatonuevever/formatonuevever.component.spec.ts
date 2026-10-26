@@ -4,7 +4,68 @@ describe('FormatonueveverComponent', () => {
   let component: FormatonueveverComponent;
 
   beforeEach(() => {
+    localStorage.removeItem('formatonuevever_codigo_reporte');
+    localStorage.removeItem('formatonuevever_codigo_reporte_formato_31');
     component = new FormatonueveverComponent(null as any);
+  });
+
+  it('uses the same assigned report code every time an existing format is opened', () => {
+    const formato = { formato9_codigo: 31 } as any;
+    localStorage.setItem('formatonuevever_codigo_reporte_formato_31', 'UTA-DEADV-C-2025-014');
+    localStorage.setItem('formatonuevever_codigo_reporte', 'UTA-DEADV-C-2025-020');
+
+    expect(component['obtenerCodigoReporte'](formato)).toBe('UTA-DEADV-C-2025-014');
+    expect(component['obtenerCodigoReporte'](formato)).toBe('UTA-DEADV-C-2025-014');
+    expect(localStorage.getItem('formatonuevever_codigo_reporte')).toBe('UTA-DEADV-C-2025-020');
+  });
+
+  it('assigns a stable code to a previously unassigned format without advancing the counter', () => {
+    component.codigoReporte = 'UTA-DEADV-C-2025-020';
+    const formato = { formato9_codigo: 31 } as any;
+
+    expect(component['obtenerCodigoReporte'](formato)).toBe('UTA-DEADV-C-2025-031');
+    expect(component['obtenerCodigoReporte'](formato)).toBe('UTA-DEADV-C-2025-031');
+    expect(localStorage.getItem('formatonuevever_codigo_reporte')).toBeNull();
+  });
+
+  it('keeps each work date and its hours together on one line', () => {
+    const contenido = component['crearContenidoDiasTrabajo']([
+      { texto: 'miércoles 24 septiembre', horas: 4, sincronico: true },
+      { texto: 'jueves 25 septiembre', horas: 2.5, sincronico: false }
+    ]);
+
+    expect(contenido).toEqual([
+      { text: 'miércoles 24 septiembre (4h)', bold: true, noWrap: true },
+      { text: '\n' },
+      { text: 'jueves 25 septiembre (2,5h)', bold: false, noWrap: true }
+    ]);
+  });
+
+  it('keeps only the most recently created report for each module and course', () => {
+    const formatoAnterior = {
+      formato9_codigo: 1,
+      formato6_codigo: 10,
+      formato9_modulo_id: 2,
+      formato9_fecha_creacion: '2026-01-10 09:00:00'
+    } as any;
+    const formatoReciente = {
+      ...formatoAnterior,
+      formato9_codigo: 2,
+      formato9_fecha_creacion: '2026-01-11 09:00:00'
+    };
+    const otroCurso = {
+      ...formatoAnterior,
+      formato9_codigo: 3,
+      formato6_codigo: 11
+    };
+
+    const resultado = component['obtenerFormatosMasRecientes']([
+      formatoAnterior,
+      formatoReciente,
+      otroCurso
+    ]);
+
+    expect(resultado).toEqual([formatoReciente, otroCurso]);
   });
 
   it('bolds only the ordinal heading from PRIMERA through DÉCIMA QUINTA', () => {

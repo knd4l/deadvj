@@ -6,7 +6,17 @@ describe('FormatonueveComponent', () => {
   let component: FormatonueveComponent;
 
   beforeEach(() => {
+    localStorage.removeItem('formatonuevever_codigo_reporte');
+    localStorage.removeItem('formatonuevever_codigo_reporte_formato_55');
     component = new FormatonueveComponent(null as any);
+  });
+
+  it('saves the report code edited in the creation form for the report viewer', () => {
+    component.codigoReporte = 'UTA-DEADV-C-2025-025';
+
+    component.guardarCodigoReporte();
+
+    expect(localStorage.getItem('formatonuevever_codigo_reporte')).toBe('UTA-DEADV-C-2025-025');
   });
 
   it('should create', () => {
@@ -57,7 +67,9 @@ describe('FormatonueveComponent', () => {
 
   it('saves the selected course, module, and all contract texts', () => {
     const insertarFormato9 = jasmine.createSpy('insertarFormato9')
-      .and.returnValue(of({ data: { success: true, message: 'Guardado' } }));
+      .and.returnValue(of({
+        data: { success: true, message: 'Guardado', item: [{ formato9_codigo: 55 }] }
+      }));
     const servicio = { insertarFormato9 };
     const componente = new FormatonueveComponent(servicio as any);
     spyOn(Swal, 'fire').and.returnValue(Promise.resolve({} as any));
@@ -78,7 +90,34 @@ describe('FormatonueveComponent', () => {
         textos: ['Texto de prueba 1', 'Texto de prueba 2']
       }
     });
+    expect(localStorage.getItem('formatonuevever_codigo_reporte_formato_55'))
+      .toBe('UTA-DEADV-C-2025-001');
+    expect(componente.codigoReporte).toBe('UTA-DEADV-C-2025-002');
     expect(componente.guardando).toBeFalse();
+  });
+
+  it('updates the report code of an existing format without advancing the counter', () => {
+    const insertarFormato9 = jasmine.createSpy('insertarFormato9')
+      .and.returnValue(of({
+        data: { success: true, message: 'Actualizado', item: [{ formato9_codigo: 55 }] }
+      }));
+    const componente = new FormatonueveComponent({ insertarFormato9 } as any);
+    spyOn(Swal, 'fire').and.returnValue(Promise.resolve({} as any));
+    componente.formato6SeleccionadoCodigo = 12;
+    componente.formato6ModuloId = 3;
+    componente.codigoReporte = 'UTA-DEADV-C-2025-027';
+    componente.formatos9Guardados = [{
+      formato9_codigo: 55,
+      formato6_codigo: 12,
+      formato9_modulo_id: 3
+    }];
+    componente.textosContrato = [{ id: 1, texto: 'Texto de prueba' }];
+
+    componente.guardarFormato9();
+
+    expect(componente.codigoReporte).toBe('UTA-DEADV-C-2025-027');
+    expect(localStorage.getItem('formatonuevever_codigo_reporte_formato_55'))
+      .toBe('UTA-DEADV-C-2025-027');
   });
 
   it('inserts the director title, name, and surname after the opening phrase in text 1', () => {

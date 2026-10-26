@@ -68,10 +68,15 @@ interface Formato9 {
 export class FormatonueveverComponent implements OnInit {
   formatos: Formato9[] = [];
   cargando = false;
+  codigoReporte = 'UTA-DEADV-C-2025-001';
+  generandoReporte = false;
+
+  private readonly claveCodigoReporte = 'formatonuevever_codigo_reporte';
 
   constructor(private modulosService: ModulosService) {}
 
   ngOnInit(): void {
+    this.codigoReporte = localStorage.getItem(this.claveCodigoReporte) || this.codigoReporte;
     this.cargarFormatos();
   }
 
@@ -85,7 +90,7 @@ export class FormatonueveverComponent implements OnInit {
           Swal.fire('Error', respuesta?.data?.message || 'No se pudieron cargar los Formatos 9.', 'error');
           return;
         }
-        this.formatos = respuesta.data.item;
+        this.formatos = this.obtenerFormatosMasRecientes(respuesta.data.item);
       },
       error: (error: any) => {
         this.cargando = false;
@@ -98,6 +103,50 @@ export class FormatonueveverComponent implements OnInit {
 
   trackByFormato(index: number, formato: Formato9): number {
     return formato.formato9_codigo;
+  }
+
+  private crearContenidoDiasTrabajo(
+    fechas: Array<{ texto: string; horas: number; sincronico: boolean }>
+  ): any[] {
+    if (fechas.length === 0) {
+      return [{ text: '—' }];
+    }
+
+    return fechas.flatMap((fecha, index) => {
+      const horas = Number(fecha.horas.toFixed(2));
+      const horasTexto = Number.isInteger(horas) ? String(horas) : String(horas).replace('.', ',');
+      return [
+        ...(index > 0 ? [{ text: '\n' }] : []),
+        {
+          text: `${fecha.texto} (${horasTexto}h)`,
+          bold: fecha.sincronico,
+          noWrap: true
+        }
+      ];
+    });
+  }
+
+  private obtenerFormatosMasRecientes(formatos: Formato9[]): Formato9[] {
+    const formatosPorModulo = new Map<string, Formato9>();
+    const fechaComoNumero = (formato: Formato9): number => {
+      const fecha = Date.parse(formato.formato9_fecha_creacion);
+      return Number.isNaN(fecha) ? Number.NEGATIVE_INFINITY : fecha;
+    };
+
+    formatos.forEach((formato) => {
+      const clave = `${formato.formato6_codigo}-${formato.formato9_modulo_id}`;
+      const existente = formatosPorModulo.get(clave);
+      if (
+        !existente ||
+        fechaComoNumero(formato) > fechaComoNumero(existente) ||
+        (fechaComoNumero(formato) === fechaComoNumero(existente) &&
+          formato.formato9_codigo > existente.formato9_codigo)
+      ) {
+        formatosPorModulo.set(clave, formato);
+      }
+    });
+
+    return Array.from(formatosPorModulo.values());
   }
 
   private formatearTextoContrato(texto: string, nombreCurso: string, indiceTexto: number): any[] {
@@ -217,8 +266,29 @@ export class FormatonueveverComponent implements OnInit {
     };
   }
 
+  private obtenerCodigoReporte(formato: Formato9): string {
+    const claveFormato = `${this.claveCodigoReporte}_formato_${formato.formato9_codigo}`;
+    const codigoGuardado = localStorage.getItem(claveFormato);
+    if (codigoGuardado) {
+      return codigoGuardado;
+    }
+
+    const prefijo = /^(.*-\d{4}-)\d+$/.exec(this.codigoReporte.trim());
+    if (!prefijo) {
+      throw new Error('Use el formato UTA-DEADV-C-2025-001 en la pantalla de creación del Formato 9.');
+    }
+    const codigoAsignado = `${prefijo[1]}${String(formato.formato9_codigo).padStart(3, '0')}`;
+    localStorage.setItem(claveFormato, codigoAsignado);
+    return codigoAsignado;
+  }
+
   async verReporte(formato: Formato9): Promise<void> {
+    if (this.generandoReporte) {
+      return;
+    }
+    this.generandoReporte = true;
     try {
+      const codigoReporte = this.obtenerCodigoReporte(formato);
       const [encabezado, pie, respuestaDirectores, respuestaAutoridades] = await Promise.all([
         this.convertirImagenBase64('assets/img/encabezado.jpg'),
         this.convertirImagenBase64('assets/img/footer.jpeg'),
@@ -257,7 +327,7 @@ export class FormatonueveverComponent implements OnInit {
           'UNIVERSIDAD TÉCNICA DE AMBATO',
           'DIRECCIÓN DE EDUCACIÓN CONTINUA, A DISTANCIA Y VIRTUAL \n',
           'CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES',
-          'UTA-DEADV-C-2026-006\n',
+          `${codigoReporte}\n`,
           'CURSO DE EDUCACIÓN CONTINUA',
           `MODALIDAD: ${modalidad}`
         ].join('\n'),
@@ -353,17 +423,7 @@ export class FormatonueveverComponent implements OnInit {
             return `${[...dias].sort((a, b) => a - b).join(', ')} de ${meses[mes - 1]} de ${anio}`;
           })
           .join('; ') || '—';
-        const diasTrabajo: any[] = fechasOrdenadas.length > 0
-          ? fechasOrdenadas.flatMap((fecha, index) => {
-              const horas = Number(fecha.horas.toFixed(2));
-              const horasTexto = Number.isInteger(horas) ? String(horas) : String(horas).replace('.', ',');
-              return [
-                ...(index > 0 ? [{ text: '\n' }] : []),
-                { text: fecha.texto, bold: fecha.sincronico },
-                { text: ` (${horasTexto}h)` }
-              ];
-            })
-          : [{ text: '—' }];
+        const diasTrabajo = this.crearContenidoDiasTrabajo(fechasOrdenadas);
 
         // Horario de trabajo: tipo de actividad + días únicos + rango horario
         const horarioContenido: any[] = [
@@ -412,13 +472,13 @@ export class FormatonueveverComponent implements OnInit {
           text: texto, bold: true,
           fontSize: 8, alignment: 'center', margin: [2, 4, 2, 4]
         });
-        const dataCell = (texto: string, align: string = 'left'): any => ({
-          text: texto, fontSize: 8, alignment: align, margin: [2, 3, 2, 3]
+        const dataCell = (texto: string): any => ({
+          text: texto, fontSize: 8, alignment: 'center', margin: [2, 3, 2, 3]
         });
 
         const tablaNovena: any = {
           table: {
-            widths: [110, 35, 55, 100, 105, 80],
+            widths: [110, 35, 55, 75, 130, 80],
             headerRows: 1,
             body: [
               [
@@ -430,11 +490,11 @@ export class FormatonueveverComponent implements OnInit {
                 headerCell('Horario de\nTrabajo')
               ],
               [
-                { stack: eventoContent, fontSize: 8, margin: [2, 3, 2, 3] },
-                dataCell('Ambato', 'center'),
-                dataCell('Plataforma Educativa UTA', 'center'),
-                dataCell(diasContratacion, 'center'),
-                { text: diasTrabajo, fontSize: 8, alignment: 'left', margin: [2, 3, 2, 3] },
+                { stack: eventoContent, fontSize: 8, alignment: 'center', margin: [2, 3, 2, 3] },
+                dataCell('Ambato'),
+                dataCell('Plataforma Educativa UTA'),
+                dataCell(diasContratacion),
+                { text: diasTrabajo, fontSize: 8, alignment: 'center', margin: [2, 3, 2, 3] },
                 { text: horarioContenido, fontSize: 8, alignment: 'center', margin: [2, 3, 2, 3] }
               ]
             ]
@@ -448,7 +508,7 @@ export class FormatonueveverComponent implements OnInit {
           margin: [0, 0, 0, 10]
         };
 
-        items.splice(idxNovena + 1, 0, tablaNovena);
+        items.splice(idxNovena + 2, 0, tablaNovena);
       }
 
       items.push(this.crearBloqueFirmas(director, profesional));
@@ -473,6 +533,8 @@ export class FormatonueveverComponent implements OnInit {
         error instanceof Error ? error.message : 'No se pudo generar el reporte PDF del Formato 9.',
         'error'
       );
+    } finally {
+      this.generandoReporte = false;
     }
   }
 }

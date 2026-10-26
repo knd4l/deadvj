@@ -56,6 +56,7 @@ interface AutoridadFormato9 {
   styleUrls: ['./formatonueve.component.css']
 })
 export class FormatonueveComponent implements OnInit {
+  codigoReporte = 'UTA-DEADV-C-2025-001';
   cursosFormato6: CursoFormato6[] = [];
   formatos9Guardados: Formato9Guardado[] = [];
   formato6SeleccionadoCodigo: number | null = null;
@@ -66,6 +67,7 @@ export class FormatonueveComponent implements OnInit {
   guardando = false;
   datosNovena: DatosNovena | null = null;
   private nombreAutoridadFormato9 = '****';
+  private readonly prefijoClaveCodigoReporteFormato = 'formatonuevever_codigo_reporte_formato_';
   textosContrato = [{
     id: 1,
     texto: 'En la ciudad de Ambato, a los ** días del mes de ** de 20**, comparecen por una parte la ****, en calidad de Directora de Educación Continua, a Distancia y Virtual de la Universidad Técnica de Ambato, debidamente facultado mediante Resolución Administrativa Nro. **** del ** de **** de 20**, a quién en adelante y para efectos del presente contrato se le podrá llamar El Contratante; o, simplemente “La Universidad”; y, por otra parte el *****, quienes: por los derechos que se representa y por el suyo propio, respectivamente, libre y voluntariamente tienen a bien celebrar el presente Contrato de Prestación de Servicios Profesionales de conformidad a lo previsto en el inciso 2do de la Disposición General Primera del Reglamento de Aplicación del Mandato Constituyente No 8 reformado, mediante Decreto Ejecutivo Nº 1121 del 2008, reformado por el Art. 5 del Decreto Ejecutivo. 1313, en concordancia con lo estipulado en los Art. 149 y 153 de la Ley Orgánica de Educación Superior, al tenor de las siguientes cláusulas y estipulaciones que se señalan a continuación; así: ' 
@@ -145,10 +147,24 @@ export class FormatonueveComponent implements OnInit {
   constructor(private modulosService: ModulosService) {}
 
   ngOnInit(): void {
+    this.codigoReporte = localStorage.getItem('formatonuevever_codigo_reporte') || this.codigoReporte;
     this.cargarCursosFormato6();
     this.cargarFormatos9();
     this.cargarDirector();
     this.cargarAutoridad();
+  }
+
+  guardarCodigoReporte(): void {
+    localStorage.setItem('formatonuevever_codigo_reporte', this.codigoReporte);
+  }
+
+  private incrementarCodigoReporte(codigo: string): string {
+    const coincidencia = /^(.*-\d{4}-)(\d+)$/.exec(codigo.trim());
+    if (!coincidencia || !coincidencia[1].trim()) {
+      throw new Error('Use el formato UTA-DEADV-C-2025-001 y termine el código con el número del reporte.');
+    }
+    const numero = String(Number(coincidencia[2]) + 1).padStart(coincidencia[2].length, '0');
+    return `${coincidencia[1]}${numero}`;
   }
 
   cargarAutoridad(): void {
@@ -544,6 +560,28 @@ export class FormatonueveComponent implements OnInit {
       return;
     }
 
+    const formatoExistente = this.formatos9Guardados.find(
+      (formato) =>
+        Number(formato.formato6_codigo) === Number(this.formato6SeleccionadoCodigo) &&
+        Number(formato.formato9_modulo_id) === Number(this.formato6ModuloId)
+    );
+    let siguienteCodigoReporte: string | null = null;
+    try {
+      if (formatoExistente) {
+        this.incrementarCodigoReporte(this.codigoReporte);
+      } else {
+        siguienteCodigoReporte = this.incrementarCodigoReporte(this.codigoReporte);
+      }
+    } catch (error) {
+      Swal.fire(
+        'Código inválido',
+        error instanceof Error ? error.message : 'Revisa el código del reporte.',
+        'warning'
+      );
+      return;
+    }
+    const codigoReporteAsignado = this.codigoReporte.trim();
+
     this.guardando = true;
     this.modulosService.insertarFormato9({
       fx: 'insertformato9',
@@ -560,14 +598,29 @@ export class FormatonueveComponent implements OnInit {
           return;
         }
         // Marcar como existente para que el botón cambie a "Actualizar"
-        const yaRegistrado = this.formatos9Guardados.some(
-          (f) =>
-            Number(f.formato6_codigo) === Number(this.formato6SeleccionadoCodigo) &&
-            Number(f.formato9_modulo_id) === Number(this.formato6ModuloId)
-        );
-        if (!yaRegistrado && this.formato6SeleccionadoCodigo && this.formato6ModuloId) {
+        if (formatoExistente) {
+          localStorage.setItem(
+            `${this.prefijoClaveCodigoReporteFormato}${formatoExistente.formato9_codigo}`,
+            codigoReporteAsignado
+          );
+        } else if (this.formato6SeleccionadoCodigo && this.formato6ModuloId) {
+          const formato9Codigo = Number(respuesta.data.item?.[0]?.formato9_codigo);
+          if (!Number.isFinite(formato9Codigo) || formato9Codigo <= 0 || !siguienteCodigoReporte) {
+            Swal.fire(
+              'Guardado con advertencia',
+              'El formulario se guardó, pero no se pudo asignar su código de reporte. Actualiza la lista e inténtalo de nuevo.',
+              'warning'
+            );
+            return;
+          }
+          localStorage.setItem(
+            `${this.prefijoClaveCodigoReporteFormato}${formato9Codigo}`,
+            codigoReporteAsignado
+          );
+          this.codigoReporte = siguienteCodigoReporte;
+          this.guardarCodigoReporte();
           this.formatos9Guardados.push({
-            formato9_codigo: respuesta.data.item?.[0]?.formato9_codigo ?? 0,
+            formato9_codigo: formato9Codigo,
             formato6_codigo: this.formato6SeleccionadoCodigo,
             formato9_modulo_id: this.formato6ModuloId
           });

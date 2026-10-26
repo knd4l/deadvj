@@ -21,6 +21,7 @@ import { FormatotreintaydosComponent } from './componentes/formatotreintaydos/fo
 import { FormatotreintaydosverComponent } from './componentes/formatotreintaydosver/formatotreintaydosver.component';
 import { FormatonueveComponent } from './componentes/formatonueve/formatonueve.component';
 import { FormatonueveverComponent } from './componentes/formatonuevever/formatonuevever.component';
+import { FormatodiezComponent } from './componentes/formatodiez/formatodiez.component';
 
 const routes: Routes = [
 {path:'',pathMatch:'full', redirectTo:'login'},
@@ -44,7 +45,8 @@ const routes: Routes = [
 {path: 'formatotreintaydos', component: FormatotreintaydosComponent, canActivate: [VigilanteGuard]},
 {path: 'verformatotreintaydos', component: FormatotreintaydosverComponent, canActivate: [VigilanteGuard]},
 {path: 'formatonueve', component: FormatonueveComponent, canActivate: [VigilanteGuard]},
-{path: 'verformatonueve', component: FormatonueveverComponent, canActivate: [VigilanteGuard]}
+{path: 'verformatonueve', component: FormatonueveverComponent, canActivate: [VigilanteGuard]},
+{path: 'formatodiez', component: FormatodiezComponent, canActivate: [VigilanteGuard]}
 ];
 
 

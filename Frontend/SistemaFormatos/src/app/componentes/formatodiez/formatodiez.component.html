@@ -1,0 +1,64 @@
+<main class="container-fluid px-4">
+  <div class="card shadow border-0 my-4">
+    <div class="card-header bg-institucional text-center">
+      <h4 class="mb-0"><b>FORMATO 10</b></h4>
+    </div>
+    <div class="card-body text-end">
+      <button class="btn btn-institucional" type="button" (click)="abrirModal()">
+        Crear
+      </button>
+      <div *ngIf="cursoSeleccionado" class="alert alert-light border mt-3 mb-0 text-start">
+        Curso definido:
+        <strong>
+          {{ cursoSeleccionado.formato1_codigo_curso || 'Sin código' }} -
+          {{ cursoSeleccionado.formato1_curso_definido }}
+        </strong>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div *ngIf="mostrarModal" class="modal-backdrop-custom" (click)="cerrarModal()">
+  <section
+    class="modal-dialog modal-dialog-centered"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tituloModalFormato10"
+    (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="tituloModalFormato10" class="modal-title">Crear Formato 10</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label fw-bold" for="cursoDefinidoFormato10">Curso definido</label>
+        <select
+          id="cursoDefinidoFormato10"
+          name="cursoDefinidoFormato10"
+          class="form-select"
+          [(ngModel)]="cursoSeleccionadoCodigo"
+          [disabled]="cargandoCursos || cursosFormato6.length === 0">
+          <option [ngValue]="null">
+            {{ cargandoCursos ? 'Cargando cursos...' : 'Seleccionar curso definido' }}
+          </option>
+          <option *ngFor="let curso of cursosFormato6" [ngValue]="curso.formato6_codigo">
+            {{ curso.formato1_codigo_curso || 'Sin código' }} - {{ curso.formato1_curso_definido }}
+          </option>
+        </select>
+        <p *ngIf="!cargandoCursos && cursosFormato6.length === 0" class="text-muted small mt-2 mb-0">
+          No hay cursos definidos disponibles.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="cerrarModal()">Cancelar</button>
+        <button
+          type="button"
+          class="btn btn-institucional"
+          (click)="seleccionarCurso()"
+          [disabled]="cargandoCursos || cursosFormato6.length === 0">
+          Seleccionar
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
