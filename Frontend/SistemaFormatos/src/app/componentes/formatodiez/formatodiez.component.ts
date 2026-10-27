@@ -30,6 +30,8 @@ interface Formato10 {
   formato10_instructor_cedula: string;
   formato10_instructor_nombres: string;
   formato10_instructor_apellidos: string;
+  formato10_instructor_correo: string;
+  formato10_instructor_telefono: string;
   formato10_detalle_uso: string;
   formato10_fecha_creacion: string;
   licencias: Array<{ id: number; nombre: string }>;
@@ -119,23 +121,33 @@ export class FormatodiezComponent implements OnInit {
     });
   }
 
-  verPdf(formato: Formato10): void {
+  async verPdf(formato: Formato10): Promise<void> {
     try {
+      const [encabezado, pie] = await Promise.all([
+        this.convertirImagenBase64('assets/img/encabezado.jpg'),
+        this.convertirImagenBase64('assets/img/footer.jpeg')
+      ]);
       const fuentes = pdfFonts as any;
       (pdfMake as any).vfs = fuentes.pdfMake?.vfs || fuentes.vfs;
       const documento = {
         pageSize: 'A4',
-        pageMargins: [48, 48, 48, 48],
+        pageMargins: [40, 85, 40, 78],
+        header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
+        footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
         content: [
           { text: 'FORMATO 10', style: 'titulo', alignment: 'center', margin: [0, 0, 0, 24] },
           {
             table: {
-              widths: ['35%', '65%'],
+              widths: ['38%', '62%'],
               body: [
+                [{ text: 'Fecha de solicitud', bold: true }, this.formatearFechaSolicitud(formato.formato10_fecha_creacion)],
+                [{ text: 'Número del formulario', bold: true }, String(formato.formato10_codigo)],
                 [{ text: 'Código del curso', bold: true }, formato.formato10_curso_codigo || 'Sin código'],
+                [{ text: 'Apellidos y nombres', bold: true }, `${formato.formato10_instructor_apellidos} ${formato.formato10_instructor_nombres}`],
+                [{ text: 'Correo electrónico', bold: true }, formato.formato10_instructor_correo || 'No registrado'],
+                [{ text: 'Documento de identidad', bold: true }, formato.formato10_instructor_cedula],
+                [{ text: 'Teléfono', bold: true }, formato.formato10_instructor_telefono || 'No registrado'],
                 [{ text: 'Nombre del curso', bold: true }, formato.formato10_curso_nombre],
-                [{ text: 'Instructor', bold: true }, `${formato.formato10_instructor_nombres} ${formato.formato10_instructor_apellidos}`],
-                [{ text: 'Cédula', bold: true }, formato.formato10_instructor_cedula],
                 [{ text: 'Licencias', bold: true }, formato.licencias.map((licencia) => licencia.nombre).join(', ') || 'Ninguna'],
                 [{ text: 'Detalle de uso', bold: true }, formato.formato10_detalle_uso]
               ]
@@ -154,6 +166,32 @@ export class FormatodiezComponent implements OnInit {
       console.error('No se pudo generar el PDF del Formato 10:', error);
       Swal.fire('Error', 'No se pudo abrir el PDF del Formato 10.', 'error');
     }
+  }
+
+  private formatearFechaSolicitud(fecha: string): string {
+    const fechaISO = fecha.split(' ')[0];
+    const partes = fechaISO.split('-');
+    return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fecha;
+  }
+
+  private convertirImagenBase64(ruta: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const imagen = new Image();
+      imagen.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = imagen.naturalWidth;
+        canvas.height = imagen.naturalHeight;
+        const contexto = canvas.getContext('2d');
+        if (!contexto) {
+          reject(new Error('No se pudo preparar la imagen del reporte.'));
+          return;
+        }
+        contexto.drawImage(imagen, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      imagen.onerror = () => reject(new Error(`No se pudo cargar ${ruta}`));
+      imagen.src = ruta;
+    });
   }
 
   private cargarFormatos(): void {

@@ -5234,17 +5234,22 @@ public function getFormato10()
             throw new Exception('No fue posible conectar con la base de datos.');
         }
 
-        $dbc->query("SELECT formato10_codigo,
-                formato6_codigo,
-                formato10_curso_codigo,
-                formato10_curso_nombre,
-                formato10_instructor_cedula,
-                formato10_instructor_nombres,
-                formato10_instructor_apellidos,
-                formato10_detalle_uso,
-                formato10_fecha_creacion
-            FROM formato10
-            ORDER BY formato10_codigo DESC");
+        $dbc->query("SELECT f10.formato10_codigo,
+                f10.formato6_codigo,
+                f10.formato10_curso_codigo,
+                f10.formato10_curso_nombre,
+                f10.formato10_instructor_cedula,
+                COALESCE(u.USUARIO_NOMBRES, f10.formato10_instructor_nombres) AS formato10_instructor_nombres,
+                COALESCE(u.USUARIO_APELLIDOS, f10.formato10_instructor_apellidos) AS formato10_instructor_apellidos,
+                COALESCE(u.USUARIO_CORREO, '') AS formato10_instructor_correo,
+                COALESCE(u.USUARIO_TELEFONO, '') AS formato10_instructor_telefono,
+                f10.formato10_detalle_uso,
+                f10.formato10_fecha_creacion
+            FROM formato10 f10
+            LEFT JOIN usuarios u
+                ON u.USUARIO_IDENTIFICACION =
+                    f10.formato10_instructor_cedula COLLATE utf8mb4_general_ci
+            ORDER BY f10.formato10_codigo DESC");
         $result = $dbc->resultset();
 
         foreach ($result as &$formato) {
