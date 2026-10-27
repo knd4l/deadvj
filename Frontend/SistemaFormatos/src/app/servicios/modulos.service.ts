@@ -67,6 +67,18 @@ obtenerUsuariosFormato5(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
+obtenerLicenciasFormato10(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
+insertarFormato10(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
+obtenerFormatos10(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
 obtenerUsuariosFormato32(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }

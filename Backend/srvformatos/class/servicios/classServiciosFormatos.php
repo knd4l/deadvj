@@ -5045,6 +5045,248 @@ public function getFormato5()
     }
 }
 
+public function getLicenciasFormato10()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT licencias_formato10_id AS id,
+                licencias_formato10_nombre AS nombre
+            FROM licencias_formato10
+            WHERE licencias_formato10_estado = 'ACTIVO'
+            ORDER BY licencias_formato10_id");
+        $result = $dbc->resultset();
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar las licencias: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function insertFormato10($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $instructorCedula = isset($datos->instructorCedula) ? trim((string) $datos->instructorCedula) : '';
+        $licenciaIds = isset($datos->licencias) && is_array($datos->licencias)
+            ? array_values(array_unique(array_filter(array_map('intval', $datos->licencias), function ($id) {
+                return $id > 0;
+            })))
+            : array();
+
+        if ($formato6Codigo <= 0 || $instructorCedula === '') {
+            throw new Exception('Selecciona un curso y un instructor.');
+        }
+
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->beginTransaction();
+        $dbc->query("SELECT f1.formato1_codigo_curso, f1.formato1_curso_definido
+            FROM formato6 f6
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
+            WHERE f6.formato6_codigo = :formato6_codigo
+              AND f1.formato1_curso_definido IS NOT NULL
+              AND TRIM(f1.formato1_curso_definido) <> ''
+            LIMIT 1
+            FOR UPDATE");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $curso = $dbc->single();
+        if (!$curso) {
+            throw new Exception('El curso seleccionado no está disponible.');
+        }
+
+        $dbc->query("SELECT USUARIO_NOMBRES AS nombres, USUARIO_APELLIDOS AS apellidos
+            FROM usuarios
+            WHERE USUARIO_IDENTIFICACION = :cedula
+              AND USUARIO_ESTADO = 'ACTIVO'
+            LIMIT 1");
+        $dbc->bind(':cedula', $instructorCedula);
+        $instructor = $dbc->single();
+        if (!$instructor) {
+            throw new Exception('El instructor seleccionado no está disponible.');
+        }
+
+        $licencias = array();
+        foreach ($licenciaIds as $licenciaId) {
+            $dbc->query("SELECT licencias_formato10_id
+                FROM licencias_formato10
+                WHERE licencias_formato10_id = :licencia_id
+                  AND licencias_formato10_estado = 'ACTIVO'
+                LIMIT 1");
+            $dbc->bind(':licencia_id', $licenciaId);
+            if (!$dbc->single()) {
+                throw new Exception('Una de las licencias seleccionadas no está disponible.');
+            }
+            $licencias[] = $licenciaId;
+        }
+
+        $dbc->query("INSERT INTO formato10 (
+            formato6_codigo,
+            formato10_curso_codigo,
+            formato10_curso_nombre,
+            formato10_instructor_cedula,
+            formato10_instructor_nombres,
+            formato10_instructor_apellidos,
+            formato10_detalle_uso
+        ) VALUES (
+            :formato6_codigo,
+            :curso_codigo,
+            :curso_nombre,
+            :instructor_cedula,
+            :instructor_nombres,
+            :instructor_apellidos,
+            :detalle_uso
+        )");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $dbc->bind(':curso_codigo', $curso['formato1_codigo_curso']);
+        $dbc->bind(':curso_nombre', $curso['formato1_curso_definido']);
+        $dbc->bind(':instructor_cedula', $instructorCedula);
+        $dbc->bind(':instructor_nombres', $instructor['nombres']);
+        $dbc->bind(':instructor_apellidos', $instructor['apellidos']);
+        $dbc->bind(':detalle_uso', 'La contraseña entregada vía correo electrónico al Instructor será actualizada periódicamente y de forma obligatoria después de que los períodos de uso concluyan');
+        $dbc->execute();
+        $formato10Codigo = (int) $dbc->lastInsertId();
+
+        foreach ($licencias as $licenciaId) {
+            $dbc->query("INSERT INTO formato10_licencias (
+                formato10_codigo,
+                licencias_formato10_id
+            ) VALUES (
+                :formato10_codigo,
+                :licencia_id
+            )");
+            $dbc->bind(':formato10_codigo', $formato10Codigo);
+            $dbc->bind(':licencia_id', $licenciaId);
+            $dbc->execute();
+        }
+
+        $dbc->endTransaction();
+        $result[] = array('formato10_codigo' => $formato10Codigo);
+        $this->estado = new Exception_Object(1, 'Formato 10 guardado correctamente.');
+        $this->estado->setLastID($formato10Codigo);
+    } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
+        $this->estado = new Exception_Object(-1, 'No se pudo guardar el Formato 10: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
+public function getFormato10()
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->query("SELECT formato10_codigo,
+                formato6_codigo,
+                formato10_curso_codigo,
+                formato10_curso_nombre,
+                formato10_instructor_cedula,
+                formato10_instructor_nombres,
+                formato10_instructor_apellidos,
+                formato10_detalle_uso,
+                formato10_fecha_creacion
+            FROM formato10
+            ORDER BY formato10_codigo DESC");
+        $result = $dbc->resultset();
+
+        foreach ($result as &$formato) {
+            $dbc->query("SELECT l.licencias_formato10_id AS id,
+                    l.licencias_formato10_nombre AS nombre
+                FROM formato10_licencias fl
+                INNER JOIN licencias_formato10 l
+                    ON l.licencias_formato10_id = fl.licencias_formato10_id
+                WHERE fl.formato10_codigo = :formato10_codigo
+                ORDER BY l.licencias_formato10_id");
+            $dbc->bind(':formato10_codigo', (int) $formato['formato10_codigo']);
+            $formato['licencias'] = $dbc->resultset();
+        }
+        unset($formato);
+
+        $this->estado = new Exception_Object(1, 'Consulta realizada correctamente.');
+        $this->estado->setLastID(1);
+    } catch (Exception $e) {
+        $this->estado = new Exception_Object(-1, 'No se pudieron consultar los Formatos 10: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+    $resultados->data->rcount = count($result);
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
 public function getUsuariosFormato5()
 {
     $dbc = null;

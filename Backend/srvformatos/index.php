@@ -109,6 +109,9 @@ if ($view == "no identificado" || $view == "none") {
 		'getusuariosformato32'=>true,
 		'insertformato32'=>true,
 		'getformato32'=>true,
+		'getlicenciasformato10'=>true,
+		'insertformato10'=>true,
+		'getformato10'=>true,
 
 		
 	);
