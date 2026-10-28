@@ -179,8 +179,8 @@ export class FormatodiezComponent implements OnInit {
       const documento = {
         pageSize: 'A4',
         pageMargins: [40, 85, 40, 78],
-        header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
-        footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
+        header: { image: encabezado, width: 595, alignment: 'center', margin: [0, 0, 0, 0] },
+        footer: { image: pie, width: 595, alignment: 'center', margin: [0, 53, 0, 0] },
         content: [
           { text: ' ', style: 'titulo', alignment: 'center', margin: [0, 0, 0, 24] },
           {
@@ -237,6 +237,133 @@ export class FormatodiezComponent implements OnInit {
                 ]
               ]
             },
+          },
+          {
+            margin: [0, 12, 0, 0],
+            table: {
+              widths: ['8%', '42%', '8%', '42%'],
+              body: [
+                [
+                  {
+                    svg: '<svg width="22" height="120" viewBox="0 0 22 120"><g transform="rotate(-90 11 60)"><text x="11" y="65" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">CREACIÓN</text></g></svg>',
+                    alignment: 'center',
+                    fillColor: '#eeeeee',
+                    margin: [0, 0, 0, 0]
+                  },
+                  {
+                    stack: [
+                      {
+                        columns: [
+                          { text: 'Creada:', width: 65, bold: true },
+                          {
+                            width: 12,
+                            canvas: [
+                              { type: 'rect', x: 0, y: 1, w: 10, h: 10, lineWidth: 1 },
+                              { type: 'line', x1: 2, y1: 3, x2: 8, y2: 9, lineWidth: 1 },
+                              { type: 'line', x1: 8, y1: 3, x2: 2, y2: 9, lineWidth: 1 }
+                            ]
+                          },
+                          { text: 'Sí', width: 25 },
+                          {
+                            width: 12,
+                            canvas: [{ type: 'rect', x: 0, y: 1, w: 10, h: 10, lineWidth: 1 }]
+                          },
+                          { text: 'No', width: 25 }
+                        ],
+                        margin: [0, 0, 0, 8]
+                      },
+                      {
+                        text: `Periodo: ${(formato.formato10_periodo_uso || '—').replace(/\s+/g, ' ').trim()}`,
+                        margin: [0, 0, 0, 5]
+                      },
+                      {
+                        text: `Fecha: ${this.formatearFechaSolicitud(formato.formato10_fecha_creacion)}`,
+                        margin: [0, 0, 0, 12]
+                      },
+                      { text: 'Responsable:', bold: true, margin: [0, 0, 0, 16] },
+                      { text: 'Asistente administrativo:', bold: true, margin: [0, 0, 0, 16] }
+                    ]
+                  },
+                  {
+                    svg: '<svg width="22" height="120" viewBox="0 0 22 120"><g transform="rotate(-90 11 60)"><text x="11" y="65" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">VALIDACIÓN</text></g></svg>',
+                    alignment: 'center',
+                    fillColor: '#eeeeee',
+                    margin: [0, 0, 0, 0]
+                  },
+                  {
+                    stack: [
+                      {
+                        columns: [
+                          { text: 'Autorizada:', width: 75, bold: true },
+                          {
+                            width: 12,
+                            canvas: [
+                              { type: 'rect', x: 0, y: 1, w: 10, h: 10, lineWidth: 1 },
+                              { type: 'line', x1: 2, y1: 3, x2: 8, y2: 9, lineWidth: 1 },
+                              { type: 'line', x1: 8, y1: 3, x2: 2, y2: 9, lineWidth: 1 }
+                            ]
+                          },
+                          { text: 'Sí', width: 25 },
+                          {
+                            width: 12,
+                            canvas: [{ type: 'rect', x: 0, y: 1, w: 10, h: 10, lineWidth: 1 }]
+                          },
+                          { text: 'No', width: 25 }
+                        ],
+                        margin: [0, 0, 0, 8]
+                      },
+                      { text: 'Observación:', bold: true, margin: [0, 0, 0, 4] },
+                      { text: '________________________________________________', margin: [0, 0, 0, 4] },
+                      { text: '________________________________________________', margin: [0, 0, 0, 12] },
+                      { text: 'Responsable:', bold: true, margin: [0, 0, 0, 16] },
+                      { text: 'Asistente/Analista TIC:', bold: true, margin: [0, 0, 0, 16] }
+                    ]
+                  }
+                ]
+              ]
+            },
+            layout: {
+              hLineWidth: () => 1,
+              vLineWidth: () => 1,
+              hLineColor: () => '#555555',
+              vLineColor: () => '#555555',
+              paddingLeft: () => 7,
+              paddingRight: () => 7,
+              paddingTop: () => 7,
+              paddingBottom: () => 7
+            }
+          },
+          {
+            margin: [0, 18, 0, 0],
+            columns: [
+              {
+                width: '50%',
+                table: {
+                  widths: ['*'],
+                  body: [[
+                    {
+                      stack: [
+                        {
+                          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 220, y2: 0, lineWidth: 1 }],
+                          margin: [0, 55, 0, 12]
+                        },
+                        { text: 'Firma del Instructor - Gestor', alignment: 'center', fontSize: 12, margin: [0, 0, 0, 22] }
+                      ]
+                    }
+                  ]]
+                },
+                layout: {
+                  hLineWidth: () => 1,
+                  vLineWidth: () => 1,
+                  hLineColor: () => '#555555',
+                  vLineColor: () => '#555555',
+                  paddingLeft: () => 8,
+                  paddingRight: () => 8,
+                  paddingTop: () => 0,
+                  paddingBottom: () => 0
+                }
+              }
+            ]
           }
         ],
         styles: {
