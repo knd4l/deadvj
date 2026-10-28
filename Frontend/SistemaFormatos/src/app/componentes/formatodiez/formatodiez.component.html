@@ -4,38 +4,53 @@
       <h4 class="mb-0"><b>FORMATO 10</b></h4>
     </div>
     <div class="card-body">
-      <div class="d-flex justify-content-end">
-        <button class="btn btn-institucional" type="button" (click)="abrirModal()">
-        Crear
-        </button>
-      </div>
-      <div *ngIf="cargandoFormatos" class="text-muted text-center py-4">
+      <div *ngIf="cargandoCursos || cargandoFormatos" class="text-muted text-center py-4">
         Cargando Formatos 10...
       </div>
-      <div *ngIf="!cargandoFormatos" class="table-responsive mt-3">
+      <div *ngIf="!cargandoCursos && !cargandoFormatos" class="table-responsive">
         <table class="table table-bordered table-hover align-middle mb-0">
-          <thead class="table-light">
+          <thead>
             <tr>
-              <th scope="col">Código del curso</th>
-              <th scope="col">Nombre del curso</th>
-              <th scope="col">Instructor</th>
-              <th scope="col">PDF</th>
+              <th scope="col" class="text-white text-nowrap" style="background-color: #6c1313;">Código del curso</th>
+              <th scope="col" class="text-white text-nowrap" style="background-color: #6c1313;">Nombre del curso</th>
+              <th scope="col" class="text-white text-nowrap" style="background-color: #6c1313;">Instructor</th>
+              <th scope="col" class="text-white text-nowrap" style="background-color: #6c1313;">Editar</th>
+              <th scope="col" class="text-white text-nowrap" style="background-color: #6c1313;">PDF</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let formato of formatos">
-              <td>{{ formato.formato10_curso_codigo || 'Sin código' }}</td>
-              <td>{{ formato.formato10_curso_nombre }}</td>
-              <td>{{ formato.formato10_instructor_nombres }} {{ formato.formato10_instructor_apellidos }}</td>
+            <tr *ngFor="let curso of cursosTabla">
+              <td>{{ curso.formato1_codigo_curso || 'Sin código' }}</td>
+              <td>{{ curso.formato1_curso_definido }}</td>
+              <td>
+                <span *ngIf="curso.formato; else sinInstructor">
+                  {{ curso.formato.formato10_instructor_nombres }} {{ curso.formato.formato10_instructor_apellidos }}
+                </span>
+                <ng-template #sinInstructor><span class="text-muted">Sin instructor asignado</span></ng-template>
+              </td>
               <td class="text-center">
-                <button class="btn btn-outline-primary btn-sm" type="button" (click)="verPdf(formato)">
-                  <i class="fa fa-file-pdf-o me-1" aria-hidden="true"></i> Ver PDF
+                <button
+                  class="btn btn-institucional btn-sm d-inline-flex align-items-center text-nowrap px-2 py-1"
+                  type="button"
+                  (click)="abrirModal(curso, curso.formato)"
+                  [disabled]="!formatosCargados">
+                  {{ curso.formato ? 'Editar' : 'Crear' }}
                 </button>
               </td>
+              <td class="text-center">
+                <button
+                  *ngIf="curso.formato"
+                  class="btn btn-institucional btn-sm d-inline-flex align-items-center text-nowrap px-2 py-1"
+                  type="button"
+                  (click)="verPdf(curso.formato)">
+                  <i class="fa fa-file-pdf" aria-hidden="true"></i><span> PDF</span>
+                </button>
+                <span *ngIf="!curso.formato" class="text-muted">—</span>
+              </td>
             </tr>
-            <tr *ngIf="formatos.length === 0">
-              <td colspan="4" class="text-center text-muted py-4">
-                Aún no hay Formatos 10 guardados.
+            <tr *ngIf="cursosTabla.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">
+                No hay cursos definidos disponibles.
               </td>
             </tr>
           </tbody>
@@ -54,27 +69,17 @@
     (click)="$event.stopPropagation()">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 id="tituloModalFormato10" class="modal-title">Crear Formato 10</h5>
+        <h5 id="tituloModalFormato10" class="modal-title">
+          {{ formato10CodigoEditando ? 'Actualizar Formato 10' : 'Crear Formato 10' }}
+        </h5>
         <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarModal()"></button>
       </div>
       <div class="modal-body">
-        <label class="form-label fw-bold" for="cursoDefinidoFormato10">Curso definido</label>
-        <select
-          id="cursoDefinidoFormato10"
-          name="cursoDefinidoFormato10"
-          class="form-select"
-          [(ngModel)]="cursoSeleccionadoCodigo"
-          [disabled]="cargandoCursos || cursosFormato6.length === 0">
-          <option [ngValue]="null">
-            {{ cargandoCursos ? 'Cargando cursos...' : 'Seleccionar curso definido' }}
-          </option>
-          <option *ngFor="let curso of cursosFormato6" [ngValue]="curso.formato6_codigo">
-            {{ curso.formato1_codigo_curso || 'Sin código' }} - {{ curso.formato1_curso_definido }}
-          </option>
-        </select>
-        <p *ngIf="!cargandoCursos && cursosFormato6.length === 0" class="text-muted small mt-2 mb-0">
-          No hay cursos definidos disponibles.
-        </p>
+        <div class="mb-3">
+          <div class="form-label fw-bold mb-1">Curso definido</div>
+          <div>{{ cursoSeleccionadoNombre }}</div>
+          <div class="text-muted small">Código: {{ cursoSeleccionadoCodigo || 'Sin código' }}</div>
+        </div>
 
         <div class="mt-3">
           <label class="form-label fw-bold" for="instructorFormato10">Instructor</label>
@@ -115,17 +120,6 @@
           </p>
         </fieldset>
 
-        <div class="mt-3">
-          <label class="form-label fw-bold" for="detalleUsoFormato10">Detalle de uso</label>
-          <textarea
-            id="detalleUsoFormato10"
-            name="detalleUsoFormato10"
-            class="form-control"
-            [(ngModel)]="detalleUso"
-            rows="3"
-            readonly>
-          </textarea>
-        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" (click)="cerrarModal()">Cancelar</button>
@@ -133,8 +127,8 @@
           type="button"
           class="btn btn-institucional"
           (click)="guardarFormato()"
-          [disabled]="guardando || cargandoCursos || cursosFormato6.length === 0 || cargandoUsuarios || usuarios.length === 0 || cargandoLicencias">
-          {{ guardando ? 'Guardando...' : 'Guardar' }}
+          [disabled]="guardando || cargandoUsuarios || usuarios.length === 0 || cargandoLicencias || !licenciasCargadas">
+          {{ guardando ? (formato10CodigoEditando ? 'Actualizando...' : 'Guardando...') : (formato10CodigoEditando ? 'Actualizar' : 'Guardar') }}
         </button>
       </div>
     </div>

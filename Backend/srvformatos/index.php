@@ -111,6 +111,7 @@ if ($view == "no identificado" || $view == "none") {
 		'getformato32'=>true,
 		'getlicenciasformato10'=>true,
 		'insertformato10'=>true,
+		'updateformato10'=>true,
 		'getformato10'=>true,
 
 		

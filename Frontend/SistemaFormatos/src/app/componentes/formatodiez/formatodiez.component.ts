@@ -27,6 +27,10 @@ interface Formato10 {
   formato6_codigo: number;
   formato10_curso_codigo: string | null;
   formato10_curso_nombre: string;
+  formato10_area: string;
+  formato10_modalidad: string;
+  formato10_tematica: string;
+  formato10_periodo_uso: string;
   formato10_instructor_cedula: string;
   formato10_instructor_nombres: string;
   formato10_instructor_apellidos: string;
@@ -34,7 +38,11 @@ interface Formato10 {
   formato10_instructor_telefono: string;
   formato10_detalle_uso: string;
   formato10_fecha_creacion: string;
-  licencias: Array<{ id: number; nombre: string }>;
+  licencias: Array<{ id: number; nombre: string; seleccionada: boolean | number }>;
+}
+
+interface CursoFormato10 extends CursoFormato6 {
+  formato: Formato10 | null;
 }
 
 @Component({
@@ -48,27 +56,50 @@ export class FormatodiezComponent implements OnInit {
   licencias: LicenciaFormato10[] = [];
   formatos: Formato10[] = [];
   cursoSeleccionadoCodigo: number | null = null;
+  formato10CodigoEditando: number | null = null;
+  cursoSeleccionadoNombre: string | null = null;
   instructorSeleccionadoCedula: string | null = null;
+  private licenciasSeleccionadasIniciales: number[] = [];
   detalleUso = 'La contraseña entregada vía correo electrónico al Instructor será actualizada periódicamente y de forma obligatoria después de que los períodos de uso concluyan';
   cargandoCursos = false;
   cargandoUsuarios = false;
   cargandoLicencias = false;
+  licenciasCargadas = false;
   cargandoFormatos = false;
+  formatosCargados = false;
   guardando = false;
   mostrarModal = false;
 
   constructor(private modulosService: ModulosService) {}
 
   ngOnInit(): void {
-    this.mostrarModal = true;
     this.cargarCursos();
-    this.cargarUsuarios();
-    this.cargarLicencias();
     this.cargarFormatos();
   }
 
-  abrirModal(): void {
+  get cursosTabla(): CursoFormato10[] {
+    return this.cursosFormato6.map((curso) => ({
+      ...curso,
+      formato: this.formatos.find((formato) => formato.formato6_codigo === curso.formato6_codigo) || null
+    }));
+  }
+
+  abrirModal(curso: CursoFormato6, formato: Formato10 | null = null): void {
+    if (!this.formatosCargados || this.guardando) {
+      return;
+    }
+
+    this.cursoSeleccionadoCodigo = curso.formato6_codigo;
+    this.formato10CodigoEditando = formato?.formato10_codigo || null;
+    this.cursoSeleccionadoNombre = curso.formato1_curso_definido || null;
+    this.instructorSeleccionadoCedula = formato?.formato10_instructor_cedula || null;
+    this.licenciasSeleccionadasIniciales = formato
+      ? formato.licencias.filter((licencia) => Number(licencia.seleccionada) === 1).map((licencia) => licencia.id)
+      : [];
+    this.licencias.forEach((licencia) => licencia.seleccionada = false);
     this.mostrarModal = true;
+    this.cargarUsuarios();
+    this.cargarLicencias();
   }
 
   cerrarModal(): void {
@@ -90,15 +121,25 @@ export class FormatodiezComponent implements OnInit {
       return;
     }
 
+    const editando = this.formato10CodigoEditando !== null;
+    const payload = {
+      formato10Codigo: this.formato10CodigoEditando,
+      formato6Codigo: this.cursoSeleccionadoCodigo,
+      instructorCedula: this.instructorSeleccionadoCedula,
+      licencias: this.licencias.filter((licencia) => licencia.seleccionada).map((licencia) => licencia.id)
+    };
     this.guardando = true;
-    this.modulosService.insertarFormato10({
-      fx: 'insertformato10',
-      d: {
-        formato6Codigo: this.cursoSeleccionadoCodigo,
-        instructorCedula: this.instructorSeleccionadoCedula,
-        licencias: this.licencias.filter((licencia) => licencia.seleccionada).map((licencia) => licencia.id)
-      }
-    }).subscribe({
+    const solicitud = editando
+      ? this.modulosService.actualizarFormato10({ fx: 'updateformato10', d: payload })
+      : this.modulosService.insertarFormato10({
+        fx: 'insertformato10',
+        d: {
+          formato6Codigo: payload.formato6Codigo,
+          instructorCedula: payload.instructorCedula,
+          licencias: payload.licencias
+        }
+      });
+    solicitud.subscribe({
       next: (respuesta: any) => {
         this.guardando = false;
         if (!respuesta?.data?.success) {
@@ -108,10 +149,16 @@ export class FormatodiezComponent implements OnInit {
 
         this.cerrarModal();
         this.cursoSeleccionadoCodigo = null;
+        this.formato10CodigoEditando = null;
+        this.cursoSeleccionadoNombre = null;
         this.instructorSeleccionadoCedula = null;
         this.licencias.forEach((licencia) => licencia.seleccionada = false);
         this.cargarFormatos();
-        Swal.fire('Guardado', 'El Formato 10 se guardó correctamente.', 'success');
+        Swal.fire(
+          editando ? 'Actualizado' : 'Guardado',
+          `El Formato 10 se ${editando ? 'actualizó' : 'guardó'} correctamente.`,
+          'success'
+        );
       },
       error: (error: any) => {
         this.guardando = false;
@@ -135,24 +182,61 @@ export class FormatodiezComponent implements OnInit {
         header: { image: encabezado, width: 515, alignment: 'center', margin: [0, 12, 0, 0] },
         footer: { image: pie, width: 515, alignment: 'center', margin: [0, 0, 0, 12] },
         content: [
-          { text: 'FORMATO 10', style: 'titulo', alignment: 'center', margin: [0, 0, 0, 24] },
+          { text: ' ', style: 'titulo', alignment: 'center', margin: [0, 0, 0, 24] },
           {
             table: {
-              widths: ['38%', '62%'],
+              widths: ['20%', '30%', '20%', '30%'],
               body: [
-                [{ text: 'Fecha de solicitud', bold: true }, this.formatearFechaSolicitud(formato.formato10_fecha_creacion)],
-                [{ text: 'Número del formulario', bold: true }, String(formato.formato10_codigo)],
-                [{ text: 'Código del curso', bold: true }, formato.formato10_curso_codigo || 'Sin código'],
-                [{ text: 'Apellidos y nombres', bold: true }, `${formato.formato10_instructor_apellidos} ${formato.formato10_instructor_nombres}`],
-                [{ text: 'Correo electrónico', bold: true }, formato.formato10_instructor_correo || 'No registrado'],
-                [{ text: 'Documento de identidad', bold: true }, formato.formato10_instructor_cedula],
-                [{ text: 'Teléfono', bold: true }, formato.formato10_instructor_telefono || 'No registrado'],
-                [{ text: 'Nombre del curso', bold: true }, formato.formato10_curso_nombre],
-                [{ text: 'Licencias', bold: true }, formato.licencias.map((licencia) => licencia.nombre).join(', ') || 'Ninguna'],
-                [{ text: 'Detalle de uso', bold: true }, formato.formato10_detalle_uso]
+                [
+                  { text: 'Número del formulario', bold: true },
+                  { text: String(formato.formato10_codigo), colSpan: 3 },
+                  {},
+                  {}
+                ],
+                [
+                  { text: 'Fecha de solicitud', bold: true },
+                  this.formatearFechaSolicitud(formato.formato10_fecha_creacion),
+                  { text: 'Código del curso', bold: true },
+                  formato.formato10_curso_codigo || 'Sin código'
+                ],
+                [
+                  { text: 'Apellidos y nombres', bold: true },
+                  `${formato.formato10_instructor_apellidos} ${formato.formato10_instructor_nombres}`,
+                  { text: 'Correo electrónico', bold: true },
+                  formato.formato10_instructor_correo || 'No registrado'
+                ],
+                [
+                  { text: 'Documento de identidad', bold: true },
+                  formato.formato10_instructor_cedula,
+                  { text: 'Teléfono', bold: true },
+                  formato.formato10_instructor_telefono || 'No registrado'
+                ],
+                [
+                  { text: 'Área', bold: true, alignment: 'center' },
+                  { text: 'Modalidad', bold: true, alignment: 'center' },
+                  { text: 'Temática', bold: true, alignment: 'center' },
+                  { text: 'Período de uso', bold: true, alignment: 'center' }
+                ],
+                [
+                  { text: formato.formato10_area || '—', alignment: 'center' },
+                  { text: formato.formato10_modalidad || '—', alignment: 'center' },
+                  { text: formato.formato10_tematica || '—', alignment: 'center' },
+                  { text: formato.formato10_periodo_uso || '—', alignment: 'center' }
+                ],
+                [
+                  { text: 'Licencias', bold: true },
+                  { ...this.crearContenidoLicencias(formato.licencias), colSpan: 3 },
+                  {},
+                  {}
+                ],
+                [
+                  { text: 'Detalle de uso', bold: true },
+                  { text: formato.formato10_detalle_uso, colSpan: 3 },
+                  {},
+                  {}
+                ]
               ]
             },
-            layout: 'lightHorizontalLines'
           }
         ],
         styles: {
@@ -166,6 +250,40 @@ export class FormatodiezComponent implements OnInit {
       console.error('No se pudo generar el PDF del Formato 10:', error);
       Swal.fire('Error', 'No se pudo abrir el PDF del Formato 10.', 'error');
     }
+  }
+
+  private crearContenidoLicencias(licencias: Formato10['licencias']): any {
+    if (licencias.length === 0) {
+      return { text: 'No hay licencias activas' };
+    }
+
+    return {
+      columns: licencias.map((licencia) => {
+        const canvas: any[] = [{
+          type: 'rect',
+          x: 0,
+          y: 1,
+          w: 10,
+          h: 10,
+          lineWidth: 1
+        }];
+        if (Number(licencia.seleccionada) === 1) {
+          canvas.push(
+            { type: 'line', x1: 2, y1: 3, x2: 8, y2: 9, lineWidth: 1 },
+            { type: 'line', x1: 8, y1: 3, x2: 2, y2: 9, lineWidth: 1 }
+          );
+        }
+        return {
+          width: '*',
+          columns: [
+            { width: 12, canvas },
+            { width: '*', text: licencia.nombre, fontSize: 9 }
+          ],
+          columnGap: 3
+        };
+      }),
+      columnGap: 4
+    };
   }
 
   private formatearFechaSolicitud(fecha: string): string {
@@ -196,6 +314,7 @@ export class FormatodiezComponent implements OnInit {
 
   private cargarFormatos(): void {
     this.cargandoFormatos = true;
+    this.formatosCargados = false;
     this.modulosService.obtenerFormatos10({ fx: 'getformato10', d: {} }).subscribe({
       next: (respuesta: any) => {
         this.cargandoFormatos = false;
@@ -205,6 +324,7 @@ export class FormatodiezComponent implements OnInit {
           return;
         }
         this.formatos = respuesta.data.item;
+        this.formatosCargados = true;
       },
       error: (error: any) => {
         this.cargandoFormatos = false;
@@ -217,6 +337,7 @@ export class FormatodiezComponent implements OnInit {
 
   private cargarLicencias(): void {
     this.cargandoLicencias = true;
+    this.licenciasCargadas = false;
     this.modulosService.obtenerLicenciasFormato10({ fx: 'getlicenciasformato10', d: {} }).subscribe({
       next: (respuesta: any) => {
         this.cargandoLicencias = false;
@@ -232,8 +353,9 @@ export class FormatodiezComponent implements OnInit {
 
         this.licencias = respuesta.data.item.map((licencia: { id: number; nombre: string }) => ({
           ...licencia,
-          seleccionada: false
+          seleccionada: this.licenciasSeleccionadasIniciales.includes(licencia.id)
         }));
+        this.licenciasCargadas = true;
       },
       error: (error: any) => {
         this.cargandoLicencias = false;

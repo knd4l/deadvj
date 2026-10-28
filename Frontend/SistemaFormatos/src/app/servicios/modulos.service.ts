@@ -75,6 +75,10 @@ insertarFormato10(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }
 
+actualizarFormato10(objetoopciones: any): Observable<any> {
+  return this.http.post<any>(this.URL, objetoopciones);
+}
+
 obtenerFormatos10(objetoopciones: any): Observable<any> {
   return this.http.post<any>(this.URL, objetoopciones);
 }

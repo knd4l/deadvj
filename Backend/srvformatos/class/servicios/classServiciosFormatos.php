@@ -5223,6 +5223,145 @@ public function insertFormato10($datos)
     }
 }
 
+public function updateFormato10($datos)
+{
+    $dbc = null;
+    $result = array();
+
+    try {
+        $formato10Codigo = isset($datos->formato10Codigo) ? (int) $datos->formato10Codigo : 0;
+        $formato6Codigo = isset($datos->formato6Codigo) ? (int) $datos->formato6Codigo : 0;
+        $instructorCedula = isset($datos->instructorCedula) ? trim((string) $datos->instructorCedula) : '';
+        $licenciaIds = isset($datos->licencias) && is_array($datos->licencias)
+            ? array_values(array_unique(array_filter(array_map('intval', $datos->licencias), function ($id) {
+                return $id > 0;
+            })))
+            : array();
+
+        if ($formato10Codigo <= 0 || $formato6Codigo <= 0 || $instructorCedula === '') {
+            throw new Exception('Selecciona un curso y un instructor.');
+        }
+
+        $dbc = $this->getInitDatabase();
+        if ($dbc->getEstado()->codigo != 0) {
+            throw new Exception('No fue posible conectar con la base de datos.');
+        }
+
+        $dbc->beginTransaction();
+        $dbc->query("SELECT formato10_codigo
+            FROM formato10
+            WHERE formato10_codigo = :formato10_codigo
+              AND formato6_codigo = :formato6_codigo
+            LIMIT 1
+            FOR UPDATE");
+        $dbc->bind(':formato10_codigo', $formato10Codigo);
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        if (!$dbc->single()) {
+            throw new Exception('El Formato 10 que intentas actualizar no existe.');
+        }
+
+        $dbc->query("SELECT f1.formato1_codigo_curso, f1.formato1_curso_definido
+            FROM formato6 f6
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
+            WHERE f6.formato6_codigo = :formato6_codigo
+              AND f1.formato1_curso_definido IS NOT NULL
+              AND TRIM(f1.formato1_curso_definido) <> ''
+            LIMIT 1");
+        $dbc->bind(':formato6_codigo', $formato6Codigo);
+        $curso = $dbc->single();
+        if (!$curso) {
+            throw new Exception('El curso seleccionado no está disponible.');
+        }
+
+        $dbc->query("SELECT USUARIO_NOMBRES AS nombres, USUARIO_APELLIDOS AS apellidos
+            FROM usuarios
+            WHERE USUARIO_IDENTIFICACION = :cedula
+              AND USUARIO_ESTADO = 'ACTIVO'
+            LIMIT 1");
+        $dbc->bind(':cedula', $instructorCedula);
+        $instructor = $dbc->single();
+        if (!$instructor) {
+            throw new Exception('El instructor seleccionado no está disponible.');
+        }
+
+        $licencias = array();
+        foreach ($licenciaIds as $licenciaId) {
+            $dbc->query("SELECT licencias_formato10_id
+                FROM licencias_formato10
+                WHERE licencias_formato10_id = :licencia_id
+                  AND licencias_formato10_estado = 'ACTIVO'
+                LIMIT 1");
+            $dbc->bind(':licencia_id', $licenciaId);
+            if (!$dbc->single()) {
+                throw new Exception('Una de las licencias seleccionadas no está disponible.');
+            }
+            $licencias[] = $licenciaId;
+        }
+
+        $dbc->query("UPDATE formato10 SET
+                formato10_curso_codigo = :curso_codigo,
+                formato10_curso_nombre = :curso_nombre,
+                formato10_instructor_cedula = :instructor_cedula,
+                formato10_instructor_nombres = :instructor_nombres,
+                formato10_instructor_apellidos = :instructor_apellidos
+            WHERE formato10_codigo = :formato10_codigo");
+        $dbc->bind(':curso_codigo', $curso['formato1_codigo_curso']);
+        $dbc->bind(':curso_nombre', $curso['formato1_curso_definido']);
+        $dbc->bind(':instructor_cedula', $instructorCedula);
+        $dbc->bind(':instructor_nombres', $instructor['nombres']);
+        $dbc->bind(':instructor_apellidos', $instructor['apellidos']);
+        $dbc->bind(':formato10_codigo', $formato10Codigo);
+        $dbc->execute();
+
+        $dbc->query("DELETE FROM formato10_licencias
+            WHERE formato10_codigo = :formato10_codigo");
+        $dbc->bind(':formato10_codigo', $formato10Codigo);
+        $dbc->execute();
+
+        foreach ($licencias as $licenciaId) {
+            $dbc->query("INSERT INTO formato10_licencias (
+                formato10_codigo,
+                licencias_formato10_id
+            ) VALUES (
+                :formato10_codigo,
+                :licencia_id
+            )");
+            $dbc->bind(':formato10_codigo', $formato10Codigo);
+            $dbc->bind(':licencia_id', $licenciaId);
+            $dbc->execute();
+        }
+
+        $dbc->endTransaction();
+        $result[] = array('formato10_codigo' => $formato10Codigo);
+        $this->estado = new Exception_Object(1, 'Formato 10 actualizado correctamente.');
+        $this->estado->setLastID($formato10Codigo);
+    } catch (Exception $e) {
+        if ($dbc !== null && $dbc->inTransaction()) {
+            $dbc->cancelTransaction();
+        }
+        $this->estado = new Exception_Object(-1, 'No se pudo actualizar el Formato 10: ' . $e->getMessage());
+        $this->estado->setLastID(-1);
+    }
+
+    if ($dbc !== null) {
+        $dbc->closeAll();
+    }
+
+    $resultados = new stdClass();
+    $resultados->data = new stdClass();
+    $resultados->data->success = $this->estado->getLastID() > 0;
+    $resultados->data->message = $this->estado->getMessage();
+    $resultados->data->estado = $this->estado->getCode();
+    $resultados->data->item = $result;
+
+    if ($this->isHTML) {
+        header('Content-type: application/json');
+        echo json_encode($resultados);
+    } else {
+        return $resultados;
+    }
+}
+
 public function getFormato10()
 {
     $dbc = null;
@@ -5238,6 +5377,16 @@ public function getFormato10()
                 f10.formato6_codigo,
                 f10.formato10_curso_codigo,
                 f10.formato10_curso_nombre,
+                COALESCE(f6.formato6_area, '') AS formato10_area,
+                COALESCE(f6.formato6_modalidad, '') AS formato10_modalidad,
+                COALESCE(f10.formato10_curso_nombre, f1.formato1_curso_definido, '') AS formato10_tematica,
+                CONCAT(
+                    'Desde: ',
+                    COALESCE(DATE_FORMAT(f1.formato1_fecha_ejecucion_desde, '%d/%m/%Y'), '—'),
+                    CHAR(10),
+                    'Hasta: ',
+                    COALESCE(DATE_FORMAT(f1.formato1_fecha_ejecucion_hasta, '%d/%m/%Y'), '—')
+                ) AS formato10_periodo_uso,
                 f10.formato10_instructor_cedula,
                 COALESCE(u.USUARIO_NOMBRES, f10.formato10_instructor_nombres) AS formato10_instructor_nombres,
                 COALESCE(u.USUARIO_APELLIDOS, f10.formato10_instructor_apellidos) AS formato10_instructor_apellidos,
@@ -5246,6 +5395,8 @@ public function getFormato10()
                 f10.formato10_detalle_uso,
                 f10.formato10_fecha_creacion
             FROM formato10 f10
+            INNER JOIN formato6 f6 ON f6.formato6_codigo = f10.formato6_codigo
+            INNER JOIN formato1 f1 ON f1.formato1_codigo = f6.formato1_codigo
             LEFT JOIN usuarios u
                 ON u.USUARIO_IDENTIFICACION =
                     f10.formato10_instructor_cedula COLLATE utf8mb4_general_ci
@@ -5254,11 +5405,13 @@ public function getFormato10()
 
         foreach ($result as &$formato) {
             $dbc->query("SELECT l.licencias_formato10_id AS id,
-                    l.licencias_formato10_nombre AS nombre
-                FROM formato10_licencias fl
-                INNER JOIN licencias_formato10 l
-                    ON l.licencias_formato10_id = fl.licencias_formato10_id
-                WHERE fl.formato10_codigo = :formato10_codigo
+                    l.licencias_formato10_nombre AS nombre,
+                    CASE WHEN fl.formato10_codigo IS NULL THEN 0 ELSE 1 END AS seleccionada
+                FROM licencias_formato10 l
+                LEFT JOIN formato10_licencias fl
+                    ON fl.licencias_formato10_id = l.licencias_formato10_id
+                   AND fl.formato10_codigo = :formato10_codigo
+                WHERE l.licencias_formato10_estado = 'ACTIVO'
                 ORDER BY l.licencias_formato10_id");
             $dbc->bind(':formato10_codigo', (int) $formato['formato10_codigo']);
             $formato['licencias'] = $dbc->resultset();
