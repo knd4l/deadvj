@@ -26,9 +26,7 @@ export class FormatounoverComponent implements OnInit {
   codigoCursoDefinido: string = '';
   formatoIdSeleccionado: number;// Código del formato que estamos editando.
   cursoDefinidoGuardado: boolean = false;// Indica si el curso ya fue guardado correctamente.
-
-  cursoGuardado: boolean = false; // Indica si el curso ya fue guardado correctamente.
-  cursoGuardadoNombre: string = '';// Guarda el nombre del curso que se acaba de guardar
+  guardandoTematica: boolean = false;
 
   index: number = 1;
   pages: number = 1;
@@ -255,6 +253,7 @@ export class FormatounoverComponent implements OnInit {
   this.tematicaNuevaEditada = '';
   this.codigoCursoDefinido = '';
   this.cursoDefinidoGuardado = false;
+  this.guardandoTematica = false;
 }
 
   //Gaurda la tematica final nombre del curso
@@ -271,19 +270,24 @@ guardarTematicaFinal() {
     return;
   }
 
-  // Verificamos que el usuario haya escrito algo.
-  if (!this.tematicaNuevaEditada ||
-      !this.tematicaNuevaEditada.trim()) {
+  const cursoNombre = this.tematicaNuevaEditada.trim();
+  const codigoCurso = this.codigoCursoDefinido.trim();
 
-    console.error('Debe ingresar una temática.');
-    Swal.fire('Campo requerido', 'Ingrese el nombre del curso antes de guardar.', 'warning');
+  if (!cursoNombre || !codigoCurso) {
+    Swal.fire(
+      'Campos requeridos',
+      'Ingrese el nombre y el código del curso antes de guardar.',
+      'warning'
+    );
 
     return;
   }
 
-  // Guardamos la temática editada.
-  const cursoNombre = this.tematicaNuevaEditada.trim();
-  const codigoCurso = this.codigoCursoDefinido.trim();
+  if (this.guardandoTematica) {
+    return;
+  }
+
+  this.guardandoTematica = true;
 
   console.log(
     'Guardando curso:',
@@ -320,19 +324,20 @@ guardarTematicaFinal() {
 
         // MOSTRAR BOTÓN PARA CONTINUAR CON EL FORMATO 6
 
-        this.cursoGuardado = true;
-
-        // Guardamos el nombre del curso para enviarlo al Formato 6
-        this.cursoGuardadoNombre = cursoNombre;
-
          // Guardar temporalmente el curso para el Formato 6
         sessionStorage.setItem(
           'cursoFormato6',
           cursoNombre
         );
 
-        // Limpiamos el contenido del input.
-        this.tematicaNuevaEditada = '';
+        document.getElementById('cerrarModalTematica')?.click();
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado completado',
+          text: 'El curso se guardó correctamente.',
+          timer: 2500,
+          showConfirmButton: false
+        });
 
       } else {
 
@@ -348,10 +353,12 @@ guardarTematicaFinal() {
 
       }
 
+      this.guardandoTematica = false;
     },
 
     error: (error: any) => {
 
+      this.guardandoTematica = false;
       console.error(
         'Error al guardar:',
         error

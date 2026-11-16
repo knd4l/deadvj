@@ -26,21 +26,29 @@
         </div>
 
         <div class="table-responsive mb-4" *ngIf="cursoSeleccionado">
-          <table class="table table-bordered align-middle mb-0">
+          <table class="table table-bordered align-middle mb-0 datos-curso">
+            <colgroup>
+              <col class="col-etiqueta">
+              <col class="col-valor">
+              <col class="col-etiqueta">
+              <col class="col-valor">
+            </colgroup>
             <tbody>
               <tr>
                 <th scope="row">Fecha de elaboración</th>
-                <td>{{ cursoSeleccionado.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
+                <td colspan="3" class="fecha-elaboracion">{{ cursoSeleccionado.formato6_fecha_elaboracion | date:'yyyy-MM-dd' }}</td>
+              </tr>
+              <tr>
                 <th scope="row">Código del curso</th>
-                <td>{{ cursoSeleccionado.formato1_codigo_curso || '—' }}</td>
+                <td class="codigo-curso">{{ cursoSeleccionado.formato1_codigo_curso || '—' }}</td>
                 <th scope="row">Modalidad</th>
-                <td>{{ cursoSeleccionado.formato6_modalidad || '—' }}</td>
+                <td class="modalidad-curso">{{ cursoSeleccionado.formato6_modalidad || '—' }}</td>
               </tr>
               <tr>
                 <th scope="row">Nombre del curso</th>
-                <td colspan="2">{{ cursoSeleccionado.formato1_curso_definido || '—' }}</td>
+                <td>{{ cursoSeleccionado.formato1_curso_definido || '—' }}</td>
                 <th scope="row">Área</th>
-                <td colspan="2">{{ cursoSeleccionado.formato6_area || '—' }}</td>
+                <td>{{ cursoSeleccionado.formato6_area || '—' }}</td>
               </tr>
             </tbody>
           </table>

@@ -6159,7 +6159,7 @@ private function insertFormato13Legacy($datos)
         $mediosUta = $this->normalizarListaPublicacionesFormato13(
             isset($datos->mediosUtaAdicionales) ? $datos->mediosUtaAdicionales : array()
         );
-
+                
         $paginaWebCodigo = $this->insertarCuadroFormato13($dbc, 'formato13_pagina_web', array(
             'fecha_publicacion' => $this->valorFormato13($datos, 'paginaWebFechaPublicacion'),
             'tipo_publicacion' => $this->valorFormato13($datos, 'paginaWebTipoPublicacion'),

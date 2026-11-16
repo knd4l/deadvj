@@ -15,17 +15,19 @@
                 <div class="modal-content">
                   <div class="modal-header">
                     <h5 class="modal-title text-danger" id="exampleModalRespons">Tematicas Tentativas</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" id="cerrarModalTematica" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
             <div class="modal-body">
             <form>
             
 
-            <ul style="cursor: pointer"  class="form-autocomplete-suggestions"  id="some-list"  role="listbox"  aria-label="Sugerencias"  tabindex="-1">
+            <ul class="form-autocomplete-suggestions lista-tematicas" id="some-list" role="listbox" aria-label="Sugerencias">
            <li 
               *ngFor="let tematica of tematicasSeleccionadas"
               (click)="seleccionarTematica(tematica)"
-              style="padding: 0.25rem 1.5rem; font-size: 95%;" 
+              class="opcion-tematica"
+              [class.tematica-seleccionada]="tematica === tematicaSeleccionada"
+              tabindex="0"
               role="option">
 
               {{ tematica }}
@@ -43,11 +45,13 @@
 
             </div>
             <div class="mb-3">
+            <label for="inputcedulamodalresp" class="form-label">Nombre del curso</label>
             <input type="text"
                     class="form-control form-control-warning"
                     name="tematicaNuevaEditada"
                     id="inputcedulamodalresp"
                     placeholder="Defina el nombre del curso"
+                    required
                     [(ngModel)]="tematicaNuevaEditada">
             </div>
             <div class="mb-3">
@@ -57,6 +61,7 @@
                      name="codigoCursoDefinido"
                      id="codigoCursoModal"
                      placeholder="Ingrese el código del curso"
+                     required
                      [(ngModel)]="codigoCursoDefinido">
             </div>
           <!-- BOTONES -->
@@ -76,17 +81,11 @@
               *ngIf="tematicaSeleccionada && !cursoDefinidoGuardado"
               type="button"
               class="btn btn-institucional"
+              [disabled]="guardandoTematica"
               (click)="guardarTematicaFinal()">
-              Guardar
+              {{ guardandoTematica ? 'Guardando...' : 'Guardar' }}
 
             </button>
-
-        <!-- BOTÓN PARA CONTINUAR CON EL FORMATO 6 -->
-        <div *ngIf="cursoGuardado" class="mt-3 text-center"> <!-- Mensaje de confirmación --> 
-          <div class="alert alert-success"> 
-            <strong>¡Curso guardado correctamente!</strong> 
-            <br> Ahora puede continuar con el Formato 6. </div> 
-             </div>
 
           </div>
 
@@ -223,6 +222,33 @@
   width: 90px;
   white-space: normal;
   line-height: 1.2;
+}
+
+.lista-tematicas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.opcion-tematica {
+  padding: 0.5rem 1rem;
+  font-size: 95%;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.opcion-tematica:hover,
+.opcion-tematica:focus-visible {
+  background-color: var(--institucional);
+  color: #fff;
+  outline: 2px solid var(--institucional-sec);
+  outline-offset: -2px;
+}
+
+.opcion-tematica.tematica-seleccionada {
+  background-color: #e8f0ec;
+  font-weight: 700;
 }
 
 

@@ -32,7 +32,6 @@
                             {{ t.tipo_capac_nombre }}
                           </option>
                         </select>
-                        <input class="form-control" formControlName="docucapacitacion">
                       </td>
                     </tr>
 
@@ -53,12 +52,28 @@
 
                     <tr>
                       <td class="label">Teléfono</td>
-                      <td><input class="form-control" formControlName="telefono"></td>
+                      <td>
+                        <input class="form-control" formControlName="telefono" type="text" inputmode="numeric" maxlength="10" placeholder="0999999999" (input)="soloNumeros($event)">
+                        <div class="text-danger small mt-1" *ngIf="formato1Form.get('telefono')?.touched && formato1Form.get('telefono')?.hasError('required')">
+                          Este campo es obligatorio.
+                        </div>
+                        <div class="text-danger small mt-1" *ngIf="formato1Form.get('telefono')?.touched && formato1Form.get('telefono')?.hasError('pattern')">
+                          Solo se permiten números.
+                        </div>
+                      </td>
                     </tr>
 
                     <tr>
                       <td class="label">Correo electrónico</td>
-                      <td><input class="form-control" formControlName="correo"></td>
+                      <td>
+                        <input class="form-control" formControlName="correo" type="email" placeholder="ejemplo@dominio.com">
+                        <div class="text-danger small mt-1" *ngIf="formato1Form.get('correo')?.touched && formato1Form.get('correo')?.hasError('required')">
+                          Este campo es obligatorio.
+                        </div>
+                        <div class="text-danger small mt-1" *ngIf="formato1Form.get('correo')?.touched && formato1Form.get('correo')?.hasError('email')">
+                          Ingrese un correo válido. Ejemplo: ejemplo@dominio.com
+                        </div>
+                      </td>
                     </tr>
 
                   </tbody>

@@ -3,6 +3,32 @@ th {
   background: #f5f5f5;
 }
 
+.datos-curso {
+  table-layout: fixed;
+}
+
+.datos-curso th {
+  width: auto;
+}
+
+.datos-curso .col-etiqueta {
+  width: 20%;
+}
+
+.datos-curso .col-valor {
+  width: 30%;
+}
+
+.datos-curso .fecha-elaboracion,
+.datos-curso .modalidad-curso {
+  white-space: nowrap;
+}
+
+.datos-curso .codigo-curso {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
 main.container-fluid {
   padding-top: 40px;
 }
@@ -74,6 +100,10 @@ form {
 @media (max-width: 576px) {
   th {
     width: auto;
+  }
+
+  .datos-curso {
+    min-width: 560px;
   }
 
   .publication-frame {

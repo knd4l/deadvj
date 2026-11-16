@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS directores (
+  director_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  tit_dir VARCHAR(50) NOT NULL,
+  nom_dir VARCHAR(120) NOT NULL,
+  ape_dir VARCHAR(120) NOT NULL,
+  cedula VARCHAR(20) DEFAULT NULL,
+  PRIMARY KEY (director_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

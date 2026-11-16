@@ -60,7 +60,7 @@ export class FormatounoComponent implements OnInit {
       institucion: ['', Validators.required],
       personacontacto: ['', Validators.required],
       direccion: ['', Validators.required],
-      telefono: ['', Validators.required],
+      telefono: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       correo: ['', [Validators.required, Validators.email]],
       mesejecucion: ['', Validators.required],
       modalidad: ['', Validators.required],
@@ -115,6 +115,12 @@ export class FormatounoComponent implements OnInit {
 
   }
 
+  soloNumeros(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const valor = (input.value || '').replace(/\D/g, '');
+    input.value = valor;
+    this.formato1Form.get('telefono')?.setValue(valor, { emitEvent: false });
+  }
 
 
   //PARA SUBIR ACUERDO DE CALIDAD
